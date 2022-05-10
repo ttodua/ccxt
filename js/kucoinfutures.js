@@ -1191,10 +1191,10 @@ module.exports = class kucoinfutures extends kucoin {
         //        settleCurrency: 'USDT'
         //    }
         //
-        const id = this.safeString (info, 'id');
+        const id = this.safeString (data, 'id');
         market = this.safeMarket (id, market);
-        const currencyId = this.safeString (info, 'settleCurrency');
-        const mode = (this.safeValue (info, 'crossMode') === true) ? 'cross' : 'isolated';
+        const currencyId = this.safeString (data, 'settleCurrency');
+        const mode = (this.safeValue (data, 'crossMode') === true) ? 'cross' : 'isolated';
         const marketId = this.safeString (market, 'symbol');
         return {
             'type': undefined,
