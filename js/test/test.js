@@ -110,9 +110,11 @@ if (settings && settings.skip) {
 //-----------------------------------------------------------------------------
 
 async function test (methodName, exchange, ... args) {
-    console.log ('Testing', exchange.id, methodName, '(', ... args, ')')
     if (exchange.has[methodName]) {
+        console.log ('Testing', exchange.id, methodName, '(', ... args, ')')
         return await (tests[methodName] (exchange, ... args))
+    } else {
+        console.log (' # Skipping Test : ' + exchange + '->' + methodName +' (not supported)')
     }
 }
 

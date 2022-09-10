@@ -118,6 +118,9 @@ sys.excepthook = handle_all_unhandled_exceptions
 
 # ------------------------------------------------------------------------------
 
+async def tester_func(tester_func_name, exchange, *args):
+    dump('Testing', exchange.id, tester_func_name, *args)
+    return await (tester_func_name)(exchange, *args)
 
 async def test_order_book(exchange, symbol):
     method = 'fetchOrderBook'
@@ -389,43 +392,31 @@ async def test_balance(exchange):
 
 # ------------------------------------------------------------------------------
 
+async def test_sign_in(exchange):
+    method = 'signIn'
+    if exchange.has[method]:
+        dump('Testing ' + method + '()')
+        await getattr(exchange, method)()
+        dump('signIn succeeded')
+    else:
+        dump(green(exchange.id), method + '() is not supported')
+
+# ------------------------------------------------------------------------------
 
 async def test_symbol(exchange, symbol, code):
-    dump(green('SYMBOL: ' + symbol))
-    dump(green('CODE: ' + code))
-    dump('Testing fetch_ticker:' + symbol)
-    await test_ticker(exchange, symbol)
-    dump('Testing fetch_tickers:' + symbol)
-    await test_tickers(exchange, symbol)
-    dump('Testing fetch_ohlcv:' + symbol)
-    await test_ohlcvs(exchange, symbol)
-
-    if exchange.id == 'coinmarketcap':
-        response = await exchange.fetchGlobal()
-        dump(green(response))
-    else:
-        dump('Testing fetch_order_book:' + symbol)
-        await test_order_book(exchange, symbol)
-        dump('Testing fetch_trades:' + symbol)
-        await test_trades(exchange, symbol)
-        if (not hasattr(exchange, 'apiKey') or (len(exchange.apiKey) < 1)):
-            return
-        method = 'signIn'
-        if exchange.has[method]:
-            dump('Testing ' + method + '()')
-            await getattr(exchange, method)()
-        dump('Testing fetch_orders:' + symbol)
-        await test_orders(exchange, symbol)
-        dump('Testing fetch_open_orders:' + symbol)
-        await test_open_orders(exchange, symbol)
-        dump('Testing fetch_closed_orders:' + symbol)
-        await test_closed_orders(exchange, symbol)
-        dump('Testing fetch_transactions:' + code)
-        await test_transactions(exchange, code)
-        dump('Testing fetch_balance')
-        await test_balance(exchange)
-        dump('Testing fetch_positions:' + symbol)
-        await test_positions(exchange, symbol)
+    await tester_func('test_ticker', exchange, symbol)
+    await tester_func('test_tickers', exchange, symbol)
+    await tester_func('test_ohlcvs', exchange, symbol)
+    await tester_func('test_order_book', exchange, symbol)
+    await tester_func('test_trades', exchange, symbol)
+    if (exchange.check_required_credentials()):
+        await tester_func('test_sign_in', exchange)
+        await tester_func('test_orders', exchange, symbol)
+        await tester_func('test_open_orders', exchange, symbol)
+        await tester_func('test_closed_orders', exchange, symbol)
+        await tester_func('test_transactions', exchange, code)
+        await tester_func('test_balance', exchange)
+        await tester_func('test_positions', exchange, symbol)
 
 # ------------------------------------------------------------------------------
 
