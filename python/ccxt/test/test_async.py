@@ -118,9 +118,13 @@ sys.excepthook = handle_all_unhandled_exceptions
 
 # ------------------------------------------------------------------------------
 
+
 async def tester_func(tester_func_name, exchange, *args):
     dump('Testing', exchange.id, tester_func_name, *args)
     return await (tester_func_name)(exchange, *args)
+
+# ------------------------------------------------------------------------------
+
 
 async def test_order_book(exchange, symbol):
     method = 'fetchOrderBook'
