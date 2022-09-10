@@ -328,7 +328,7 @@ function test_sign_in($exchange) {
     $method = 'signIn';
     if ($exchange->has[$method]) {
         dump(green($exchange->id),  'testing ' . $method . '()');
-        yield $exchange->sign_in();
+        $exchange->sign_in();
         dump('signIn succeeded');
     } else {
         dump($method . '() is not supported');
