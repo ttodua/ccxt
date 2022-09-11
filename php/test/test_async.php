@@ -514,7 +514,7 @@ function test_exchange($exchange) {
         yield test_symbol($exchange, $symbol, $code);
     }
 
-    yield test_accounts($exchange);
+    yield tester_func('test_accounts', $exchange);
 }
 
 $proxies = array(
