@@ -203,6 +203,7 @@ async def test_tickers(exchange, symbol):
 
 # ------------------------------------------------------------------------------
 
+
 def get_active_symbols(exchange):
     return [symbol for symbol in exchange.symbols if is_active_symbol(exchange, symbol)]
 
@@ -396,6 +397,7 @@ async def test_balance(exchange):
 
 # ------------------------------------------------------------------------------
 
+
 async def test_sign_in(exchange):
     method = 'signIn'
     if exchange.has[method]:
@@ -406,6 +408,7 @@ async def test_sign_in(exchange):
         dump(green(exchange.id), method + '() is not supported')
 
 # ------------------------------------------------------------------------------
+
 
 async def test_symbol(exchange, symbol, code):
     await tester_func('test_ticker', exchange, symbol)
