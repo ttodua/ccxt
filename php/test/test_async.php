@@ -85,8 +85,8 @@ foreach ($config as $id => $params) {
 $exchanges['coinbasepro']->urls['api'] = $exchanges['coinbasepro']->urls['test'];
 
 function tester_func($tester_func_name, $exchange, ...$args) {
-    dump('Testing', $exchange->id, $tester_func_name, json_encode($args));
-    yield call_user_func_array($tester_func_name, [$exchange, ...$args]);
+    dump('> Testing', $exchange->id, $tester_func_name, json_encode($args));
+    yield call_user_func_array('\\'.__NAMESPACE__ .'\\'.$tester_func_name, [$exchange, ...$args]);
 }
 
 

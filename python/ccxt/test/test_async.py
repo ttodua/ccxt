@@ -119,9 +119,12 @@ sys.excepthook = handle_all_unhandled_exceptions
 # ------------------------------------------------------------------------------
 
 
+localFunctions = locals()
+
+
 async def tester_func(tester_func_name, exchange, *args):
-    dump('Testing', exchange.id, tester_func_name, *args)
-    return await (tester_func_name)(exchange, *args)
+    dump('> Testing', exchange.id, tester_func_name, *args)
+    return await localFunctions[tester_func_name](exchange, *args)
 
 # ------------------------------------------------------------------------------
 
