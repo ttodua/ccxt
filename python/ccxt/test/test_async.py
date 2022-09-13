@@ -1,3 +1,5 @@
+				 
+
 # -*- coding: utf-8 -*-
 
 import argparse
@@ -138,10 +140,12 @@ tester_func_names = {
 
 
 async def tester_func(method_name, exchange, *args):
-    tester_func_name = tester_func_names[method_name]
-    dump('> Testing', exchange.id, tester_func_name, *args)
-    return await localFunctions[tester_func_name](exchange, *args)
-
+    if (exchange.has[method_name]):
+        tester_func_name = tester_func_names[method_name]
+        dump('> Testing', exchange.id, tester_func_name, *args)
+        return await localFunctions[tester_func_name](exchange, *args)
+    else:
+        dump(' # Skipping Test : ', exchange.id, method_name, ' (not supported)')
 # ------------------------------------------------------------------------------
 
 
@@ -417,18 +421,6 @@ async def test_balance(exchange):
 # ------------------------------------------------------------------------------
 
 
-async def test_sign_in(exchange):
-    method = 'signIn'
-    if exchange.has[method]:
-        dump('Testing ' + method + '()')
-        await getattr(exchange, method)()
-        dump('signIn succeeded')
-    else:
-        dump(green(exchange.id), method + '() is not supported')
-
-# ------------------------------------------------------------------------------
-
-
 async def test_symbol(exchange, symbol, code):
     await tester_func('fetchTicker', exchange, symbol)
     await tester_func('fetchTickers', exchange, symbol)
@@ -443,6 +435,18 @@ async def test_symbol(exchange, symbol, code):
         await tester_func('fetchTransactions', exchange, code)
         await tester_func('fetchBalance', exchange)
         await tester_func('fetchPositions', exchange, symbol)
+
+# ------------------------------------------------------------------------------
+
+
+async def test_sign_in(exchange):
+    method = 'signIn'
+    if exchange.has[method]:
+        dump('Testing ' + method + '()')
+        await getattr(exchange, method)()
+        dump('signIn succeeded')
+    else:
+        dump(green(exchange.id), method + '() is not supported')
 
 # ------------------------------------------------------------------------------
 
