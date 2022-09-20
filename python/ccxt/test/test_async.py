@@ -121,11 +121,29 @@ sys.excepthook = handle_all_unhandled_exceptions
 
 localFunctions = locals()
 
+tester_func_names = {
+    'fetchTicker': 'test_ticker',
+    'fetchTickers': 'test_tickers',
+    'fetchOrderBook': 'test_order_book',
+    'fetchTrades': 'test_trades',
+    'fetchOrders': 'test_orders',
+    'fetchClosedOrders': 'test_closed_orders',
+    'fetchOpenOrders': 'test_open_orders',
+    'fetchPositions': 'test_positions',
+    'fetchTransactions': 'test_transactions',
+    'fetchOHLCV': 'test_ohlcvs',
+    'fetchBalance': 'test_balance',
+    'signIn': 'test_sign_in',
+}
 
-async def tester_func(tester_func_name, exchange, *args):
-    dump('> Testing', exchange.id, tester_func_name, *args)
-    return await localFunctions[tester_func_name](exchange, *args)
 
+async def tester_func(method_name, exchange, *args):
+    if (exchange.has[method_name]):
+        tester_func_name = tester_func_names[method_name]
+        dump('> Testing', exchange.id, tester_func_name, *args)
+        return await localFunctions[tester_func_name](exchange, *args)
+    else:
+        dump(' # Skipping Test : ', exchange.id, method_name, ' (not supported)')
 # ------------------------------------------------------------------------------
 
 
@@ -401,6 +419,24 @@ async def test_balance(exchange):
 # ------------------------------------------------------------------------------
 
 
+async def test_symbol(exchange, symbol, code):
+    await tester_func('fetchTicker', exchange, symbol)
+    await tester_func('fetchTickers', exchange, symbol)
+    await tester_func('fetchOHLCV', exchange, symbol)
+    await tester_func('fetchOrderBook', exchange, symbol)
+    await tester_func('fetchTrades', exchange, symbol)
+    if (exchange.check_required_credentials()):
+        await tester_func('signIn', exchange)
+        await tester_func('fetchOrders', exchange, symbol)
+        await tester_func('fetchOpenOrders', exchange, symbol)
+        await tester_func('fetchClosedOrders', exchange, symbol)
+        await tester_func('fetchTransactions', exchange, code)
+        await tester_func('fetchBalance', exchange)
+        await tester_func('fetchPositions', exchange, symbol)
+
+# ------------------------------------------------------------------------------
+
+
 async def test_sign_in(exchange):
     method = 'signIn'
     if exchange.has[method]:
@@ -409,24 +445,6 @@ async def test_sign_in(exchange):
         dump('signIn succeeded')
     else:
         dump(green(exchange.id), method + '() is not supported')
-
-# ------------------------------------------------------------------------------
-
-
-async def test_symbol(exchange, symbol, code):
-    await tester_func('test_ticker', exchange, symbol)
-    await tester_func('test_tickers', exchange, symbol)
-    await tester_func('test_ohlcvs', exchange, symbol)
-    await tester_func('test_order_book', exchange, symbol)
-    await tester_func('test_trades', exchange, symbol)
-    if (exchange.check_required_credentials()):
-        await tester_func('test_sign_in', exchange)
-        await tester_func('test_orders', exchange, symbol)
-        await tester_func('test_open_orders', exchange, symbol)
-        await tester_func('test_closed_orders', exchange, symbol)
-        await tester_func('test_transactions', exchange, code)
-        await tester_func('test_balance', exchange)
-        await tester_func('test_positions', exchange, symbol)
 
 # ------------------------------------------------------------------------------
 

@@ -84,9 +84,29 @@ foreach ($config as $id => $params) {
 
 $exchanges['coinbasepro']->urls['api'] = $exchanges['coinbasepro']->urls['test'];
 
-function tester_func($tester_func_name, $exchange, ...$args) {
-    dump('> Testing', $exchange->id, $tester_func_name, json_encode($args));
-    yield call_user_func_array('\\'.__NAMESPACE__ .'\\'.$tester_func_name, [$exchange, ...$args]);
+$tester_func_names = [
+    'fetchTicker' => 'test_ticker',
+    'fetchOrderBook' => 'test_order_book',
+    'fetchTrades' => 'test_trades',
+    'fetchOrders' => 'test_orders',
+    'fetchClosedOrders' => 'test_closed_orders',
+    'fetchOpenOrders' => 'test_open_orders',
+    'fetchPositions' => 'test_positions',
+    'fetchTransactions' => 'test_transactions',
+    'fetchOHLCV' => 'test_ohlcvs',
+    'fetchAccounts' => 'test_accounts',
+    'fetchBalance' => 'test_balance',
+    'signIn' => 'test_sign_in',
+];
+
+function tester_func($method_name, $exchange, ...$args) {
+    if ($exchange->has[$methodName]) {
+        $tester_func_name = $GLOBALS['tester_func_names'][$method_name];
+        dump('> Testing', $exchange->id, $tester_func_name, json_encode($args));
+        yield call_user_func_array('\\'.__NAMESPACE__ .'\\'.$tester_func_name, [$exchange, ...$args]);
+    } else {
+        dump(' # Skipping Test : ', $exchange->id, $methodName, ' (not supported)');
+    }
 }
 
 
@@ -279,17 +299,17 @@ function test_ohlcvs($exchange, $symbol) {
 //-----------------------------------------------------------------------------
 
 function test_symbol($exchange, $symbol, $code) {
-    yield tester_func('test_ticker', $exchange, $symbol);
-    yield tester_func('test_order_book', $exchange, $symbol);
-    yield tester_func('test_trades', $exchange, $symbol);
-    yield tester_func('test_ohlcvs', $exchange, $symbol);
+    yield tester_func('fetchTicker', $exchange, $symbol);
+    yield tester_func('fetchOrderBook', $exchange, $symbol);
+    yield tester_func('fetchTrades', $exchange, $symbol);
+    yield tester_func('fetchOHLCV', $exchange, $symbol);
     if ($exchange->check_required_credentials(false)) {
-        yield tester_func('test_sign_in', $exchange);
-        yield tester_func('test_orders', $exchange, $symbol);
-        yield tester_func('test_closed_orders', $exchange, $symbol);
-        yield tester_func('test_open_orders', $exchange, $symbol);
-        yield tester_func('test_transactions', $exchange, $code);
-        yield tester_func('test_balance', $exchange);
+        yield tester_func('signIn', $exchange);
+        yield tester_func('fetchOrders', $exchange, $symbol);
+        yield tester_func('fetchClosedOrders', $exchange, $symbol);
+        yield tester_func('fetchOpenOrders', $exchange, $symbol);
+        yield tester_func('fetchTransactions', $exchange, $code);
+        yield tester_func('fetchBalance', $exchange);
     }
 }
 
@@ -514,7 +534,7 @@ function test_exchange($exchange) {
         yield test_symbol($exchange, $symbol, $code);
     }
 
-    yield test_accounts($exchange);
+    yield tester_func('fetchAccounts', $exchange);
 }
 
 $proxies = array(
