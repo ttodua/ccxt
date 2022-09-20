@@ -100,12 +100,12 @@ $tester_func_names = [
 ];
 
 function tester_func($method_name, $exchange, ...$args) {
-    if ($exchange->has[$methodName]) {
+    if ($exchange->has[$method_name]) {
         $tester_func_name = $GLOBALS['tester_func_names'][$method_name];
         dump('> Testing', $exchange->id, $tester_func_name, json_encode($args));
         yield call_user_func_array('\\'.__NAMESPACE__ .'\\'.$tester_func_name, [$exchange, ...$args]);
     } else {
-        dump(' # Skipping Test : ', $exchange->id, $methodName, ' (not supported)');
+        dump(' # Skipping Test : ', $exchange->id, $method_name, ' (not supported)');
     }
 }
 
