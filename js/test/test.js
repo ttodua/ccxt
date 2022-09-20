@@ -95,7 +95,6 @@ if (settings) {
 
 Object.assign (exchange, settings)
 
-
 // check auth keys in env var
 const requiredCredentials = exchange.requiredCredentials;
 for (const [credential, isRequired] of Object.entries (requiredCredentials)) {
