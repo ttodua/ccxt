@@ -15,12 +15,17 @@ const fs = require ('fs')
 
 // ----------------------------------------------------------------------------
 
-process.on ('uncaughtException',  (e) => { console.log (e, e.stack); process.exit (1) })
-process.on ('unhandledRejection', (e) => { console.log (e, e.stack); process.exit (1) })
+// to have unified function name
+function dump(...args) {
+    console.log(...args);
+}
+
+process.on ('uncaughtException',  (e) => { dump (e, e.stack); process.exit (1) })
+process.on ('unhandledRejection', (e) => { dump (e, e.stack); process.exit (1) })
 
 // ----------------------------------------------------------------------------
 
-console.log ('\nTESTING', { 'exchange': exchangeId, 'symbol': exchangeSymbol || 'all' }, '\n')
+dump ('\nTESTING', { 'exchange': exchangeId, 'symbol': exchangeSymbol || 'all' }, '\n')
 
 // ----------------------------------------------------------------------------
 
@@ -90,6 +95,7 @@ if (settings) {
 
 Object.assign (exchange, settings)
 
+
 // check auth keys in env var
 const requiredCredentials = exchange.requiredCredentials;
 for (const [credential, isRequired] of Object.entries (requiredCredentials)) {
@@ -103,7 +109,7 @@ for (const [credential, isRequired] of Object.entries (requiredCredentials)) {
 }
 
 if (settings && settings.skip) {
-    console.log ('[Skipped]', { 'exchange': exchangeId, 'symbol': exchangeSymbol || 'all' })
+    dump ('[Skipped]', { 'exchange': exchangeId, 'symbol': exchangeSymbol || 'all' })
     process.exit ()
 }
 
@@ -111,10 +117,10 @@ if (settings && settings.skip) {
 
 async function tester_func (methodName, exchange, ... args) {
     if (exchange.has[methodName]) {
-        console.log ('Testing', exchange.id, methodName, '(', ... args, ')')
+        dump ('Testing', exchange.id, methodName, '(', ... args, ')')
         return await (tests[methodName] (exchange, ... args))
     } else {
-        console.log (' # Skipping Test : ' + exchange + '->' + methodName +' (not supported)')
+        dump (' # Skipping Test : ',  exchange.id, '->', methodName, ' (not supported)')
     }
 }
 
@@ -185,7 +191,7 @@ async function loadExchange (exchange) {
         }
     }
 
-    console.log (exchange.symbols.length, 'symbols', result)
+    dump (exchange.symbols.length, 'symbols', result)
 }
 
 //-----------------------------------------------------------------------------
@@ -292,7 +298,7 @@ async function testExchange (exchange) {
         symbol = exchange.symbols[0]
     }
 
-    console.log ('SYMBOL:', symbol)
+    dump ('SYMBOL:', symbol)
     if ((symbol.indexOf ('.d') < 0)) {
         await testSymbol (exchange, symbol)
     }
@@ -375,7 +381,7 @@ async function tryAllProxies (exchange, proxies) {
         } catch (e) {
 
             currentProxy = ++currentProxy % proxies.length
-            console.log ('[' + e.constructor.name + '] ' + e.message.slice (0, 200))
+            dump ('[' + e.constructor.name + '] ' + e.message.slice (0, 200))
             if (e instanceof ccxt.DDoSProtection) {
                 continue
             } else if (e instanceof ccxt.RequestTimeout) {
