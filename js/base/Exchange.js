@@ -2746,5 +2746,4 @@ module.exports = class Exchange {
         }
         return [ marginMode, params ];
     }
-
 };
