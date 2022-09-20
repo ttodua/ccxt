@@ -13,12 +13,12 @@ const fs = require ('fs')
     , { Agent } = require ('https')
     , ccxt = require ('../../ccxt.js') // eslint-disable-line import/order
 
-// ----------------------------------------------------------------------------
-
 // to have unified function name
 function dump(...args) {
     console.log(...args);
 }
+
+// ----------------------------------------------------------------------------
 
 process.on ('uncaughtException',  (e) => { dump (e, e.stack); process.exit (1) })
 process.on ('unhandledRejection', (e) => { dump (e, e.stack); process.exit (1) })
