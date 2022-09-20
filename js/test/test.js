@@ -204,26 +204,27 @@ async function loadExchange (exchange) {
         'EUR/USD',
     ];
 
-    const result = [];
+    const resultSymbols = [];
     const exchangeSpecificSymbols = exchange.symbols;
     for (let i = 0; i < exchangeSpecificSymbols.length; i++) {
         const symbol = exchangeSpecificSymbols[i];
         if (exchange.inArray(symbol, symbols)) {
-            result.push (symbol);
+            resultSymbols.push (symbol);
         }
     }
 
-    const resultLength = result.length;
+    const resultMsg = '';
+    const resultLength = resultSymbols.length;
     const exchangeSymbolsLength = exchange.symbols.length;
     if (resultLength > 0) {
         if (exchangeSymbolsLength > resultLength) {
-            result = result.join (', ') + ' + more...';
+            resultMsg = result.join (', ') + ' + more...';
         } else {
-            result = result.join (', ');
+            resultMsg = result.join (', ');
         }
     }
 
-    console.log (exchangeSymbolsLength, 'symbols', result);
+    console.log (exchangeSymbolsLength, 'symbols', resultMsg);
 }
 
 //-----------------------------------------------------------------------------
