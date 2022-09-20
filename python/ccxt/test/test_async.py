@@ -146,21 +146,6 @@ async def run_tester_method(exchange, method_name, *args):
 def test_method_available_for_current_lang(method_name):
     return method_name in tester_func_names
 
-def assert_method(condition, message):
-    assert(condition, message)
-    
-def get_included_symbols(exchange, symbols):
-    return list(filter(lambda symbol: symbol in symbols, exchange.symbols))
-
-def get_markets_for_code(markets, code):
-    return list(filter(lambda market: market['base'] == code, markets))
-
-def get_symbols_from_markets(markets):
-    return list(map(lambda market: market['symbol'], markets))
-
-def get_active_markets(exchange, markets):
-    return dict(filter(lambda market: exchange.safe_value (market, 'active') is not False, markets))
-
 def find_value_index_in_array(arr, value):
     return arr.index(value)
 

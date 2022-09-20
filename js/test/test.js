@@ -13,18 +13,14 @@ const fs = require ('fs')
     , { Agent } = require ('https')
     , ccxt = require ('../../ccxt.js') // eslint-disable-line import/order
 
-function dump(...args) {
-    console.log(...args);
-}
+// ----------------------------------------------------------------------------
+
+process.on ('uncaughtException',  (e) => { console.log (e, e.stack); process.exit (1) })
+process.on ('unhandledRejection', (e) => { console.log (e, e.stack); process.exit (1) })
 
 // ----------------------------------------------------------------------------
 
-process.on ('uncaughtException',  (e) => { dump (e, e.stack); process.exit (1) })
-process.on ('unhandledRejection', (e) => { dump (e, e.stack); process.exit (1) })
-
-// ----------------------------------------------------------------------------
-
-dump ('\nTESTING', { 'exchange': exchangeId, 'symbol': exchangeSymbol || 'all' }, '\n')
+console.log ('\nTESTING', { 'exchange': exchangeId, 'symbol': exchangeSymbol || 'all' }, '\n')
 
 // ----------------------------------------------------------------------------
 
@@ -107,7 +103,7 @@ for (const [credential, isRequired] of Object.entries (requiredCredentials)) {
 }
 
 if (settings && settings.skip) {
-    dump ('[Skipped]', { 'exchange': exchangeId, 'symbol': exchangeSymbol || 'all' })
+    console.log ('[Skipped]', { 'exchange': exchangeId, 'symbol': exchangeSymbol || 'all' })
     process.exit ();
 }
 
@@ -120,26 +116,6 @@ async function runTesterMethod(exchange, methodName, ... args) {
 
 function testMethodAvailableForCurrentLang(methodName) {
     return tests[methodName] !== undefined;
-}
-
-function assertMethod (condition, message) {
-    assert (condition, message);
-}
-
-function getIncludedSymbols (exchange, symbols) {
-    return exchange.symbols.filter ((symbol) => symbols.indexOf (symbol) >= 0);
-}
-
-function getMarketsForCode (markets, code) {
-    return markets.filter ((market) => (market['base'] === code));
-}
-
-function getSymbolsFromMarkets (markets) {
-    return markets.map (market => market['symbol']);
-}
-
-function getActiveMarkets (exchange, markets) {
-    return markets.filter ((market) => exchange.safeValue (market, 'active') !== false);
 }
 
 function findValueIndexInArray (arr, value) {
@@ -158,13 +134,13 @@ function exceptionHint (exc) {
 async function tester_func (methodName, exchange, ... args) {
     if (exchange.has[methodName]) {
         if (testMethodAvailableForCurrentLang(methodName)) {
-            dump ('Testing', exchange.id, methodName, '(', ... args, ')');
+            console.log ('Testing', exchange.id, methodName, '(', ... args, ')');
             return await runTesterMethod(methodName, exchange, ... args);
         } else {
-            dump (' # Skipping Test : ',  exchange.id, '->', methodName, ' (test method not available in current language)');
+            console.log (' # Skipping Test : ',  exchange.id, '->', methodName, ' (test method not available in current language)');
         }
     } else {
-        dump (' # Skipping Test : ',  exchange.id, '->', methodName, ' (method not supported)');
+        console.log (' # Skipping Test : ',  exchange.id, '->', methodName, ' (method not supported)');
     }
 }
 
@@ -195,12 +171,12 @@ async function loadExchange (exchange) {
 
     const markets = await exchange.loadMarkets ();
 
-    assertMethod (exchange.isObject (exchange.markets), '.markets is not an object');
-    assertMethod (exchange.isArray (exchange.symbols), '.symbols is not an array');
-    assertMethod (exchange.arrayLength (exchange.symbols) > 0, '.symbols count <= 0 (less than or equal to zero)');
+    assert (exchange.isObject (exchange.markets), '.markets is not an object');
+    assert (exchange.isArray (exchange.symbols), '.symbols is not an array');
+    assert (exchange.arrayLength (exchange.symbols) > 0, '.symbols count <= 0 (less than or equal to zero)');
     const marketKeys = Object.keys (exchange.markets);
-    assertMethod (exchange.arrayLength (marketKeys) > 0, '.markets objects keys length <= 0 (less than or equal to zero)');
-    assertMethod (exchange.arrayLength (exchange.symbols) === exchange.arrayLength (marketKeys), 'number of .symbols is not equal to the number of .markets');
+    assert (exchange.arrayLength (marketKeys) > 0, '.markets objects keys length <= 0 (less than or equal to zero)');
+    assert (exchange.arrayLength (exchange.symbols) === exchange.arrayLength (marketKeys), 'number of .symbols is not equal to the number of .markets');
 
     const symbols = [
         'BTC/CNY',
@@ -226,7 +202,14 @@ async function loadExchange (exchange) {
         'EUR/USD',
     ];
 
-    let result = getIncludedSymbols (exchange, symbols);
+    const result = [];
+    const exchangeSpecificSymbols = exchange.symbols;
+    for (let i = 0; i < exchangeSpecificSymbols.length; i++) {
+        const symbol = exchangeSpecificSymbols[i];
+        if (exchange.inArray(symbol, symbols)) {
+            result.push (symbol);
+        }
+    }
 
     if (exchange.arrayLength (result) > 0) {
         if (exchange.arrayLength (exchange.symbols) > exchange.arrayLength (result)) {
@@ -236,7 +219,7 @@ async function loadExchange (exchange) {
         }
     }
 
-    dump (exchange.arrayLength (exchange.symbols), 'symbols', result);
+    console.log (exchange.arrayLength (exchange.symbols), 'symbols', result);
 }
 
 //-----------------------------------------------------------------------------
@@ -318,20 +301,47 @@ async function testExchange (exchange) {
 
     if (symbol === undefined) {
         for (let i = 0; i < codes.length; i++) {
-            const markets = Object.values (exchange.markets);
-            const activeMarkets = getMarketsForCode (markets, codes[i]);
-            if (exchange.arrayLength (activeMarkets) > 0) {
-                const activeSymbols = getSymbolsFromMarkets (activeMarkets);
-                symbol = getTestSymbol (exchange, activeSymbols);
+            const marketKeys = Object.keys (exchange.markets);
+            const marketsForBaseCode = [];
+            for (let i = 0; i < marketKeys.length; i++) {
+                const key = marketKeys[i];
+                const market = exchange.markets[key];
+                if (market['base'] === codes[i]) {
+                    marketsForBaseCode.push (market);
+                }
+            }
+
+            if (exchange.arrayLength (marketsForBaseCode) > 0) {
+                const symbolsForBaseCode = [];
+                const keysOfMarketsOfBaseCode = Object.keys (marketsForBaseCode);
+                for (let i = 0; i < keysOfMarketsOfBaseCode.length; i++) {
+                    const key = keysOfMarketsOfBaseCode[i];
+                    const market = marketsForBaseCode[key];
+                    symbolsForBaseCode.push (market['symbol']);
+                }
+                symbol = getTestSymbol (exchange, symbolsForBaseCode);
                 break;
             }
         }
     }
 
     if (symbol === undefined) {
-        const markets = Object.values (exchange.markets);
-        const activeMarkets = getActiveMarkets (exchange, markets);
-        const activeSymbols = getSymbolsFromMarkets (activeMarkets);
+        const marketKeys = Object.keys (exchange.markets);
+        const activeMarkets = [];
+        for (let i = 0; i < marketKeys.length; i++) {
+            const key = marketKeys[i];
+            const market = exchange.markets[key];
+            if (exchange.safeValue (market, 'active') !== false) {
+                activeMarkets.push (market);
+            }
+        }
+        const activeSymbols = [];
+        const keysOfActiveMarketsForCode = Object.keys (activeMarkets);
+        for (let i = 0; i < keysOfActiveMarketsForCode.length; i++) {
+            const key = keysOfActiveMarketsForCode[i];
+            const market = activeMarkets[key];
+            activeSymbols.push (market['symbol']);
+        }
         symbol = getTestSymbol (exchange, activeSymbols)
     }
 
@@ -343,7 +353,7 @@ async function testExchange (exchange) {
         symbol = exchange.symbols[0];
     }
 
-    dump ('SYMBOL:', symbol);
+    console.log ('SYMBOL:', symbol);
     if ((symbol.indexOf ('.d') < 0)) {
         await testSymbol (exchange, symbol);
     }
@@ -426,7 +436,7 @@ async function tryAllProxies (exchange, proxies) {
         } catch (e) {
 
             currentProxy = (currentProxy + 1) % proxies.length;
-            dump (exceptionHint (e));
+            console.log (exceptionHint (e));
             if (e instanceof ccxt.DDoSProtection) {
                 continue;
             } else if (e instanceof ccxt.RequestTimeout) {

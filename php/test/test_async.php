@@ -109,26 +109,6 @@ function test_method_available_for_current_lang($method_name){
     return array_key_exists($method_name, $GLOBALS['tester_func_names']);
 }
 
-function assert_method ($condition, $message){
-    assert($condition, $message);
-}
-
-function get_included_symbols($exchange, $symbols){
-    return array_filter($exchange->symbols, function($symbol) use ($symbols) {return in_array($symbol, $symbols);});
-}
-
-function get_markets_for_code($markets, $code) {
-    return array_filter($markets, function($market) use ($code){ return $market['base'] === $code;});
-}
-
-function get_symbols_from_markets($markets) {
-    return array_map(function ($market){ return $market['symbol']; }, $markets);
-}
-
-function get_active_markets($exchange, $markets) {
-    return array_filter($markets, function($market){ return $exchange->safe_value ($market, 'active') !== false;});
-}
-
 function find_value_index_in_array($arr, $value){
     $result = array_search($value, $arr);
     return ($result === false ? -1 : $result);
