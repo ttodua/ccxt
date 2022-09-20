@@ -122,7 +122,7 @@ sys.excepthook = handle_all_unhandled_exceptions
 # ### common language specific methods ###
 
 
-localFunctions = locals() # get all functions defined in this file
+localFunctions = locals()  # get all functions defined in this file
 
 tester_func_names = {
     'fetchTicker': 'test_ticker',
