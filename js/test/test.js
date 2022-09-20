@@ -13,7 +13,6 @@ const fs = require ('fs')
     , { Agent } = require ('https')
     , ccxt = require ('../../ccxt.js') // eslint-disable-line import/order
 
-// to have unified function name
 function dump(...args) {
     console.log(...args);
 }
