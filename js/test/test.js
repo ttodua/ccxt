@@ -173,10 +173,12 @@ async function loadExchange (exchange) {
 
     assert (exchange.isObject (exchange.markets), '.markets is not an object');
     assert (exchange.isArray (exchange.symbols), '.symbols is not an array');
-    assert (exchange.arrayLength (exchange.symbols) > 0, '.symbols count <= 0 (less than or equal to zero)');
+    const symbolsLength = exchange.symbols.length;
+    assert (symbolsLength > 0, '.symbols count <= 0 (less than or equal to zero)');
     const marketKeys = Object.keys (exchange.markets);
-    assert (exchange.arrayLength (marketKeys) > 0, '.markets objects keys length <= 0 (less than or equal to zero)');
-    assert (exchange.arrayLength (exchange.symbols) === exchange.arrayLength (marketKeys), 'number of .symbols is not equal to the number of .markets');
+    const marketKeysLength = marketKeys.length;
+    assert (marketKeysLength > 0, '.markets objects keys length <= 0 (less than or equal to zero)');
+    assert (symbolsLength === marketKeysLength, 'number of .symbols is not equal to the number of .markets');
 
     const symbols = [
         'BTC/CNY',
@@ -211,15 +213,17 @@ async function loadExchange (exchange) {
         }
     }
 
-    if (exchange.arrayLength (result) > 0) {
-        if (exchange.arrayLength (exchange.symbols) > exchange.arrayLength (result)) {
+    const resultLength = result.length;
+    const exchangeSymbolsLength = exchange.symbols.length;
+    if (resultLength > 0) {
+        if (exchangeSymbolsLength > resultLength) {
             result = result.join (', ') + ' + more...';
         } else {
             result = result.join (', ');
         }
     }
 
-    console.log (exchange.arrayLength (exchange.symbols), 'symbols', result);
+    console.log (exchangeSymbolsLength, 'symbols', result);
 }
 
 //-----------------------------------------------------------------------------
@@ -311,7 +315,8 @@ async function testExchange (exchange) {
                 }
             }
 
-            if (exchange.arrayLength (marketsForBaseCode) > 0) {
+            const lengthOfMarketsForBaseCode = marketsForBaseCode.length;
+            if (lengthOfMarketsForBaseCode > 0) {
                 const symbolsForBaseCode = [];
                 const keysOfMarketsOfBaseCode = Object.keys (marketsForBaseCode);
                 for (let i = 0; i < keysOfMarketsOfBaseCode.length; i++) {
@@ -425,7 +430,8 @@ async function tryAllProxies (exchange, proxies) {
             exchange.proxy = proxies[currentProxy];
 
             // add random origin for proxies
-            if (exchange.arrayLength (exchange.proxy) > 0) {
+            const proxiesLength = exchange.proxy;
+            if (proxiesLength > 0) {
                 exchange.origin = exchange.uuid ();
             }
 
