@@ -2746,4 +2746,10 @@ module.exports = class Exchange {
         }
         return [ marginMode, params ];
     }
+
+    arrayLength (arr) {
+        // because of current transpilation state, we need to have this method for unified transpilations and avoiding `.length` confusion between array and string
+        const length = arr.length;
+        return length;
+    }
 };

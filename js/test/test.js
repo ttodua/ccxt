@@ -109,17 +109,59 @@ for (const [credential, isRequired] of Object.entries (requiredCredentials)) {
 
 if (settings && settings.skip) {
     dump ('[Skipped]', { 'exchange': exchangeId, 'symbol': exchangeSymbol || 'all' })
-    process.exit ()
+    process.exit ();
 }
 
-//-----------------------------------------------------------------------------
+async function runMethod(exchange, methodName, ... args) {
+    return await tests[methodName] (exchange, ... args);
+}
+
+function testMethodAvailableForCurrentLang(methodName) {
+    return tests[methodName] !== undefined;
+}
+
+function assertMethod (condition, message) {
+    assert (condition, message);
+}
+
+function getIncludedSymbols (exchange, symbols) {
+    return exchange.symbols.filter ((symbol) => symbols.indexOf (symbol) >= 0);
+}
+
+function getMarketsForCode (markets, code) {
+    return markets.filter ((market) => (market['base'] === code));
+}
+
+function getSymbolsFromMarkets (markets) {
+    return markets.map (market => market['symbol']);
+}
+
+function getActiveMarkets (markets) {
+    return markets.filter ((market) => !exchange.safeValue (market, 'active', false));
+}
+
+function findValueIndexInArray (arr, value) {
+    return arr.indexOf (value);
+}
+
+function exceptionHint (exc) {
+    return '[' + exceptionTypeName (exc.constructor.name) + '] ' + exc.message.slice (0, 200);
+}
+
+// ----------------------------------------------------------------------------
+// ### AUTO-TRANSPILER-START ###
+// ----------------------------------------------------------------------------
 
 async function tester_func (methodName, exchange, ... args) {
     if (exchange.has[methodName]) {
-        dump ('Testing', exchange.id, methodName, '(', ... args, ')')
-        return await (tests[methodName] (exchange, ... args))
+        if (testMethodAvailableForCurrentLang(methodName)) {
+            dump ('Testing', exchange.id, methodName, '(', ... args, ')');
+            return await runMethod(methodName, exchange, ... args);
+        } else {
+            dump (' # Skipping Test : ',  exchange.id, '->', methodName, ' (test method not available in current language)');
+        }
     } else {
-        dump (' # Skipping Test : ',  exchange.id, '->', methodName, ' (not supported)')
+        dump (' # Skipping Test : ',  exchange.id, '->', methodName, ' (method not supported)');
     }
 }
 
@@ -148,13 +190,14 @@ async function testSymbol (exchange, symbol) {
 
 async function loadExchange (exchange) {
 
-    const markets = await exchange.loadMarkets ()
+    const markets = await exchange.loadMarkets ();
 
-    assert (typeof exchange.markets === 'object', '.markets is not an object')
-    assert (Array.isArray (exchange.symbols), '.symbols is not an array')
-    assert (exchange.symbols.length > 0, '.symbols.length <= 0 (less than or equal to zero)')
-    assert (Object.keys (exchange.markets).length > 0, 'Object.keys (.markets).length <= 0 (less than or equal to zero)')
-    assert (exchange.symbols.length === Object.keys (exchange.markets).length, 'number of .symbols is not equal to the number of .markets')
+    assertMethod (exchange.isObject (exchange.markets), '.markets is not an object');
+    assertMethod (exchange.isArray (exchange.symbols), '.symbols is not an array');
+    assertMethod (exchange.arrayLength (exchange.symbols) > 0, '.symbols count <= 0 (less than or equal to zero)');
+    const marketKeys = Object.keys (exchange.markets);
+    assertMethod (exchange.arrayLength (marketKeys) > 0, '.markets objects keys length <= 0 (less than or equal to zero)');
+    assertMethod (exchange.arrayLength (exchange.symbols) === exchange.arrayLength (marketKeys), 'number of .symbols is not equal to the number of .markets');
 
     const symbols = [
         'BTC/CNY',
@@ -178,42 +221,42 @@ async function loadExchange (exchange) {
         'BTC/UAH',
         'LTC/BTC',
         'EUR/USD',
-    ]
+    ];
 
-    let result = exchange.symbols.filter ((symbol) => symbols.indexOf (symbol) >= 0)
+    let result = getIncludedSymbols (exchange, symbols);
 
-    if (result.length > 0) {
-        if (exchange.symbols.length > result.length) {
-            result = result.join (', ') + ' + more...'
+    if (exchange.arrayLength (result) > 0) {
+        if (exchange.arrayLength (exchange.symbols) > exchange.arrayLength (result)) {
+            result = result.join (', ') + ' + more...';
         } else {
-            result = result.join (', ')
+            result = result.join (', ');
         }
     }
 
-    dump (exchange.symbols.length, 'symbols', result)
+    dump (exchange.arrayLength (exchange.symbols), 'symbols', result);
 }
 
 //-----------------------------------------------------------------------------
 
 function getTestSymbol (exchange, symbols) {
-    let symbol = undefined
+    let symbol = undefined;
     for (let i = 0; i < symbols.length; i++) {
-        const s = symbols[i]
-        const market = exchange.safeValue (exchange.markets, s)
+        const s = symbols[i];
+        const market = exchange.safeValue (exchange.markets, s);
         if (market !== undefined) {
-            const active = exchange.safeValue (market, 'active')
+            const active = exchange.safeValue (market, 'active');
             if (active || (active === undefined)) {
-                symbol = s
+                symbol = s;
                 break;
             }
         }
     }
-    return symbol
+    return symbol;
 }
 
 async function testExchange (exchange) {
 
-    await loadExchange (exchange)
+    await loadExchange (exchange);
 
     const codes = [
         'BTC',
@@ -246,12 +289,12 @@ async function testExchange (exchange) {
         'XMR',
         'ZEC',
         'ZRX',
-    ]
+    ];
 
-    let code = undefined
+    let code = undefined;
     for (let i = 0; i < codes.length; i++) {
         if (codes[i] in exchange.currencies) {
-            code = codes[i]
+            code = codes[i];
         }
     }
 
@@ -268,85 +311,85 @@ async function testExchange (exchange) {
         'LTC/BTC',
         'ZRX/WETH',
         'EUR/USD',
-    ])
+    ]);
 
     if (symbol === undefined) {
         for (let i = 0; i < codes.length; i++) {
-            const markets = Object.values (exchange.markets)
-            const activeMarkets = markets.filter ((market) => (market['base'] === codes[i]))
-            if (activeMarkets.length) {
-                const activeSymbols = activeMarkets.map (market => market['symbol'])
-                symbol = getTestSymbol (exchange, activeSymbols)
+            const markets = Object.values (exchange.markets);
+            const activeMarkets = getMarketsForCode (markets, codes[i]);
+            if (exchange.arrayLength (activeMarkets) > 0) {
+                const activeSymbols = getSymbolsFromMarkets (activeMarkets);
+                symbol = getTestSymbol (exchange, activeSymbols);
                 break;
             }
         }
     }
 
     if (symbol === undefined) {
-        const markets = Object.values (exchange.markets)
-        const activeMarkets = markets.filter ((market) => !exchange.safeValue (market, 'active', false))
-        const activeSymbols = activeMarkets.map (market => market['symbol'])
+        const markets = Object.values (exchange.markets);
+        const activeMarkets = getActiveMarkets (markets);
+        const activeSymbols = getSymbolsFromMarkets (activeMarkets);
         symbol = getTestSymbol (exchange, activeSymbols)
     }
 
     if (symbol === undefined) {
-        symbol = getTestSymbol (exchange, exchange.symbols)
+        symbol = getTestSymbol (exchange, exchange.symbols);
     }
 
     if (symbol === undefined) {
-        symbol = exchange.symbols[0]
+        symbol = exchange.symbols[0];
     }
 
-    dump ('SYMBOL:', symbol)
+    dump ('SYMBOL:', symbol);
     if ((symbol.indexOf ('.d') < 0)) {
-        await testSymbol (exchange, symbol)
+        await testSymbol (exchange, symbol);
     }
 
-    if (!exchange.privateKey && (!exchange.apiKey || (exchange.apiKey.length < 1))) {
-        return true
+    if (!exchange.privateKey && (!exchange.apiKey || (exchange.apiKey === ''))) {
+        return true;
     }
 
-    exchange.checkRequiredCredentials ()
+    exchange.checkRequiredCredentials ();
 
-    await tester_func ('signIn', exchange)
+    await tester_func ('signIn', exchange);
 
     // move to testnet/sandbox if possible before accessing the balance
     // if (exchange.urls['test'])
     //    exchange.urls['api'] = exchange.urls['test']
 
-    const balance = await tester_func ('fetchBalance', exchange)
-    await tester_func ('fetchAccounts', exchange)
-    await tester_func ('fetchTransactionFees', exchange)
-    await tester_func ('fetchTradingFees', exchange)
-    await tester_func ('fetchStatus', exchange)
-    await tester_func ('fetchOpenInterestHistory', exchange, symbol)
-    await tester_func ('fetchOrders', exchange, symbol)
-    await tester_func ('fetchOpenOrders', exchange, symbol)
-    await tester_func ('fetchClosedOrders', exchange, symbol)
-    await tester_func ('fetchMyTrades', exchange, symbol)
-    await tester_func ('fetchLeverageTiers', exchange, symbol)
-    await tester_func ('fetchOpenInterestHistory', exchange, symbol)
+    const balance = await tester_func ('fetchBalance', exchange);
+    await tester_func ('fetchAccounts', exchange);
+    await tester_func ('fetchTransactionFees', exchange);
+    await tester_func ('fetchTradingFees', exchange);
+    await tester_func ('fetchStatus', exchange);
+    await tester_func ('fetchOpenInterestHistory', exchange, symbol);
+    await tester_func ('fetchOrders', exchange, symbol);
+    await tester_func ('fetchOpenOrders', exchange, symbol);
+    await tester_func ('fetchClosedOrders', exchange, symbol);
+    await tester_func ('fetchMyTrades', exchange, symbol);
+    await tester_func ('fetchLeverageTiers', exchange, symbol);
+    await tester_func ('fetchOpenInterestHistory', exchange, symbol);
 
-    await tester_func ('fetchPositions', exchange, symbol)
+    await tester_func ('fetchPositions', exchange, symbol);
 
     if ('fetchLedger' in tests) {
-        await tester_func ('fetchLedger', exchange, code)
+        await tester_func ('fetchLedger', exchange, code);
     }
 
-    await tester_func ('fetchTransactions', exchange, code)
-    await tester_func ('fetchDeposits', exchange, code)
-    await tester_func ('fetchWithdrawals', exchange, code)
-    await tester_func ('fetchBorrowRate', exchange, code)
-    await tester_func ('fetchBorrowRates', exchange)
-    await tester_func ('fetchBorrowInterest', exchange, code)
-    await tester_func ('fetchBorrowInterest', exchange, code, symbol)
+    await tester_func ('fetchTransactions', exchange, code);
+    await tester_func ('fetchDeposits', exchange, code);
+    await tester_func ('fetchWithdrawals', exchange, code);
+    await tester_func ('fetchBorrowRate', exchange, code);
+    await tester_func ('fetchBorrowRates', exchange);
+    await tester_func ('fetchBorrowInterest', exchange, code);
+    await tester_func ('fetchBorrowInterest', exchange, code, symbol);
 
     if (exchange.extendedTest) {
 
-        await tester_func ('InvalidNonce', exchange, symbol)
-        await tester_func ('OrderNotFound', exchange, symbol)
-        await tester_func ('InvalidOrder', exchange, symbol)
-        await tester_func ('InsufficientFunds', exchange, symbol, balance) // danger zone - won't execute with non-empty balance
+        await tester_func ('InvalidNonce', exchange, symbol);
+        await tester_func ('OrderNotFound', exchange, symbol);
+        await tester_func ('InvalidOrder', exchange, symbol);
+        await tester_func ('InsufficientFunds', exchange, symbol, balance); // danger zone - won't execute with non-empty balance
     }
 }
 
@@ -354,45 +397,45 @@ async function testExchange (exchange) {
 
 async function tryAllProxies (exchange, proxies) {
 
-    const index = proxies.indexOf (exchange.proxy)
-    let currentProxy = (index >= 0) ? index : 0
-    const maxRetries = proxies.length
+    const index = findValueIndexInArray (proxies, exchange.proxy);
+    let currentProxy = (index >= 0) ? index : 0;
+    const maxRetries = proxies.length;
 
     if (settings && ('proxy' in settings)) {
-        currentProxy = proxies.indexOf (settings.proxy)
+        currentProxy = findValueIndexInArray (proxies, settings.proxy);
     }
 
     for (let numRetries = 0; numRetries < maxRetries; numRetries++) {
 
         try {
 
-            exchange.proxy = proxies[currentProxy]
+            exchange.proxy = proxies[currentProxy];
 
             // add random origin for proxies
-            if (exchange.proxy.length > 0) {
-                exchange.origin = exchange.uuid ()
+            if (exchange.arrayLength (exchange.proxy) > 0) {
+                exchange.origin = exchange.uuid ();
             }
 
-            await testExchange (exchange)
+            await testExchange (exchange);
 
-            break
+            break;
 
         } catch (e) {
 
-            currentProxy = ++currentProxy % proxies.length
-            dump ('[' + e.constructor.name + '] ' + e.message.slice (0, 200))
+            currentProxy = (currentProxy + 1) % proxies.length;
+            dump (exceptionHint (e));
             if (e instanceof ccxt.DDoSProtection) {
-                continue
+                continue;
             } else if (e instanceof ccxt.RequestTimeout) {
-                continue
+                continue;
             } else if (e instanceof ccxt.ExchangeNotAvailable) {
-                continue
+                continue;
             } else if (e instanceof ccxt.AuthenticationError) {
-                return
+                return;
             } else if (e instanceof ccxt.InvalidNonce) {
-                return
+                return;
             } else {
-                throw e
+                throw e;
             }
         }
     }
@@ -404,14 +447,18 @@ async function main () {
 
     if (exchangeSymbol) {
 
-        await loadExchange (exchange)
-        await testSymbol (exchange, exchangeSymbol)
+        await loadExchange (exchange);
+        await testSymbol (exchange, exchangeSymbol);
 
     } else {
 
-        await tryAllProxies (exchange, proxies)
+        await tryAllProxies (exchange, proxies);
     }
 
 }
+
+// ----------------------------------------------------------------------------
+// ### AUTO-TRANSPILER-END ###
+// ----------------------------------------------------------------------------
 
 main ()
