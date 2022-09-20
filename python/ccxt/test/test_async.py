@@ -119,34 +119,6 @@ sys.excepthook = handle_all_unhandled_exceptions
 # ------------------------------------------------------------------------------
 
 
-localFunctions = locals()
-
-tester_func_names = {
-    'fetchTicker': 'test_ticker',
-    'fetchTickers': 'test_tickers',
-    'fetchOrderBook': 'test_order_book',
-    'fetchTrades': 'test_trades',
-    'fetchOrders': 'test_orders',
-    'fetchClosedOrders': 'test_closed_orders',
-    'fetchOpenOrders': 'test_open_orders',
-    'fetchPositions': 'test_positions',
-    'fetchTransactions': 'test_transactions',
-    'fetchOHLCV': 'test_ohlcvs',
-    'fetchBalance': 'test_balance',
-    'signIn': 'test_sign_in',
-}
-
-
-async def tester_func(method_name, exchange, *args):
-    if (exchange.has[method_name]):
-        tester_func_name = tester_func_names[method_name]
-        dump('> Testing', exchange.id, tester_func_name, *args)
-        return await localFunctions[tester_func_name](exchange, *args)
-    else:
-        dump(' # Skipping Test : ', exchange.id, method_name, ' (not supported)')
-# ------------------------------------------------------------------------------
-
-
 async def test_order_book(exchange, symbol):
     method = 'fetchOrderBook'
     if exchange.has[method]:
@@ -223,7 +195,6 @@ async def test_tickers(exchange, symbol):
 
 
 # ------------------------------------------------------------------------------
-
 
 def get_active_symbols(exchange):
     return [symbol for symbol in exchange.symbols if is_active_symbol(exchange, symbol)]
@@ -420,31 +391,41 @@ async def test_balance(exchange):
 
 
 async def test_symbol(exchange, symbol, code):
-    await tester_func('fetchTicker', exchange, symbol)
-    await tester_func('fetchTickers', exchange, symbol)
-    await tester_func('fetchOHLCV', exchange, symbol)
-    await tester_func('fetchOrderBook', exchange, symbol)
-    await tester_func('fetchTrades', exchange, symbol)
-    if (exchange.check_required_credentials()):
-        await tester_func('signIn', exchange)
-        await tester_func('fetchOrders', exchange, symbol)
-        await tester_func('fetchOpenOrders', exchange, symbol)
-        await tester_func('fetchClosedOrders', exchange, symbol)
-        await tester_func('fetchTransactions', exchange, code)
-        await tester_func('fetchBalance', exchange)
-        await tester_func('fetchPositions', exchange, symbol)
+    dump(green('SYMBOL: ' + symbol))
+    dump(green('CODE: ' + code))
+    dump('Testing fetch_ticker:' + symbol)
+    await test_ticker(exchange, symbol)
+    dump('Testing fetch_tickers:' + symbol)
+    await test_tickers(exchange, symbol)
+    dump('Testing fetch_ohlcv:' + symbol)
+    await test_ohlcvs(exchange, symbol)
 
-# ------------------------------------------------------------------------------
-
-
-async def test_sign_in(exchange):
-    method = 'signIn'
-    if exchange.has[method]:
-        dump('Testing ' + method + '()')
-        await getattr(exchange, method)()
-        dump('signIn succeeded')
+    if exchange.id == 'coinmarketcap':
+        response = await exchange.fetchGlobal()
+        dump(green(response))
     else:
-        dump(green(exchange.id), method + '() is not supported')
+        dump('Testing fetch_order_book:' + symbol)
+        await test_order_book(exchange, symbol)
+        dump('Testing fetch_trades:' + symbol)
+        await test_trades(exchange, symbol)
+        if (not hasattr(exchange, 'apiKey') or (len(exchange.apiKey) < 1)):
+            return
+        method = 'signIn'
+        if exchange.has[method]:
+            dump('Testing ' + method + '()')
+            await getattr(exchange, method)()
+        dump('Testing fetch_orders:' + symbol)
+        await test_orders(exchange, symbol)
+        dump('Testing fetch_open_orders:' + symbol)
+        await test_open_orders(exchange, symbol)
+        dump('Testing fetch_closed_orders:' + symbol)
+        await test_closed_orders(exchange, symbol)
+        dump('Testing fetch_transactions:' + code)
+        await test_transactions(exchange, code)
+        dump('Testing fetch_balance')
+        await test_balance(exchange)
+        dump('Testing fetch_positions:' + symbol)
+        await test_positions(exchange, symbol)
 
 # ------------------------------------------------------------------------------
 
@@ -631,6 +612,8 @@ with open(keys_file, encoding='utf8') as file:
 
 # instantiate all exchanges
 for id in ccxt.exchanges:
+    if id == 'theocean':
+        continue
     exchange = getattr(ccxt, id)
     exchange_config = {'verbose': argv.verbose}
     if sys.version_info[0] < 3:
@@ -646,17 +629,19 @@ async def main():
 
     if argv.exchange:
 
-        exchange = exchanges[argv.exchange]
-        symbol = argv.symbol
+        if argv.exchange != 'theocean':
 
-        if hasattr(exchange, 'skip') and exchange.skip:
-            dump(green(exchange.id), 'skipped')
-        else:
-            if symbol:
-                await load_exchange(exchange)
-                await test_symbol(exchange, symbol)
+            exchange = exchanges[argv.exchange]
+            symbol = argv.symbol
+
+            if hasattr(exchange, 'skip') and exchange.skip:
+                dump(green(exchange.id), 'skipped')
             else:
-                await try_all_proxies(exchange, proxies)
+                if symbol:
+                    await load_exchange(exchange)
+                    await test_symbol(exchange, symbol)
+                else:
+                    await try_all_proxies(exchange, proxies)
 
     else:
         for exchange in sorted(exchanges.values(), key=lambda x: x.id):
