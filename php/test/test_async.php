@@ -82,6 +82,9 @@ foreach ($config as $id => $params) {
     }
 }
 
+
+// ### common language specific methods ###
+
 $tester_func_names = [
     'fetchTicker' => 'test_ticker',
     'fetchOrderBook' => 'test_order_book',
@@ -97,44 +100,41 @@ $tester_func_names = [
     'signIn' => 'test_sign_in',
 ];
 
-
-// ### common language specific methods ###
-
-function runTesterMethod($exchange, $method_name, ...$args){
+function run_tester_method($exchange, $method_name, ...$args){
     $tester_func_name = $GLOBALS['tester_func_names'][$method_name];
     return yield call_user_func_array('\\'.__NAMESPACE__ .'\\'.$tester_func_name, [$exchange, ...$args]);
 }
 
-function testMethodAvailableForCurrentLang($method_name){
+function test_method_available_for_current_lang($method_name){
     return array_key_exists($method_name, $GLOBALS['tester_func_names']);
 }
 
-function assertMethod ($condition, $message){
+function assert_method ($condition, $message){
     assert($condition, $message);
 }
 
-function getIncludedSymbols($exchange, $symbols){
+function get_included_symbols($exchange, $symbols){
     return array_filter($exchange->symbols, function($symbol) use ($symbols) {return in_array($symbol, $symbols);});
 }
 
-function getMarketsForCode($markets, $code) {
+function get_markets_for_code($markets, $code) {
     return array_filter($markets, function($market) use ($code){ return $market['base'] === $code;});
 }
 
-function getSymbolsFromMarkets($markets) {
+function get_symbols_from_markets($markets) {
     return array_map(function ($market){ return $market['symbol']; }, $markets);
 }
 
-function getActiveMarkets($markets) {
-    return array_filter($markets, function($market){ return !$exchange->safeValue ($market, 'active', false);});
+function get_active_markets($exchange, $markets) {
+    return array_filter($markets, function($market){ return $exchange->safe_value ($market, 'active') !== false;});
 }
 
-function findValueIndexInArray($arr, $value){
+function find_value_index_in_array($arr, $value){
     $result = array_search($value, $arr);
     return ($result === false ? -1 : $result);
 }
 
-function exceptionHint($exc) {
+function exception_hint($exc) {
     return '[' + get_class($exc) + '] ' + substr($exc->getMessage(), 0, 200);
 }
 

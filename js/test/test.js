@@ -138,8 +138,8 @@ function getSymbolsFromMarkets (markets) {
     return markets.map (market => market['symbol']);
 }
 
-function getActiveMarkets (markets) {
-    return markets.filter ((market) => !exchange.safeValue (market, 'active', false));
+function getActiveMarkets (exchange, markets) {
+    return markets.filter ((market) => exchange.safeValue (market, 'active') !== false);
 }
 
 function findValueIndexInArray (arr, value) {
@@ -330,7 +330,7 @@ async function testExchange (exchange) {
 
     if (symbol === undefined) {
         const markets = Object.values (exchange.markets);
-        const activeMarkets = getActiveMarkets (markets);
+        const activeMarkets = getActiveMarkets (exchange, markets);
         const activeSymbols = getSymbolsFromMarkets (activeMarkets);
         symbol = getTestSymbol (exchange, activeSymbols)
     }

@@ -119,6 +119,58 @@ sys.excepthook = handle_all_unhandled_exceptions
 # ------------------------------------------------------------------------------
 
 
+# ### common language specific methods ###
+
+
+localFunctions = locals() # get all functions defined in this file
+
+tester_func_names = {
+    'fetchTicker': 'test_ticker',
+    'fetchTickers': 'test_tickers',
+    'fetchOrderBook': 'test_order_book',
+    'fetchTrades': 'test_trades',
+    'fetchOrders': 'test_orders',
+    'fetchClosedOrders': 'test_closed_orders',
+    'fetchOpenOrders': 'test_open_orders',
+    'fetchPositions': 'test_positions',
+    'fetchTransactions': 'test_transactions',
+    'fetchOHLCV': 'test_ohlcvs',
+    'fetchBalance': 'test_balance',
+    'signIn': 'test_sign_in',
+}
+
+async def run_tester_method(exchange, method_name, *args):
+    tester_func_name = tester_func_names[method_name]
+    return await localFunctions[tester_func_name](exchange, *args)
+
+def test_method_available_for_current_lang(method_name):
+    return method_name in tester_func_names
+
+def assert_method(condition, message):
+    assert(condition, message)
+    
+def get_included_symbols(exchange, symbols):
+    return list(filter(lambda symbol: symbol in symbols, exchange.symbols))
+
+def get_markets_for_code(markets, code):
+    return list(filter(lambda market: market['base'] == code, markets))
+
+def get_symbols_from_markets(markets):
+    return list(map(lambda market: market['symbol'], markets))
+
+def get_active_markets(exchange, markets):
+    return dict(filter(lambda market: exchange.safe_value (market, 'active') is not False, markets))
+
+def find_value_index_in_array(arr, value):
+    return arr.index(value)
+
+def exception_hint(exc):
+    return '[' + type(exc).__name__ + '] ' + str(exc)[0:200]
+
+# ### end of language specific common methods ###
+
+# ------------------------------------------------------------------------------
+
 async def test_order_book(exchange, symbol):
     method = 'fetchOrderBook'
     if exchange.has[method]:
@@ -390,6 +442,36 @@ async def test_balance(exchange):
 # ------------------------------------------------------------------------------
 
 
+# prefer local testing keys to global keys
+keys_folder = os.path.dirname(root)
+keys_global = os.path.join(keys_folder, 'keys.json')
+keys_local = os.path.join(keys_folder, 'keys.local.json')
+keys_file = keys_local if os.path.exists(keys_local) else keys_global
+
+# load the api keys from config
+with open(keys_file, encoding='utf8') as file:
+    config = json.load(file)
+
+# instantiate all exchanges
+for id in ccxt.exchanges:
+    if id == 'theocean':
+        continue
+    exchange = getattr(ccxt, id)
+    exchange_config = {'verbose': argv.verbose}
+    if sys.version_info[0] < 3:
+        exchange_config.update()
+    if id in config:
+        exchange_config = ccxt.Exchange.deep_extend(exchange_config, config[id])
+    exchanges[id] = exchange(exchange_config)
+
+# ------------------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------------
+# ### AUTO-TRANSPILER-START ###
+# ----------------------------------------------------------------------------
+
+
 async def test_symbol(exchange, symbol, code):
     dump(green('SYMBOL: ' + symbol))
     dump(green('CODE: ' + code))
@@ -600,27 +682,6 @@ proxies = [
     'https://cors-anywhere.herokuapp.com/',
 ]
 
-# prefer local testing keys to global keys
-keys_folder = os.path.dirname(root)
-keys_global = os.path.join(keys_folder, 'keys.json')
-keys_local = os.path.join(keys_folder, 'keys.local.json')
-keys_file = keys_local if os.path.exists(keys_local) else keys_global
-
-# load the api keys from config
-with open(keys_file, encoding='utf8') as file:
-    config = json.load(file)
-
-# instantiate all exchanges
-for id in ccxt.exchanges:
-    if id == 'theocean':
-        continue
-    exchange = getattr(ccxt, id)
-    exchange_config = {'verbose': argv.verbose}
-    if sys.version_info[0] < 3:
-        exchange_config.update()
-    if id in config:
-        exchange_config = ccxt.Exchange.deep_extend(exchange_config, config[id])
-    exchanges[id] = exchange(exchange_config)
 
 # ------------------------------------------------------------------------------
 
@@ -651,11 +712,6 @@ async def main():
                 await try_all_proxies(exchange, proxies)
 
 # ------------------------------------------------------------------------------
-
-
-# ----------------------------------------------------------------------------
-# ### AUTO-TRANSPILER-START ###
-# ----------------------------------------------------------------------------
 
 
 # ----------------------------------------------------------------------------
