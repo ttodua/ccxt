@@ -104,7 +104,7 @@ for (const [credential, isRequired] of Object.entries (requiredCredentials)) {
 
 if (settings && settings.skip) {
     console.log ('[Skipped]', { 'exchange': exchangeId, 'symbol': exchangeSymbol || 'all' })
-    process.exit ();
+    process.exit ()
 }
 
 
