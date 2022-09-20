@@ -441,7 +441,7 @@ async function tryAllProxies (exchange, proxies) {
 
         } catch (e) {
 
-            currentProxy = (currentProxy + 1) % proxies.length;
+            currentProxy = (currentProxy + 1) % maxRetries;
             console.log (exceptionHint (e));
             if (e instanceof ccxt.DDoSProtection) {
                 continue;

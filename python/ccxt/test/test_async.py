@@ -139,15 +139,19 @@ tester_func_names = {
     'signIn': 'test_sign_in',
 }
 
+
 async def run_tester_method(exchange, method_name, *args):
     tester_func_name = tester_func_names[method_name]
     return await localFunctions[tester_func_name](exchange, *args)
 
+
 def test_method_available_for_current_lang(method_name):
     return method_name in tester_func_names
 
+
 def find_value_index_in_array(arr, value):
     return arr.index(value)
+
 
 def exception_hint(exc):
     return '[' + type(exc).__name__ + '] ' + str(exc)[0:200]
@@ -155,6 +159,7 @@ def exception_hint(exc):
 # ### end of language specific common methods ###
 
 # ------------------------------------------------------------------------------
+
 
 async def test_order_book(exchange, symbol):
     method = 'fetchOrderBook'
