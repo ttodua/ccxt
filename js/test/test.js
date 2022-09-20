@@ -111,7 +111,10 @@ if (settings && settings.skip) {
     process.exit ();
 }
 
-async function runMethod(exchange, methodName, ... args) {
+
+// ### common language specific methods ###
+
+async function runTesterMethod(exchange, methodName, ... args) {
     return await tests[methodName] (exchange, ... args);
 }
 
@@ -146,6 +149,7 @@ function findValueIndexInArray (arr, value) {
 function exceptionHint (exc) {
     return '[' + exc.constructor.name + '] ' + exc.message.slice (0, 200);
 }
+// ### end of language specific common methods ###
 
 // ----------------------------------------------------------------------------
 // ### AUTO-TRANSPILER-START ###
@@ -155,7 +159,7 @@ async function tester_func (methodName, exchange, ... args) {
     if (exchange.has[methodName]) {
         if (testMethodAvailableForCurrentLang(methodName)) {
             dump ('Testing', exchange.id, methodName, '(', ... args, ')');
-            return await runMethod(methodName, exchange, ... args);
+            return await runTesterMethod(methodName, exchange, ... args);
         } else {
             dump (' # Skipping Test : ',  exchange.id, '->', methodName, ' (test method not available in current language)');
         }
