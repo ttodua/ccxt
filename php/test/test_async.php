@@ -279,17 +279,17 @@ function test_ohlcvs($exchange, $symbol) {
 //-----------------------------------------------------------------------------
 
 function test_symbol($exchange, $symbol, $code) {
-    tester_func('test_ticker', $exchange, $symbol);
+    yield tester_func('test_ticker', $exchange, $symbol);
     yield tester_func('test_order_book', $exchange, $symbol);
     yield tester_func('test_trades', $exchange, $symbol);
     yield tester_func('test_ohlcvs', $exchange, $symbol);
     if ($exchange->check_required_credentials(false)) {
-        tester_func('test_sign_in', $exchange);
-        tester_func('test_orders', $exchange, $symbol);
-        tester_func('test_closed_orders', $exchange, $symbol);
-        tester_func('test_open_orders', $exchange, $symbol);
-        tester_func('test_transactions', $exchange, $code);
-        tester_func('test_balance', $exchange);
+        yield tester_func('test_sign_in', $exchange);
+        yield tester_func('test_orders', $exchange, $symbol);
+        yield tester_func('test_closed_orders', $exchange, $symbol);
+        yield tester_func('test_open_orders', $exchange, $symbol);
+        yield tester_func('test_transactions', $exchange, $code);
+        yield tester_func('test_balance', $exchange);
     }
 }
 
@@ -328,7 +328,7 @@ function test_sign_in($exchange) {
     $method = 'signIn';
     if ($exchange->has[$method]) {
         dump(green($exchange->id),  'testing ' . $method . '()');
-        $exchange->sign_in();
+        yield $exchange->sign_in();
         dump('signIn succeeded');
     } else {
         dump($method . '() is not supported');
