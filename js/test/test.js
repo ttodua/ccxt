@@ -144,7 +144,7 @@ function findValueIndexInArray (arr, value) {
 }
 
 function exceptionHint (exc) {
-    return '[' + exceptionTypeName (exc.constructor.name) + '] ' + exc.message.slice (0, 200);
+    return '[' + exc.constructor.name + '] ' + exc.message.slice (0, 200);
 }
 
 // ----------------------------------------------------------------------------
