@@ -346,6 +346,32 @@ function test_accounts($exchange) {
 
 //-----------------------------------------------------------------------------
 
+function test_balance($exchange) {
+    $method = 'fetchBalance';
+    if ($exchange->has[$method]) {
+        dump(green($exchange->id),  'executing ' . $method . '()');
+        $balance = yield $exchange->fetch_balance();
+        dump('fetched', green(count(array_keys($balance))), 'balance items');
+    } else {
+        dump($method . '() is not supported');
+    }
+}
+
+//-----------------------------------------------------------------------------
+
+function test_sign_in($exchange) {
+    $method = 'signIn';
+    if ($exchange->has[$method]) {
+        dump(green($exchange->id),  'testing ' . $method . '()');
+        yield $exchange->sign_in();
+        dump('signIn succeeded');
+    } else {
+        dump($method . '() is not supported');
+    }
+}
+
+//-----------------------------------------------------------------------------
+
 // ----------------------------------------------------------------------------
 // ### AUTO-TRANSPILER-START ###
 // ----------------------------------------------------------------------------
