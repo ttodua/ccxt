@@ -213,7 +213,7 @@ async function loadExchange (exchange) {
         }
     }
 
-    const resultMsg = '';
+    let resultMsg = '';
     const resultLength = resultSymbols.length;
     const exchangeSymbolsLength = exchange.symbols.length;
     if (resultLength > 0) {
