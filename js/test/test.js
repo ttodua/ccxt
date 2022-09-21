@@ -218,9 +218,9 @@ async function loadExchange (exchange) {
     const exchangeSymbolsLength = exchange.symbols.length;
     if (resultLength > 0) {
         if (exchangeSymbolsLength > resultLength) {
-            resultMsg = result.join (', ') + ' + more...';
+            resultMsg = resultSymbols.join (', ') + ' + more...';
         } else {
-            resultMsg = result.join (', ');
+            resultMsg = resultSymbols.join (', ');
         }
     }
 
