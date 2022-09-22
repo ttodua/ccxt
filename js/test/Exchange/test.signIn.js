@@ -15,7 +15,7 @@ module.exports = async (exchange) => {
 
         await exchange[method] (code)
 
-        console.log ('sign-in successful')
+        console.log (method + ' successful')
 
     } else {
 
