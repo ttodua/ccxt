@@ -111,7 +111,7 @@ if (settings && settings.skip) {
 // ### common language specific methods ###
 
 async function runTesterMethod(exchange, methodName, ... args) {
-    return await tests[methodName] (exchange, ... args);
+    return await tests[methodName](exchange, ... args);
 }
 
 function testMethodAvailableForCurrentLang(methodName) {
@@ -135,7 +135,7 @@ async function tester_func (methodName, exchange, ... args) {
     if (exchange.has[methodName]) {
         if (testMethodAvailableForCurrentLang(methodName)) {
             console.log ('Testing', exchange.id, methodName, '(', ... args, ')');
-            return await runTesterMethod(methodName, exchange, ... args);
+            return await runTesterMethod(exchange, methodName, ... args);
         } else {
             console.log (' # Skipping Test : ',  exchange.id, '->', methodName, ' (test method not available in current language)');
         }
