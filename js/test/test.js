@@ -131,7 +131,7 @@ function exceptionHint (exc) {
 // ### AUTO-TRANSPILER-START ###
 // ----------------------------------------------------------------------------
 
-async function tester_func (methodName, exchange, ... args) {
+async function test (methodName, exchange, ... args) {
     if (exchange.has[methodName]) {
         if (testMethodAvailableForCurrentLang(methodName)) {
             console.log ('Testing', exchange.id, methodName, '(', ... args, ')');
@@ -146,12 +146,12 @@ async function tester_func (methodName, exchange, ... args) {
 
 async function testSymbol (exchange, symbol) {
 
-    await tester_func ('loadMarkets', exchange);
-    await tester_func ('fetchCurrencies', exchange);
-    await tester_func ('fetchTicker', exchange, symbol);
-    await tester_func ('fetchTickers', exchange, symbol);
-    await tester_func ('fetchOHLCV', exchange, symbol);
-    await tester_func ('fetchTrades', exchange, symbol);
+    await test ('loadMarkets', exchange);
+    await test ('fetchCurrencies', exchange);
+    await test ('fetchTicker', exchange, symbol);
+    await test ('fetchTickers', exchange, symbol);
+    await test ('fetchOHLCV', exchange, symbol);
+    await test ('fetchTrades', exchange, symbol);
 
     if (exchange.id === 'coinbase') {
 
@@ -159,9 +159,9 @@ async function testSymbol (exchange, symbol) {
 
     } else {
 
-        await tester_func ('fetchOrderBook', exchange, symbol);
-        await tester_func ('fetchL2OrderBook', exchange, symbol);
-        await tester_func ('fetchOrderBooks', exchange);
+        await test ('fetchOrderBook', exchange, symbol);
+        await test ('fetchL2OrderBook', exchange, symbol);
+        await test ('fetchOrderBooks', exchange);
     }
 }
 
@@ -370,45 +370,45 @@ async function testExchange (exchange) {
 
     exchange.checkRequiredCredentials ();
 
-    await tester_func ('signIn', exchange);
+    await test ('signIn', exchange);
 
     // move to testnet/sandbox if possible before accessing the balance
     // if (exchange.urls['test'])
     //    exchange.urls['api'] = exchange.urls['test']
 
-    const balance = await tester_func ('fetchBalance', exchange);
-    await tester_func ('fetchAccounts', exchange);
-    await tester_func ('fetchTransactionFees', exchange);
-    await tester_func ('fetchTradingFees', exchange);
-    await tester_func ('fetchStatus', exchange);
-    await tester_func ('fetchOpenInterestHistory', exchange, symbol);
-    await tester_func ('fetchOrders', exchange, symbol);
-    await tester_func ('fetchOpenOrders', exchange, symbol);
-    await tester_func ('fetchClosedOrders', exchange, symbol);
-    await tester_func ('fetchMyTrades', exchange, symbol);
-    await tester_func ('fetchLeverageTiers', exchange, symbol);
-    await tester_func ('fetchOpenInterestHistory', exchange, symbol);
+    const balance = await test ('fetchBalance', exchange);
+    await test ('fetchAccounts', exchange);
+    await test ('fetchTransactionFees', exchange);
+    await test ('fetchTradingFees', exchange);
+    await test ('fetchStatus', exchange);
+    await test ('fetchOpenInterestHistory', exchange, symbol);
+    await test ('fetchOrders', exchange, symbol);
+    await test ('fetchOpenOrders', exchange, symbol);
+    await test ('fetchClosedOrders', exchange, symbol);
+    await test ('fetchMyTrades', exchange, symbol);
+    await test ('fetchLeverageTiers', exchange, symbol);
+    await test ('fetchOpenInterestHistory', exchange, symbol);
 
-    await tester_func ('fetchPositions', exchange, symbol);
+    await test ('fetchPositions', exchange, symbol);
 
     if ('fetchLedger' in tests) {
-        await tester_func ('fetchLedger', exchange, code);
+        await test ('fetchLedger', exchange, code);
     }
 
-    await tester_func ('fetchTransactions', exchange, code);
-    await tester_func ('fetchDeposits', exchange, code);
-    await tester_func ('fetchWithdrawals', exchange, code);
-    await tester_func ('fetchBorrowRate', exchange, code);
-    await tester_func ('fetchBorrowRates', exchange);
-    await tester_func ('fetchBorrowInterest', exchange, code);
-    await tester_func ('fetchBorrowInterest', exchange, code, symbol);
+    await test ('fetchTransactions', exchange, code);
+    await test ('fetchDeposits', exchange, code);
+    await test ('fetchWithdrawals', exchange, code);
+    await test ('fetchBorrowRate', exchange, code);
+    await test ('fetchBorrowRates', exchange);
+    await test ('fetchBorrowInterest', exchange, code);
+    await test ('fetchBorrowInterest', exchange, code, symbol);
 
     if (exchange.extendedTest) {
 
-        await tester_func ('InvalidNonce', exchange, symbol);
-        await tester_func ('OrderNotFound', exchange, symbol);
-        await tester_func ('InvalidOrder', exchange, symbol);
-        await tester_func ('InsufficientFunds', exchange, symbol, balance); // danger zone - won't execute with non-empty balance
+        await test ('InvalidNonce', exchange, symbol);
+        await test ('OrderNotFound', exchange, symbol);
+        await test ('InvalidOrder', exchange, symbol);
+        await test ('InsufficientFunds', exchange, symbol, balance); // danger zone - won't execute with non-empty balance
     }
 }
 
