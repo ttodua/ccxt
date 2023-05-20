@@ -68,7 +68,6 @@ fi
 git remote set-branches origin 'master'
 git fetch --depth=1
 
-
 ##### DETECT CHANGES #####
 diff=$(git diff origin/master --name-only)
 echo "$diff"
