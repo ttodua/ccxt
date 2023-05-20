@@ -78,8 +78,9 @@ diff=$(echo "$diff" | sed -e "s/python\/qa.py//") # temporarily remove this scri
 diff=$(echo "$diff" | sed -e "s/python\/tox.ini//") # temporarily remove this script from diff
 echo "222222222222"
 echo "$diff"
+echo "3333333333"
 replace_string=""
-echo "${diff1//^build.sh/${replace_string}}"
+echo "${diff1//build\.sh/${replace_string}}"
 
 critical_pattern='Client(Trait)?\.php|Exchange\.php|\/test|\/base|^build|static_dependencies|^run-tests|package(-lock)?\.json|ccxt\.ts|__init__.py'
 if [[ "$diff" =~ $critical_pattern ]]; then
