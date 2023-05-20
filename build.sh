@@ -64,6 +64,11 @@ if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
   build_and_test_all
 fi
 
+
+git remote set-branches origin 'master'
+git fetch --depth=1
+
+
 ##### DETECT CHANGES #####
 diff=$(git diff origin/master --name-only)
 echo "$diff"
