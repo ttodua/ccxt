@@ -72,15 +72,16 @@ git fetch --depth=1
 diff1=$(git diff origin/master --name-only)
 echo "111111111"
 echo "$diff1"
-diff=$(echo "$diff1" | sed -e "s/^build.sh//") # temporarily remove this script from diff
-diff=$(echo "$diff" | sed -e "s/^package.json//") # temporarily remove this script from diff
-diff=$(echo "$diff" | sed -e "s/python\/qa.py//") # temporarily remove this script from diff
-diff=$(echo "$diff" | sed -e "s/python\/tox.ini//") # temporarily remove this script from diff
-echo "222222222222"
-echo "$diff"
-echo "3333333333"
-replace_string=""
-echo "${diff1//build\.sh/${replace_string}}"
+# temporarily remove the below script from diff
+diff=$(echo "$diff1" | sed -e "s/^build.sh//")
+diff=$(echo "$diff" | sed -e "s/^package.json//")
+diff=$(echo "$diff" | sed -e "s/python\/qa.py//")
+diff=$(echo "$diff" | sed -e "s/python\/tox.ini//")
+replace_with=""
+diff="${diff1//^build\.sh/${replace_with}}"
+diff="${diff//^package\.json/${replace_with}}"
+diff="${diff//python\/qa\.py/${replace_with}}"
+diff="${diff//python\/tox\.ini/${replace_with}}"
 
 critical_pattern='Client(Trait)?\.php|Exchange\.php|\/test|\/base|^build|static_dependencies|^run-tests|package(-lock)?\.json|ccxt\.ts|__init__.py'
 if [[ "$diff" =~ $critical_pattern ]]; then
