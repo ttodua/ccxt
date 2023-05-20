@@ -69,15 +69,17 @@ git remote set-branches origin 'master'
 git fetch --depth=1
 
 ##### DETECT CHANGES #####
-diff=$(git diff origin/master --name-only)
+diff1=$(git diff origin/master --name-only)
 echo "111111111"
-echo "$diff"
-diff=$(echo "$diff" | sed "s/^build.sh//") # temporarily remove this script from diff
-diff=$(echo "$diff" | sed "s/^package.json//") # temporarily remove this script from diff
-diff=$(echo "$diff" | sed "s/python\/qa.py//") # temporarily remove this script from diff
-diff=$(echo "$diff" | sed "s/python\/tox.ini//") # temporarily remove this script from diff
+echo "$diff1"
+diff=$(echo "$diff1" | sed -e "s/^build.sh//") # temporarily remove this script from diff
+diff=$(echo "$diff" | sed -e "s/^package.json//") # temporarily remove this script from diff
+diff=$(echo "$diff" | sed -e "s/python\/qa.py//") # temporarily remove this script from diff
+diff=$(echo "$diff" | sed -e "s/python\/tox.ini//") # temporarily remove this script from diff
 echo "222222222222"
 echo "$diff"
+replace_string=""
+echo "${diff1//^build.sh/${replace_string}}"
 
 critical_pattern='Client(Trait)?\.php|Exchange\.php|\/test|\/base|^build|static_dependencies|^run-tests|package(-lock)?\.json|ccxt\.ts|__init__.py'
 if [[ "$diff" =~ $critical_pattern ]]; then
