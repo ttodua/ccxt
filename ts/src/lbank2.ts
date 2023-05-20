@@ -20,7 +20,7 @@ export default class lbank2 extends Exchange {
             'countries': [ 'CN' ],
             'version': 'v2',
             // 50 per second for making and cancelling orders 1000ms / 50 = 20
-            // 20 per second for all other requests, cost = 50 / 20 = 2.5
+            // 20 per second for all other requests, cost = 50 / 20 = 2.5 dummy
             'rateLimit': 20,
             'has': {
                 'CORS': false,

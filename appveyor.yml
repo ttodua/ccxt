@@ -2,51 +2,17 @@ environment:
   matrix:
     - nodejs_version: '16'
 install:
-  - ps: Install-Product node $env:nodejs_version
   - set LIB=C:\OpenSSL-Win64\lib;%LIB%
   - set INCLUDE=C:\OpenSSL-Win64\include;%INCLUDE%
   - set CI=true
-  # - npm install --global npm@latest
-  - set PATH=%APPDATA%\npm;C:\Python38;C:\Python38\Scripts;%PATH%
-  # Remove python2.7 from path
-  - set PATH=%PATH:C:\Python27;=%
-  - set PATH=%PATH:C:\Python27\Scripts;=%
-  - echo %PATH%
-  - npm install
-  - python --version
-  - pip --version
-  - python -m pip install --upgrade pip setuptools
-  - pip install tox
-  - pip install requests
-  - pip install cryptography
-  - set PATH=C:\Program Files\curl;%PATH%
-  - setx PATH "%PATH%"
-  - ps: Set-Service wuauserv -StartupType Manual
-  - cinst -y php --version 8.1.10 --allow-empty-checksums
-  - cinst composer -i -y
-  # - php -i
-  - cd c:\tools\php81
-  - copy php.ini-production php.ini
-  - echo date.timezone="UTC" >> php.ini
-  - echo extension_dir=ext >> php.ini
-  - echo extension=php_curl.dll >> php.ini
-  - echo extension=php_mbstring.dll >> php.ini
-  - echo extension=php_gmp.dll >> php.ini
-  - echo extension=php_openssl.dll >> php.ini
-  - cd %APPVEYOR_BUILD_FOLDER%
-  - refreshenv
-  - composer install
+  - move "C:\Program Files\Git\usr\bin\msys-2.0.dll" "C:\Program Files\Git\usr\bin\msys-2.0-bak.dll"
+  - cmd: build.sh
 matrix:
   fast_finish: true
 build: off
 clone_depth: 1
 test_script:
   - refreshenv
-  - node --version
-  - npm --version
-  - python --version
-  - npm run force-build
-  # - npm run test-base
 cache:
   - '%APPDATA%\npm-cache'
   - '%LOCALAPPDATA%\pip\Cache'
