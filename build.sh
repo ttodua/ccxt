@@ -70,12 +70,13 @@ git fetch --depth=1
 
 ##### DETECT CHANGES #####
 diff=$(git diff origin/master --name-only)
+echo "111111111"
 echo "$diff"
-diff=$(echo "$diff" | sed -e "s/^build.sh//") # temporarily remove this script from diff
-diff=$(echo "$diff" | sed -e "s/^package.json//") # temporarily remove this script from diff
-diff=$(echo "$diff" | sed -e "s/python\/qa.py//") # temporarily remove this script from diff
-diff=$(echo "$diff" | sed -e "s/python\/tox.ini//") # temporarily remove this script from diff
-
+diff=$(echo "$diff" | sed "s/^build.sh//") # temporarily remove this script from diff
+diff=$(echo "$diff" | sed "s/^package.json//") # temporarily remove this script from diff
+diff=$(echo "$diff" | sed "s/python\/qa.py//") # temporarily remove this script from diff
+diff=$(echo "$diff" | sed "s/python\/tox.ini//") # temporarily remove this script from diff
+echo "222222222222"
 echo "$diff"
 
 critical_pattern='Client(Trait)?\.php|Exchange\.php|\/test|\/base|^build|static_dependencies|^run-tests|package(-lock)?\.json|ccxt\.ts|__init__.py'
