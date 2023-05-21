@@ -645,10 +645,15 @@ async function exportEverything () {
 
 // ============================================================================
 // main entry point
+console.log("zzzzzzzzz1");
 let metaUrl = import.meta.url
+console.log("zzzzzzzzz2");
 metaUrl = metaUrl.substring(0, metaUrl.lastIndexOf(".")) // remove extension
+console.log("zzzzzzzzz3");
 const url = pathToFileURL(process.argv[1]);
+console.log("zzzzzzzzz4");
 const href = (url.href.indexOf('.') !== -1) ? url.href.substring(0, url.href.lastIndexOf(".")) : url.href;
+console.log("zzzzzzzzz5");
 if (metaUrl === href) {
 
     // if called directly like `node module`
