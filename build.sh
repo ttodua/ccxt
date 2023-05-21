@@ -58,6 +58,7 @@ build_and_test_all () {
   exit
 }
 
+npm i
 # faster version of pre-transpile (without bundle and atomic linting)
 npm run export-exchanges && npm run tsBuild && npm run emitAPI
 exchange="poloniex"
