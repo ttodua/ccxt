@@ -67,12 +67,18 @@ cd $APPVEYOR_BUILD_FOLDER
 ls
 dir ./
 
-yourfilenames=`ls ./*`
+yourfilenames=`ls ./`
 for eachfile in $yourfilenames
 do
    echo $eachfile
 done
 
+echo "zzz01"
+search_dir=./
+for entry in "$search_dir"/*
+do
+  echo "$entry"
+done
 echo "zzz1"
 npm i
 # faster version of pre-transpile (without bundle and atomic linting)
