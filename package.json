@@ -56,7 +56,7 @@
     "cli.py": "python3 ./examples/py/cli.py",
     "cli.php": "php ./examples/php/cli.php",
     "cli.ts": "node --loader ts-node/esm examples/ts/cli.ts",
-    "export-exchanges": "node build/export-exchanges",
+    "export-exchanges": "node ./build/export-exchanges.js",
     "capabilities": "node ./examples/js/exchange-capabilities.js",
     "git-ignore-generated-files": "node build/git-ignore-generated-files.cjs",
     "git-unignore-generated-files": "node build/git-ignore-generated-files.cjs --unignore",
