@@ -60,33 +60,25 @@ build_and_test_all () {
 npm i ololog
 npm i ansicolor
 npm i piscina
-# APPVEYOR_BUILD_FOLDER
-ls
-echo "zzz0"
-cd $APPVEYOR_BUILD_FOLDER
-ls
-dir ./
 
-yourfilenames=`ls ./`
-for eachfile in $yourfilenames
-do
-   echo $eachfile
-done
+ff () {
+  search_dir=./
+  for entry in "$search_dir"/*
+  do
+    echo "$entry"
+  done
+}
 
-echo "zzz01"
-search_dir=./
-for entry in "$search_dir"/*
-do
-  echo "$entry"
-done
+ 
 echo "zzz1"
-npm i
+ff
 # faster version of pre-transpile (without bundle and atomic linting)
 npm run export-exchanges 
 echo "zzz2"
-dir ./
+ff
 npm run tsBuild 
 echo "zzz3"
+ff
 dir
 npm run emitAPI 
 echo "zzz4"
