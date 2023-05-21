@@ -58,9 +58,22 @@ build_and_test_all () {
   exit
 }
 
+dir
+echo "zzz1"
 npm i
 # faster version of pre-transpile (without bundle and atomic linting)
-npm run export-exchanges && npm run tsBuild && npm run emitAPI
+npm run export-exchanges 
+echo "zzz2"
+dir
+npm run tsBuild 
+echo "zzz3"
+dir
+npm run emitAPI 
+echo "zzz4"
+dir
 exchange="poloniex"
 npm run eslint "ts/src/$exchange.ts"
+echo "zzz5"
+dir
 node build/transpile.js $exchange --force --child
+echo "zzz6"
