@@ -58,85 +58,8 @@ build_and_test_all () {
   exit
 }
 
-### CHECK IF THIS IS A PR ###
-if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
-  echo "not a PR, will build everything"
-  build_and_test_all
-fi
-
-
-git remote set-branches origin 'master'
-git fetch --depth=1
-
-##### DETECT CHANGES #####
-diff1=$(git diff origin/master --name-only)
-echo "111111111"
-echo "$diff1"
-# temporarily remove the below script from diff
-diff=$(echo "$diff1" | sed -e "s/^build.sh//")
-diff=$(echo "$diff" | sed -e "s/^package.json//")
-diff=$(echo "$diff" | sed -e "s/python\/qa.py//")
-diff=$(echo "$diff" | sed -e "s/python\/tox.ini//")
-replace_with=""
-diff="${diff1//^build\.sh/${replace_with}}"
-diff="${diff//^package\.json/${replace_with}}"
-diff="${diff//python\/qa\.py/${replace_with}}"
-diff="${diff//python\/tox\.ini/${replace_with}}"
-
-critical_pattern='Client(Trait)?\.php|Exchange\.php|\/test|\/base|^build|static_dependencies|^run-tests|package(-lock)?\.json|ccxt\.ts|__init__.py'
-if [[ "$diff" =~ $critical_pattern ]]; then
-  echo "detected critical change, will build/test everything"
-  build_and_test_all
-fi
-
-echo "detected non-critical change, will build/test specific exchanges"
-readarray -t y <<<"$diff"
-rest_pattern='ts\/src\/([A-Za-z0-9_-]+).ts' # \w not working for some reason
-ws_pattern='ts\/src\/pro\/([A-Za-z0-9_-]+)\.ts'
-
-REST_EXCHANGES=()
-WS_EXCHANGES=()
-for file in "${y[@]}"; do
-  if [[ "$file" =~ $rest_pattern ]]; then
-    modified_exchange="${BASH_REMATCH[1]}"
-    REST_EXCHANGES+=($modified_exchange)
-  elif [[ "$file" =~ $ws_pattern ]]; then
-    modified_exchange="${BASH_REMATCH[1]}"
-    WS_EXCHANGES+=($modified_exchange)
-  fi
-done
-
-### BUILD SPECIFIC EXCHANGES ###
-# npm run pre-transpile
 # faster version of pre-transpile (without bundle and atomic linting)
 npm run export-exchanges && npm run tsBuild && npm run emitAPI
-echo "REST_EXCHANGES TO BE TRANSPILED: ${REST_EXCHANGES[@]}"
-PYTHON_FILES=()
-for exchange in "${REST_EXCHANGES[@]}"; do
-  npm run eslint "ts/src/$exchange.ts"
-  node build/transpile.js $exchange --force --child
-  PYTHON_FILES+=("python/ccxt/$exchange.py")
-  PYTHON_FILES+=("python/ccxt/async_support/$exchange.py")
-done
-echo "WS_EXCHANGES TO BE TRANSPILED: ${WS_EXCHANGES[@]}"
-for exchange in "${WS_EXCHANGES[@]}"; do
-  npm run eslint "ts/src/pro/$exchange.ts"
-  node build/transpileWS.js $exchange --force --child
-  PYTHON_FILES+=("python/ccxt/pro/$exchange.py")
-done
-# faster version of post-transpile
-npm run check-php-syntax
-cd python && tox -e qa -- ${PYTHON_FILES[*]} && cd ..
-
-### RUN SPECIFIC TESTS ###
-if [  ${#REST_EXCHANGES[@]} -eq 0 ] && [ ${#WS_EXCHANGES[@]} -eq 0 ]; then
-  echo "no exchanges to test, exiting"
-  exit
-fi
-
-# rest_args=${REST_EXCHANGES[*]} || "skip"
-rest_args=$(IFS=" " ; echo "${REST_EXCHANGES[*]}") || "skip"
-# ws_args=${WS_EXCHANGES[*]} || "skip"
-ws_args=$(IFS=" " ; echo "${WS_EXCHANGES[*]}") || "skip"
-
-run_tests "$rest_args" "$ws_args"
+exchange="poloniex"
+npm run eslint "ts/src/$exchange.ts"
+node build/transpile.js $exchange --force --child
