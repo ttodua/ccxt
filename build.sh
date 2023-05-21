@@ -57,18 +57,21 @@ build_and_test_all () {
   run_tests
   exit
 }
-
+npm i ololog
+npm i ansicolor
+npm i piscina
 # APPVEYOR_BUILD_FOLDER
 ls
 echo "zzz0"
 cd $APPVEYOR_BUILD_FOLDER
 ls
+dir ./
 echo "zzz1"
 npm i
 # faster version of pre-transpile (without bundle and atomic linting)
 npm run export-exchanges 
 echo "zzz2"
-dir
+dir ./
 npm run tsBuild 
 echo "zzz3"
 dir

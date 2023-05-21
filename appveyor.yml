@@ -14,13 +14,9 @@ clone_depth: 1
 test_script:
   - refreshenv
 cache:
-  - '%APPDATA%\npm-cache'
-  - '%LOCALAPPDATA%\pip\Cache'
-  - '%LOCALAPPDATA%\Composer\files -> composer.lock'
   # - C:\ProgramData\chocolatey\bin
   # - C:\ProgramData\chocolatey\lib
   # - C:\tools\php81
-  - .cache
 after_build:
   # Remove old or huge cache files to hopefully not exceed the 1GB cache limit.
   #
@@ -29,8 +25,4 @@ after_build:
   # current and having a cache at all.
   # NB: This is done only `on_success` since the cache in uploaded only on
   # success anyway.
-  - C:\cygwin\bin\find "%LOCALAPPDATA%\pip" -type f -mtime +360 -delete
-  - C:\cygwin\bin\find "%LOCALAPPDATA%\pip" -type f -size +10M -delete
-  - C:\cygwin\bin\find "%LOCALAPPDATA%\pip" -empty -delete
   # Show size of cache
-  - C:\cygwin\bin\du -hs "%LOCALAPPDATA%\pip\Cache"
