@@ -5,8 +5,7 @@
 // ----------------------------------------------------------------------------
 
 import fs from 'fs'
-import log  from 'ololog'
-import ansi from 'ansicolor'
+import log  from 'ololog' 
 import { pathToFileURL } from 'url'
 import { countries } from './countries.js'
 import { execSync } from 'child_process';
@@ -15,9 +14,7 @@ import asTable from 'as-table'
 import { promisify } from 'util'
 
 const { keys, values, entries, fromEntries } = Object
-
-ansi.nice
-
+ 
 const unlimitedLog = log.unlimited;
 
 function cloneGitHubWiki (gitWikiPath) {

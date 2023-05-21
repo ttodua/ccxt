@@ -57,9 +57,6 @@ build_and_test_all () {
   run_tests
   exit
 }
-npm i ololog
-npm i ansicolor
-npm i piscina
 
 ff () {
   search_dir=./
@@ -70,22 +67,7 @@ ff () {
 }
 
  
-echo "zzz1"
-ff
 # faster version of pre-transpile (without bundle and atomic linting)
 npm run export-exchanges 
 echo "zzz2"
 ff
-npm run tsBuild 
-echo "zzz3"
-ff
-dir
-npm run emitAPI 
-echo "zzz4"
-dir
-exchange="poloniex"
-npm run eslint "ts/src/$exchange.ts"
-echo "zzz5"
-dir
-node build/transpile.js $exchange --force --child
-echo "zzz6"
