@@ -59,10 +59,10 @@ build_and_test_all () {
 }
 
 # APPVEYOR_BUILD_FOLDER
-dir
+ls
 echo "zzz0"
 cd $APPVEYOR_BUILD_FOLDER
-dir
+ls
 echo "zzz1"
 npm i
 # faster version of pre-transpile (without bundle and atomic linting)
