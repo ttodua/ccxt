@@ -6,7 +6,8 @@ install:
   - set INCLUDE=C:\OpenSSL-Win64\include;%INCLUDE%
   - set CI=true
   - move "C:\Program Files\Git\usr\bin\msys-2.0.dll" "C:\Program Files\Git\usr\bin\msys-2.0-bak.dll"
-  - npm i
+  - npm i ololog
+  - npm i as-table
   - cmd: build.sh
 matrix:
   fast_finish: true
