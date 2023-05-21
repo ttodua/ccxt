@@ -58,6 +58,10 @@ build_and_test_all () {
   exit
 }
 
+# APPVEYOR_BUILD_FOLDER
+dir
+echo "zzz0"
+cd $APPVEYOR_BUILD_FOLDER
 dir
 echo "zzz1"
 npm i
