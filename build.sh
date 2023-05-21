@@ -75,4 +75,5 @@ npm run export-exchanges2
 echo "zz1b"
 npm run export-exchanges
 echo "zz2"
+node ./build/export-exchanges.js
 ff
