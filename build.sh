@@ -70,6 +70,9 @@ ff () {
 # faster version of pre-transpile (without bundle and atomic linting)
 echo "zz1"
 sdasd aaa
-cd $APPVEYOR_BUILD_FOLDER && npm run export-exchanges
+npm
+npm run
+
+npm run export-exchanges
 echo "zz2"
 ff
