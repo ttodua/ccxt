@@ -61,14 +61,14 @@ build_and_test_all () {
 cd "C:\\Program Files or (x86)\\nodejs\\"
 set path=%PATH%;%CD%
 setx path "%PATH%"
+echo $PATH
 which npm
 apt-get install -y npm
 echo "zzzzzzz0"
 npm install --global npm@latest
 npm --version
-node --version
+
 echo "zzzzzzz1"
-node a.js
 echo "zzzzzzz2"
 npm run a
 ff () {
@@ -81,11 +81,7 @@ ff () {
 
  
 # faster version of pre-transpile (without bundle and atomic linting)
-echo "zz1"
-sdasd aaa
-npm
-npm run
-
-npm run export-exchanges
+echo "zz1" 
+#npm run export-exchanges
 echo "zz2"
-ff
+#ff
