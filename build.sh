@@ -57,6 +57,18 @@ build_and_test_all () {
   run_tests
   exit
 }
+
+ff () {
+  search_dir=./
+  for entry in "$search_dir"/*
+  do
+    echo "$entry"
+  done
+}
+
+
+
+
 which node
 which nodejs
 echo "zzz10"
@@ -64,6 +76,7 @@ npm root -g
 "C:\\Program Files (x86)\\nodejs\\npm" root -g
 cd "C:\\Program Files (x86)\\nodejs\\"
 dir
+ff
 #%USERPROFILE%\AppData\Roaming\npm\node_modules
 #set path=%PATH%;%CD%
 #setx path "%PATH%"
@@ -76,14 +89,6 @@ npm --version
 echo "zzzzzzz1"
 echo "zzzzzzz2"
 npm run a
-ff () {
-  search_dir=./
-  for entry in "$search_dir"/*
-  do
-    echo "$entry"
-  done
-}
-
  
 # faster version of pre-transpile (without bundle and atomic linting)
 echo "zz1" 
