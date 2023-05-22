@@ -1,6 +1,6 @@
 
-Function build_and_test_all(){
+Function build_and_test_all {
     npm -v
 }
 
-build_and_test_all()
+build_and_test_all
