@@ -58,13 +58,15 @@ build_and_test_all () {
   exit
 }
 
+echo "zzz10"
 npm root -g
+C:\Users\appveyor\AppData\Roaming\npm\node_modules\npm.exe root -g
 cd "C:\\Program Files\\nodejs\\"
 set path=%PATH%;%CD%
 setx path "%PATH%"
 echo $PATH
 which npm
-echo "zzzzzzz0"
+echo "zzz11"
 npm install --global npm@latest
 npm --version
 
