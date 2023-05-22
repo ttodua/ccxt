@@ -24,7 +24,7 @@ test_script:
   - npm --version
   - python --version
   - pip --version
-  - php --version
+  #- php --version
   #- move "C:\Program Files\Git\usr\bin\msys-2.0.dll" "C:\Program Files\Git\usr\bin\msys-2.0-bak.dll" # workaround for cygwin-related error
   - bash build.sh
 cache:
