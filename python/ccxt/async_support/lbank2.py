@@ -26,7 +26,7 @@ from ccxt.base.precise import Precise
 
 
 class lbank2(Exchange, ImplicitAPI):
-
+def 
     def describe(self):
         return self.deep_extend(super(lbank2, self).describe(), {
             'id': 'lbank2',
@@ -934,6 +934,7 @@ class lbank2(Exchange, ImplicitAPI):
         request = {
             'symbol': market['id'],
         }
+sadasd
         ioc = (timeInForce == 'IOC')
         fok = (timeInForce == 'FOK')
         maker = (postOnly or (timeInForce == 'PO'))
