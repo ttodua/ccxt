@@ -5,7 +5,7 @@ Function build_and_test_all {
 }
 
 echo "1111"
-echo "$Env:APPVEYOR_PULL_REQUEST_NUMBER"
+echo "$Env:APPVEYOR_API_URL"
 echo "2222"
-echo $Env:APPVEYOR_PULL_REQUEST_NUMBER
-$Env:APPVEYOR_PULL_REQUEST_NUMBER
+echo $Env:APPVEYOR_API_URL
+$Env:APPVEYOR_API_URL
