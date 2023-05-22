@@ -2,9 +2,7 @@ environment:
   matrix:
     - nodejs_version: '16'
 install:
-  - echo "aa111"
-  - echo %APPVEYOR_REPO_BRANCH%
-  - echo "aa222"
+  - echo %APPVEYOR_PULL_REQUEST_NUMBER%
   - echo %APPVEYOR_REPO_BRANCH%
   - ps: Install-Product node $env:nodejs_version
   - set LIB=C:\OpenSSL-Win64\lib;%LIB%
