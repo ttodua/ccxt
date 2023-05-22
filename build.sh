@@ -57,7 +57,8 @@ build_and_test_all () {
   run_tests
   exit
 }
-
+which npm
+echo "zzzzzzz0"
 npm install --global npm@latest
 npm --version
 node --version
