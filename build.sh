@@ -57,10 +57,12 @@ build_and_test_all () {
   run_tests
   exit
 }
-
+which node
+which nodejs
 echo "zzz10"
 npm root -g
 C:\Users\appveyor\AppData\Roaming\npm\node_modules\npm.exe root -g
+#%USERPROFILE%\AppData\Roaming\npm\node_modules
 cd "C:\\Program Files\\nodejs\\"
 set path=%PATH%;%CD%
 setx path "%PATH%"
