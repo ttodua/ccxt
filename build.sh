@@ -75,23 +75,16 @@ echo "zzz10"
 npm root -g
 "C:\\Program Files (x86)\\nodejs\\npm" root -g
 cd "C:\\Program Files (x86)\\nodejs\\"
-dir
+ff
+cd "/usr/"
 ff
 #%USERPROFILE%\AppData\Roaming\npm\node_modules
 #set path=%PATH%;%CD%
 #setx path "%PATH%"
 #echo $PATH
 which npm
+which node
 echo "zzz11"
-npm install --global npm@latest
 npm --version
 node a.js
-echo "zzzzzzz1"
-echo "zzzzzzz2"
-npm run a
- 
-# faster version of pre-transpile (without bundle and atomic linting)
-echo "zz1" 
-#npm run export-exchanges
-echo "zz2"
-#ff
+echo "zzz22"
