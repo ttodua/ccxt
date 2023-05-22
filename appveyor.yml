@@ -15,7 +15,8 @@ clone_depth: 1
 test_script:
   - refreshenv
   - move "C:\Program Files\Git\usr\bin\msys-2.0.dll" "C:\Program Files\Git\usr\bin\msys-2.0-bak.dll"
-  - cmd: appveyor-build.ps1
+  - npm -v
+  - ps: appveyor-build.ps1
 
 cache:
   - '%APPDATA%\npm-cache'
