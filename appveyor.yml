@@ -14,8 +14,8 @@ build: off
 clone_depth: 1
 test_script:
   - refreshenv
-  - move "C:\Program Files\Git\usr\bin\msys-2.0.dll" "C:\Program Files\Git\usr\bin\msys-2.0-bak.dll"
-  - cmd: b.sh
+  - bash b.sh
+  #- cmd: b.sh
 
 cache:
   - '%APPDATA%\npm-cache'
