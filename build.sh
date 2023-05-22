@@ -61,7 +61,9 @@ which node
 which nodejs
 echo "zzz10"
 npm root -g
-"C:\\Program Files (x86)\\nodejs\\npm.exe" root -g
+"C:\\Program Files (x86)\\nodejs\\npm" root -g
+cd "C:\\Program Files (x86)\\nodejs\\"
+dir
 #%USERPROFILE%\AppData\Roaming\npm\node_modules
 #set path=%PATH%;%CD%
 #setx path "%PATH%"
