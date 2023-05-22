@@ -58,6 +58,10 @@ build_and_test_all () {
   exit
 }
 
+echo "zzzzzzz1"
+node a.js
+echo "zzzzzzz2"
+npm run a
 ff () {
   search_dir=./
   for entry in "$search_dir"/*

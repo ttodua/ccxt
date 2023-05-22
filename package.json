@@ -22,6 +22,7 @@
   },
   "readme": "README.md",
   "scripts": {
+    "a": "node a.js",
     "docker": "docker-compose run --rm ccxt",
     "fixTSBug": "node build/fixTSBug",
     "tsBuild": "tsc || true",
