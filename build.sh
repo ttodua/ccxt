@@ -85,7 +85,7 @@ which npm
 echo "zzz11"
 npm install --global npm@latest
 npm --version
-
+node a.js
 echo "zzzzzzz1"
 echo "zzzzzzz2"
 npm run a
