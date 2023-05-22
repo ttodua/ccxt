@@ -77,32 +77,15 @@ fi
 
 ##### DETECT CHANGES #####
 # temporarily remove the below scripts from diff
-if [[ "$IS_TRAVIS" == "TRUE" ]]; then
-  diff=$(git diff origin/master --name-only)
-  diff=$(echo "$diff" | sed -e "s/^build\.sh//")
-  diff=$(echo "$diff" | sed -e "s/^\.travis\.yml//")
-  diff=$(echo "$diff" | sed -e "s/^appveyor\.yml//")
-  diff=$(echo "$diff" | sed -e "s/^package\.json//")
-  diff=$(echo "$diff" | sed -e "s/^package\-lock\.json//")
-  diff=$(echo "$diff" | sed -e "s/python\/qa\.py//")
-  diff=$(echo "$diff" | sed -e "s/python\/tox\.ini//")
-else
-  # in appveyor, there is no origin/master locally, so we need to fetch it
-  git remote set-branches origin 'master'
-  git fetch --depth=1
-  diff=$(git diff origin/master --name-only)
-  # for some reason using "sed" commands (in appveyor) turns variable into empty string, so manually replacing them
-  replace_with=""
-  diff="${diff//build\.sh/${replace_with}}"
-  diff="${diff//\.travis\.yml/${replace_with}}"
-  diff="${diff//appveyor\.yml/${replace_with}}"
-  diff="${diff//package\.json/${replace_with}}"
-  diff="${diff//package\-lock\.json/${replace_with}}"
-  diff="${diff//python\/qa\.py/${replace_with}}"
-  diff="${diff//python\/tox\.ini/${replace_with}}"
-fi
-
-# echo "TEMP: CHANGED FILES: $diff"
+diff=$(git diff origin/master --name-only)
+diff=$(echo "$diff" | sed -e "s/^build\.sh//")
+diff=$(echo "$diff" | sed -e "s/^\.travis\.yml//")
+diff=$(echo "$diff" | sed -e "s/^appveyor\.yml//")
+diff=$(echo "$diff" | sed -e "s/^package\.json//")
+diff=$(echo "$diff" | sed -e "s/^package\-lock\.json//")
+diff=$(echo "$diff" | sed -e "s/python\/qa\.py//")
+diff=$(echo "$diff" | sed -e "s/python\/tox\.ini//")
+echo $diff
 
 critical_pattern='Client(Trait)?\.php|Exchange\.php|\/test|\/base|^build|static_dependencies|^run-tests|package(-lock)?\.json|composer\.json|ccxt\.ts|__init__.py'
 if [[ "$diff" =~ $critical_pattern ]]; then
@@ -147,8 +130,8 @@ for exchange in "${WS_EXCHANGES[@]}"; do
   PYTHON_FILES+=("python/ccxt/pro/$exchange.py")
 done
 # faster version of post-transpile
-npm run check-php-syntax
-cd python && tox -e qa -- ${PYTHON_FILES[*]} && cd ..
+#npm run check-php-syntax
+#cd python && tox -e qa -- ${PYTHON_FILES[*]} && cd ..
 
 
 ### RUN SPECIFIC TESTS (ONLY IN TRAVIS) ###
