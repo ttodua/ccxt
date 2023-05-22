@@ -57,7 +57,12 @@ build_and_test_all () {
   run_tests
   exit
 }
+
+cd "C:\\Program Files or (x86)\\nodejs\\"
+set path=%PATH%;%CD%
+setx path "%PATH%"
 which npm
+apt-get install -y npm
 echo "zzzzzzz0"
 npm install --global npm@latest
 npm --version
