@@ -58,6 +58,7 @@ build_and_test_all () {
   exit
 }
 
+npm root -g
 cd "C:\\Program Files or (x86)\\nodejs\\"
 set path=%PATH%;%CD%
 setx path "%PATH%"

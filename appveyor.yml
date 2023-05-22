@@ -5,6 +5,8 @@ install:
   - set LIB=C:\OpenSSL-Win64\lib;%LIB%
   - set INCLUDE=C:\OpenSSL-Win64\include;%INCLUDE%
   - set CI=true
+  - npm root -g
+  - echo "a111"
   - set PATH=%APPDATA%\npm;C:\Python38;C:\Python38\Scripts;%PATH%
 matrix:
   fast_finish: true
