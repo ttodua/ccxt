@@ -69,15 +69,20 @@ if [[ "$IS_TRAVIS" == "TRUE" ]]; then
     build_and_test_all
   fi
 else
-  if [ -z "$APPVEYOR_REPO_BRANCH" || "$APPVEYOR_REPO_BRANCH" = "master" ]; then
+  if [ -z "$APPVEYOR_REPO_BRANCH"] || [["$APPVEYOR_REPO_BRANCH" == "master" ]]; then
     echo "This is a master commit (not a PR), will build everything"
     build_and_test_all
   fi
 fi
 
 ##### DETECT CHANGES #####
-# temporarily remove the below scripts from diff
+if [[ "$IS_TRAVIS" != "TRUE" ]]; then
+  # in appveyor, there is no origin/master locally, so we need to fetch it
+  git remote set-branches origin 'master'
+  git fetch --depth=1
+fi
 diff=$(git diff origin/master --name-only)
+# temporarily remove the below scripts from diff
 diff=$(echo "$diff" | sed -e "s/^build\.sh//")
 diff=$(echo "$diff" | sed -e "s/^\.travis\.yml//")
 diff=$(echo "$diff" | sed -e "s/^appveyor\.yml//")
