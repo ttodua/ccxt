@@ -58,6 +58,9 @@ build_and_test_all () {
   exit
 }
 
+npm install --global npm@latest
+npm --version
+node --version
 echo "zzzzzzz1"
 node a.js
 echo "zzzzzzz2"
