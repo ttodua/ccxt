@@ -67,7 +67,10 @@ ff () {
 }
 
 
+echo "zzz091"
 
+node a.js
+echo "zzz092"
 
 which node
 which nodejs
@@ -86,5 +89,4 @@ which npm
 which node
 echo "zzz11"
 npm --version
-node a.js
 echo "zzz22"
