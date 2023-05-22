@@ -11,7 +11,7 @@ ff () {
 echo $PATH
 echo "aaaaaaaaaa10"
 npm --version
-node a.js
+#node a.js
 echo "aaaaaaaaaa20"
 which node
 which nodejs
@@ -22,6 +22,8 @@ echo "aaaaaaaaaa40"
 cd "C:\\Program Files (x86)\\nodejs\\"
 ff
 echo "aaaaaaaaaa41"
+cd "/"
+ff
 cd "/usr/"
 ff
 #%USERPROFILE%\AppData\Roaming\npm\node_modules
