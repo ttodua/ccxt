@@ -61,12 +61,11 @@ which node
 which nodejs
 echo "zzz10"
 npm root -g
-C:\Users\appveyor\AppData\Roaming\npm\node_modules\npm.exe root -g
+"C:\\Program Files (x86)\\nodejs\\npm.exe" root -g
 #%USERPROFILE%\AppData\Roaming\npm\node_modules
-cd "C:\\Program Files\\nodejs\\"
-set path=%PATH%;%CD%
-setx path "%PATH%"
-echo $PATH
+#set path=%PATH%;%CD%
+#setx path "%PATH%"
+#echo $PATH
 which npm
 echo "zzz11"
 npm install --global npm@latest
