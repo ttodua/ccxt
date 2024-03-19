@@ -1433,7 +1433,7 @@ export default class Exchange {
             this.clients[url] = new WsClient (url, onMessageWithStream, onError, onClose, onConnected, options);
             const originalResolve = this.clients[url].resolve;
             this.clients[url].resolve = (result, messageHash) => {
-                this.handleStreamProduce (result, messageHash);
+                this.streamProduceHook (result, messageHash);
                 return originalResolve (result, messageHash);
             };
         }
@@ -1790,7 +1790,7 @@ export default class Exchange {
     // ------------------------------------------------------------------------
     // METHODS BELOW THIS LINE ARE TRANSPILED FROM JAVASCRIPT TO PYTHON AND PHP
 
-    handleStreamProduce (result, messageHash) {
+    streamProduceHook (result, messageHash) {
         const parts = messageHash.split (':');
         const targetName = parts[0];
         const targetNameLower = targetName.toLowerCase ();
