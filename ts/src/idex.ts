@@ -1727,7 +1727,7 @@ export default class idex extends Exchange {
         // https://api-docs-v4.idex.io/#authentication
         const nonce = order['nonce'];
         const wallet = this.safeString (order, 'wallet');
-        const walletBytes = this.remove0xPrefix (wallet);
+        const walletBytes = this.remove0xPrefix (wallet).toLowerCase (); // for some reason "static_dependencies/scure-base" needs lowercases
         const market = this.safeString (order, 'market');
         const type = this.safeString (order, 'type');
         // https://api-docs-v4.idex.io/#wallet-signature-hash-enums
