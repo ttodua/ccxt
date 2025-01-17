@@ -11,6 +11,8 @@ import { secp256k1 } from './static_dependencies/noble-curves/secp256k1.js';
 import { ecdsa } from './base/functions/crypto.js';
 import type { Balances, Currency, Dict, FundingRateHistory, Int, Market, Num, OHLCV, Order, OrderBook, OrderSide, OrderType, Position, Str, Strings, Ticker, Tickers, Trade, Transaction, int, DepositAddress } from './base/types.js';
 
+import { v1 as uuidv1 } from 'uuid';
+import * as ethers from 'ethers';
 // ---------------------------------------------------------------------------
 
 /**
@@ -214,6 +216,12 @@ export default class idex extends Exchange {
                     'stargate.optimism': 'OPTIMISM',
                     'stargate.polygon': 'MATIC',
                     'stargate.sei': 'SEI',
+                },
+                'domainOpts' : {
+                  "name": "IDEX",
+                  "version": "4.0.0",
+                  "chainId": 94524,
+                  "verifyingContract": "0x08ea6C351d08fAc8E177267898612A5fc6D92349",
                 },
             },
             'exceptions': {
@@ -1589,25 +1597,31 @@ export default class idex extends Exchange {
     }
 
     async associateWallet (walletAddress, params = {}) {
-        const nonce = this.uuidv1 ();
-        const noPrefix = this.remove0xPrefix (walletAddress);
-        const byteArray = [
-            this.base16ToBinary (nonce),
-            this.base16ToBinary (noPrefix),
-        ];
-        const binary = this.binaryConcatArray (byteArray);
-        const hash = this.hash (binary, keccak, 'hex');
-        const signature = this.signMessageString (hash, this.privateKey);
-        // {
-        //   "address": "0x0AB991497116f7F5532a4c2f4f7B1784488628e1",
-        //   "totalPortfolioValueUsd": "0.00",
-        //   "time": 1598468353626
-        // }
+        const nonceString = uuidv1 ();
+        const domainSeparator = this.options.domainOpts;
+        const walletAssociationType = {
+            WalletAssociation: [
+              { name: "nonce", type: "uint128", },
+              { name: "wallet", type: "address", },
+            ],
+        };
+        let nonceAsHexString = `0x${nonceString.replace(/-/g, '')}`;
+        let nonceAsUint128 = BigInt.asUintN(128, BigInt(nonceAsHexString));
+        const requestParamsWithNonce = {
+            nonce: nonceString,
+            wallet: walletAddress,
+        };
+        const requestParams = {
+            nonce: nonceAsUint128,
+            wallet: walletAddress,
+        };
+        const signature = await new ethers.Wallet (this.privateKey).signTypedData(
+            domainSeparator,
+            walletAssociationType,
+            requestParams
+        );
         const request: Dict = {
-            'parameters': {
-                'nonce': nonce,
-                'wallet': walletAddress,
-            },
+            'parameters': requestParamsWithNonce,
             'signature': signature,
         };
         const result = await this.privatePostWallets (request);
@@ -1645,12 +1659,12 @@ export default class idex extends Exchange {
         let wallet = this.walletAddress;
         [ wallet, params ] = this.handleOptionAndParams (params, 'createOrder', 'wallet', wallet);
         const order: Dict = {
-            'nonce': this.uuidv1 (),
+            'nonce': uuidv1 (),
             'wallet': wallet,
             'market': market['id'],
             'side': side.toLowerCase (),
             'quantity': this.amountToPrecision (symbol, amount),
-            'reduceOnly': this.safeBool (params, 'reduceOnly', false),
+            // 'reduceOnly': this.safeBool (params, 'reduceOnly', false),
         };
         let delegatedKey = undefined;
         [ delegatedKey, params ] = this.handleOptionAndParams (params, 'createOrder', 'delegatedKey');
@@ -1796,7 +1810,7 @@ export default class idex extends Exchange {
         // const delegatedPublicKeyBytes = this.remove0xPrefix (delegatedPublicKey);
         const clientOrderId = this.safeString (order, 'clientOrderId', '');
         const byteArray = [
-            this.base16ToBinary (nonce),
+            this.encode (nonce),
             this.base16ToBinary (walletBytes),
             this.encode (market),
             this.numberToBE (typeEnum, 1),
