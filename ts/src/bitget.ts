@@ -2422,6 +2422,7 @@ export default class bitget extends Exchange {
      * @returns {object} a [transaction structure]{@link https://docs.ccxt.com/#/?id=transaction-structure}
      */
     async withdraw (code: string, amount: number, address: string, tag = undefined, params = {}): Promise<Transaction> {
+        [ tag, params ] = this.handleWithdrawTagAndParams (tag, params);
         this.checkAddress (address);
         let networkCode = undefined;
         [ networkCode, params ] = this.handleNetworkCodeAndParams (params);
