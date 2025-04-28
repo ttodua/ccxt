@@ -123,16 +123,16 @@ public partial class Exchange
 
 
     // deep cloning using Newtonsoft
+    private static JsonSerializerSettings CustomCloneSettings = new JsonSerializerSettings
+    {
+        TypeNameHandling = TypeNameHandling.All,
+        ObjectCreationHandling = ObjectCreationHandling.Replace
+    };
+
     private static object CustomClone(object obj)
     {
         if (obj == null)
             return null;
-
-        var settings = new JsonSerializerSettings
-        {
-            TypeNameHandling = TypeNameHandling.All,
-            ObjectCreationHandling = ObjectCreationHandling.Replace
-        };
 
         System.Reflection.MethodInfo copyMethod = obj.GetType().GetMethod("Copy");
         if (copyMethod != null)
@@ -141,8 +141,8 @@ public partial class Exchange
         }
         
         try {
-           string json = JsonConvert.SerializeObject(obj, settings);
-           return JsonConvert.DeserializeObject(json, obj.GetType(), settings);
+           string json = JsonConvert.SerializeObject(obj, CustomCloneSettings);
+           return JsonConvert.DeserializeObject(json, obj.GetType(), CustomCloneSettings);
         }
         catch (Exception ex)
         {
