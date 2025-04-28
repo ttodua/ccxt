@@ -123,7 +123,7 @@ public partial class Exchange
 
 
     // deep cloning using Newtonsoft
-    private static JsonSerializerSettings CustomCloneSettings = new JsonSerializerSettings
+    private static readonly JsonSerializerSettings CustomCloneSettings = new JsonSerializerSettings
     {
         TypeNameHandling = TypeNameHandling.All,
         ObjectCreationHandling = ObjectCreationHandling.Replace
