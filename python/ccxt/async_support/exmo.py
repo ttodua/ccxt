@@ -5,8 +5,9 @@
 
 from ccxt.async_support.base.exchange import Exchange
 from ccxt.abstract.exmo import ImplicitAPI
+import asyncio
 import hashlib
-from ccxt.base.types import Balances, Currencies, Currency, DepositAddress, Int, MarginModification, Market, Num, Order, OrderBook, OrderSide, OrderType, Str, Strings, Ticker, Tickers, Trade, TradingFees, Transaction
+from ccxt.base.types import Any, Balances, Currencies, Currency, DepositAddress, Int, MarginModification, Market, Num, Order, OrderBook, OrderSide, OrderType, Str, Strings, Ticker, Tickers, OrderBooks, Trade, TradingFees, Transaction
 from typing import List
 from ccxt.base.errors import ExchangeError
 from ccxt.base.errors import AuthenticationError
@@ -25,7 +26,7 @@ from ccxt.base.precise import Precise
 
 class exmo(Exchange, ImplicitAPI):
 
-    def describe(self):
+    def describe(self) -> Any:
         return self.deep_extend(super(exmo, self).describe(), {
             'id': 'exmo',
             'name': 'EXMO',
@@ -218,6 +219,67 @@ class exmo(Exchange, ImplicitAPI):
                 },
                 'margin': {
                     'fillResponseFromRequest': True,
+                },
+            },
+            'features': {
+                'spot': {
+                    'sandbox': False,
+                    'createOrder': {
+                        'marginMode': True,  # todo revise
+                        'triggerPrice': True,  # todo: endpoint lacks other features
+                        'triggerPriceType': None,
+                        'triggerDirection': False,
+                        'stopLossPrice': False,
+                        'takeProfitPrice': False,
+                        'attachedStopLossTakeProfit': None,
+                        'timeInForce': {
+                            'IOC': True,
+                            'FOK': True,
+                            'PO': True,
+                            'GTD': True,
+                        },
+                        'hedged': False,
+                        'selfTradePrevention': False,
+                        'trailing': False,
+                        'leverage': True,
+                        'marketBuyByCost': True,
+                        'marketBuyRequiresPrice': False,
+                        'iceberg': False,
+                    },
+                    'createOrders': None,
+                    'fetchMyTrades': {
+                        'marginMode': True,
+                        'limit': 100,
+                        'daysBack': None,
+                        'untilDays': None,
+                        'symbolRequired': True,
+                    },
+                    'fetchOrder': {
+                        'marginMode': False,
+                        'trigger': False,
+                        'trailing': False,
+                        'symbolRequired': False,
+                    },
+                    'fetchOpenOrders': {
+                        'marginMode': False,
+                        'limit': None,
+                        'trigger': False,
+                        'trailing': False,
+                        'symbolRequired': False,
+                    },
+                    'fetchOrders': None,
+                    'fetchClosedOrders': None,
+                    'fetchOHLCV': {
+                        'limit': 1000,  # todo, not in request
+                    },
+                },
+                'swap': {
+                    'linear': None,
+                    'inverse': None,
+                },
+                'future': {
+                    'linear': None,
+                    'inverse': None,
                 },
             },
             'commonCurrencies': {
@@ -605,8 +667,9 @@ class exmo(Exchange, ImplicitAPI):
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :returns dict: an associative dictionary of currencies
         """
+        promises = []
         #
-        currencyList = await self.publicGetCurrencyListExtended(params)
+        promises.append(self.publicGetCurrencyListExtended(params))
         #
         #     [
         #         {"name":"VLX","description":"Velas"},
@@ -615,7 +678,7 @@ class exmo(Exchange, ImplicitAPI):
         #         {"name":"USD","description":"US Dollar"}
         #     ]
         #
-        cryptoList = await self.publicGetPaymentsProvidersCryptoList(params)
+        promises.append(self.publicGetPaymentsProvidersCryptoList(params))
         #
         #     {
         #         "BTC":[
@@ -640,6 +703,9 @@ class exmo(Exchange, ImplicitAPI):
         #         ],
         #     }
         #
+        responses = await asyncio.gather(*promises)
+        currencyList = responses[0]
+        cryptoList = responses[1]
         result: dict = {}
         for i in range(0, len(currencyList)):
             currency = currencyList[i]
@@ -693,6 +759,10 @@ class exmo(Exchange, ImplicitAPI):
                                 commissionDesc = self.safe_string(provider, 'commission_desc')
                                 fee = self.parse_fixed_float_value(commissionDesc)
             code = self.safe_currency_code(currencyId)
+            info = {
+                'currency': currency,
+                'providers': providers,
+            }
             result[code] = {
                 'id': currencyId,
                 'code': code,
@@ -704,7 +774,7 @@ class exmo(Exchange, ImplicitAPI):
                 'fee': fee,
                 'precision': self.parse_number('1e-8'),
                 'limits': limits,
-                'info': providers,
+                'info': info,
                 'networks': {},
             }
         return result
@@ -718,7 +788,8 @@ class exmo(Exchange, ImplicitAPI):
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :returns dict[]: an array of objects representing market data
         """
-        response = await self.publicGetPairSettings(params)
+        promises = []
+        promises.append(self.publicGetPairSettings(params))
         #
         #     {
         #         "BTC_USD":{
@@ -735,8 +806,9 @@ class exmo(Exchange, ImplicitAPI):
         #     }
         #
         marginPairsDict: dict = {}
-        if self.check_required_credentials(False):
-            marginPairs = await self.privatePostMarginPairList(params)
+        fetchMargin = self.check_required_credentials(False)
+        if fetchMargin:
+            promises.append(self.privatePostMarginPairList(params))
             #
             #    {
             #        "pairs": [
@@ -766,14 +838,18 @@ class exmo(Exchange, ImplicitAPI):
             #        ]
             #    }
             #
-            pairs = self.safe_value(marginPairs, 'pairs')
+        responses = await asyncio.gather(*promises)
+        spotResponse = responses[0]
+        if fetchMargin:
+            marginPairs = responses[1]
+            pairs = self.safe_list(marginPairs, 'pairs')
             marginPairsDict = self.index_by(pairs, 'name')
-        keys = list(response.keys())
+        keys = list(spotResponse.keys())
         result = []
         for i in range(0, len(keys)):
             id = keys[i]
-            market = response[id]
-            marginMarket = self.safe_value(marginPairsDict, id)
+            market = spotResponse[id]
+            marginMarket = self.safe_dict(marginPairsDict, id)
             symbol = id.replace('_', '/')
             baseId, quoteId = symbol.split('/')
             base = self.safe_currency_code(baseId)
@@ -1010,7 +1086,7 @@ class exmo(Exchange, ImplicitAPI):
         result = self.safe_dict(response, market['id'])
         return self.parse_order_book(result, market['symbol'], None, 'bid', 'ask')
 
-    async def fetch_order_books(self, symbols: Strings = None, limit: Int = None, params={}):
+    async def fetch_order_books(self, symbols: Strings = None, limit: Int = None, params={}) -> OrderBooks:
         """
         fetches information on open orders with bid(buy) and ask(sell) prices, volumes and other data for multiple markets
 
@@ -1290,7 +1366,7 @@ class exmo(Exchange, ImplicitAPI):
         marginMode = None
         marginMode, params = self.handle_margin_mode_and_params('fetchMyTrades', params)
         if marginMode == 'cross':
-            raise BadRequest(self.id + 'only isolated margin is supported')
+            raise BadRequest(self.id + ' only isolated margin is supported')
         await self.load_markets()
         market = self.market(symbol)
         pair = market['id']
@@ -2419,7 +2495,7 @@ class exmo(Exchange, ImplicitAPI):
         first = self.safe_dict(items, 0, {})
         return self.parse_transaction(first, currency)
 
-    async def fetch_deposit(self, id=None, code: Str = None, params={}):
+    async def fetch_deposit(self, id: str, code: Str = None, params={}):
         """
         fetch information on a deposit
 

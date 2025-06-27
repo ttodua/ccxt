@@ -9,7 +9,7 @@ import { ecdsa, eddsa } from './base/functions/crypto.js';
 import { ed25519 } from './static_dependencies/noble-curves/ed25519.js';
 import { keccak_256 as keccak } from './static_dependencies/noble-hashes/sha3.js';
 import { secp256k1 } from './static_dependencies/noble-curves/secp256k1.js';
-import type { Balances, Currency, FundingRateHistory, Int, Market, Num, OHLCV, Order, OrderBook, OrderSide, OrderType, Str, Strings, Trade, Transaction, Leverage, Currencies, TradingFees, OrderRequest, Dict, int, LedgerEntry, FundingRate, FundingRates } from './base/types.js';
+import type { Balances, Currency, FundingRateHistory, Int, Market, Num, OHLCV, Order, OrderBook, OrderSide, OrderType, Str, Strings, Trade, Transaction, Leverage, Currencies, TradingFees, OrderRequest, Dict, int, LedgerEntry, FundingRate, FundingRates, Position } from './base/types.js';
 
 // ---------------------------------------------------------------------------
 
@@ -18,7 +18,7 @@ import type { Balances, Currency, FundingRateHistory, Int, Market, Num, OHLCV, O
  * @augments Exchange
  */
 export default class woofipro extends Exchange {
-    describe () {
+    describe (): any {
         return this.deepExtend (super.describe (), {
             'id': 'woofipro',
             'name': 'WOOFI PRO',
@@ -336,17 +336,20 @@ export default class woofipro extends Exchange {
                         'limit': 500,
                         'daysBack': undefined,
                         'untilDays': 100000,
+                        'symbolRequired': false,
                     },
                     'fetchOrder': {
                         'marginMode': false,
                         'trigger': true,
                         'trailing': false,
+                        'symbolRequired': false,
                     },
                     'fetchOpenOrders': {
                         'marginMode': false,
                         'limit': 500,
                         'trigger': true,
                         'trailing': false,
+                        'symbolRequired': false,
                     },
                     'fetchOrders': undefined,
                     'fetchClosedOrders': {
@@ -357,6 +360,7 @@ export default class woofipro extends Exchange {
                         'untilDays': 100000,
                         'trigger': true,
                         'trailing': false,
+                        'symbolRequired': false,
                     },
                     'fetchOHLCV': {
                         'limit': 1000,
@@ -474,7 +478,7 @@ export default class woofipro extends Exchange {
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {int} the current integer timestamp in milliseconds from the exchange server
      */
-    async fetchTime (params = {}) {
+    async fetchTime (params = {}): Promise<Int> {
         const response = await this.v1PublicGetPublicSystemInfo (params);
         //
         //     {
@@ -545,7 +549,7 @@ export default class woofipro extends Exchange {
             'active': undefined,
             'contract': true,
             'linear': true,
-            'inverse': undefined,
+            'inverse': false,
             'contractSize': this.parseNumber ('1'),
             'expiry': undefined,
             'expiryDatetime': undefined,
@@ -632,13 +636,14 @@ export default class woofipro extends Exchange {
      * @method
      * @name woofipro#fetchCurrencies
      * @description fetches all available currencies on an exchange
-     * @see https://orderly.network/docs/build-on-evm/evm-api/restful-api/public/get-token-info
+     * @see https://orderly.network/docs/build-on-omnichain/evm-api/restful-api/public/get-supported-collateral-info#get-supported-collateral-info
+     * @see https://orderly.network/docs/build-on-omnichain/evm-api/restful-api/public/get-supported-chains-per-builder#get-supported-chains-per-builder
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} an associative dictionary of currencies
      */
     async fetchCurrencies (params = {}): Promise<Currencies> {
         const result: Dict = {};
-        const response = await this.v1PublicGetPublicToken (params);
+        const tokenPromise = this.v1PublicGetPublicToken (params);
         //
         // {
         //     "success": true,
@@ -661,26 +666,28 @@ export default class woofipro extends Exchange {
         //     }
         // }
         //
-        const data = this.safeDict (response, 'data', {});
-        const tokenRows = this.safeList (data, 'rows', []);
+        const chainPromise = this.v1PublicGetPublicChainInfo (params);
+        const [ tokenResponse, chainResponse ] = await Promise.all ([ tokenPromise, chainPromise ]);
+        const tokenData = this.safeDict (tokenResponse, 'data', {});
+        const tokenRows = this.safeList (tokenData, 'rows', []);
+        const chainData = this.safeDict (chainResponse, 'data', {});
+        const chainRows = this.safeList (chainData, 'rows', []);
+        const indexedChains = this.indexBy (chainRows, 'chain_id');
         for (let i = 0; i < tokenRows.length; i++) {
             const token = tokenRows[i];
             const currencyId = this.safeString (token, 'token');
             const networks = this.safeList (token, 'chain_details');
             const code = this.safeCurrencyCode (currencyId);
-            let minPrecision = undefined;
             const resultingNetworks: Dict = {};
             for (let j = 0; j < networks.length; j++) {
-                const network = networks[j];
-                // TODO: transform chain id to human readable name
-                const networkId = this.safeString (network, 'chain_id');
-                const precision = this.parsePrecision (this.safeString (network, 'decimals'));
-                if (precision !== undefined) {
-                    minPrecision = (minPrecision === undefined) ? precision : Precise.stringMin (precision, minPrecision);
-                }
-                resultingNetworks[networkId] = {
+                const networkEntry = networks[j];
+                const networkId = this.safeString (networkEntry, 'chain_id');
+                const networkRow = this.safeDict (indexedChains, networkId);
+                const networkName = this.safeString (networkRow, 'name');
+                const networkCode = this.networkIdToCode (networkName, code);
+                resultingNetworks[networkCode] = {
                     'id': networkId,
-                    'network': networkId,
+                    'network': networkCode,
                     'limits': {
                         'withdraw': {
                             'min': undefined,
@@ -694,16 +701,16 @@ export default class woofipro extends Exchange {
                     'active': undefined,
                     'deposit': undefined,
                     'withdraw': undefined,
-                    'fee': this.safeNumber (network, 'withdrawal_fee'),
-                    'precision': this.parseNumber (precision),
-                    'info': network,
+                    'fee': this.safeNumber (networkEntry, 'withdrawal_fee'),
+                    'precision': this.parseNumber (this.parsePrecision (this.safeString (networkEntry, 'decimals'))),
+                    'info': [ networkEntry, networkRow ],
                 };
             }
-            result[code] = {
+            result[code] = this.safeCurrencyStructure ({
                 'id': currencyId,
-                'name': currencyId,
+                'name': undefined,
                 'code': code,
-                'precision': this.parseNumber (minPrecision),
+                'precision': undefined,
                 'active': undefined,
                 'fee': undefined,
                 'networks': resultingNetworks,
@@ -720,7 +727,7 @@ export default class woofipro extends Exchange {
                     },
                 },
                 'info': token,
-            };
+            });
         }
         return result;
     }
@@ -979,8 +986,7 @@ export default class woofipro extends Exchange {
         //
         const data = this.safeDict (response, 'data', {});
         const rows = this.safeList (data, 'rows', []);
-        const result = this.parseFundingRates (rows);
-        return this.filterByArray (result, 'symbol', symbols);
+        return this.parseFundingRates (rows, symbols);
     }
 
     /**
@@ -1431,6 +1437,7 @@ export default class woofipro extends Exchange {
                 'algo_type': 'POSITIONAL_TP_SL',
                 'child_orders': [],
             };
+            const childOrders = outterOrder['child_orders'];
             const closeSide = (orderSide === 'BUY') ? 'SELL' : 'BUY';
             if (stopLoss !== undefined) {
                 const stopLossPrice = this.safeNumber2 (stopLoss, 'triggerPrice', 'price', stopLoss);
@@ -1441,7 +1448,7 @@ export default class woofipro extends Exchange {
                     'type': 'LIMIT',
                     'reduce_only': true,
                 };
-                outterOrder['child_orders'].push (stopLossOrder);
+                childOrders.push (stopLossOrder);
             }
             if (takeProfit !== undefined) {
                 const takeProfitPrice = this.safeNumber2 (takeProfit, 'triggerPrice', 'price', takeProfit);
@@ -1452,7 +1459,7 @@ export default class woofipro extends Exchange {
                     'type': 'LIMIT',
                     'reduce_only': true,
                 };
-                outterOrder['child_orders'].push (takeProfitOrder);
+                outterOrder.push (takeProfitOrder);
             }
             request['child_orders'] = [ outterOrder ];
         }
@@ -1555,7 +1562,7 @@ export default class woofipro extends Exchange {
             const takeProfit = this.safeValue (orderParams, 'takeProfit');
             const isConditional = triggerPrice !== undefined || stopLoss !== undefined || takeProfit !== undefined || (this.safeValue (orderParams, 'childOrders') !== undefined);
             if (isConditional) {
-                throw new NotSupported (this.id + 'createOrders() only support non-stop order');
+                throw new NotSupported (this.id + ' createOrders() only support non-stop order');
             }
             const orderRequest = this.createOrderRequest (marketId, type, side, amount, price, orderParams);
             ordersRequests.push (orderRequest);
@@ -1850,7 +1857,10 @@ export default class woofipro extends Exchange {
      */
     async fetchOrder (id: string, symbol: Str = undefined, params = {}) {
         await this.loadMarkets ();
-        const market = (symbol !== undefined) ? this.market (symbol) : undefined;
+        let market = undefined;
+        if (symbol !== undefined) {
+            market = this.market (symbol);
+        }
         const trigger = this.safeBool2 (params, 'stop', 'trigger', false);
         const request: Dict = {};
         const clientOrderId = this.safeStringN (params, [ 'clOrdID', 'clientOrderId', 'client_order_id' ]);
@@ -2298,7 +2308,9 @@ export default class woofipro extends Exchange {
      * @returns {object} a [ledger structure]{@link https://docs.ccxt.com/#/?id=ledger}
      */
     async fetchLedger (code: Str = undefined, since: Int = undefined, limit: Int = undefined, params = {}): Promise<LedgerEntry[]> {
-        const [ currency, rows ] = await this.getAssetHistoryRows (code, since, limit, params);
+        const currencyRows = await this.getAssetHistoryRows (code, since, limit, params);
+        const currency = this.safeValue (currencyRows, 0);
+        const rows = this.safeList (currencyRows, 1);
         return this.parseLedger (rows, currency, since, limit, params);
     }
 
@@ -2397,7 +2409,9 @@ export default class woofipro extends Exchange {
      */
     async fetchDepositsWithdrawals (code: Str = undefined, since: Int = undefined, limit: Int = undefined, params = {}): Promise<Transaction[]> {
         const request: Dict = {};
-        const [ currency, rows ] = await this.getAssetHistoryRows (code, since, limit, this.extend (request, params));
+        const currencyRows = await this.getAssetHistoryRows (code, since, limit, this.extend (request, params));
+        const currency = this.safeValue (currencyRows, 0);
+        const rows = this.safeList (currencyRows, 1);
         //
         //     {
         //         "rows":[],
@@ -2461,7 +2475,7 @@ export default class woofipro extends Exchange {
         if (code !== undefined) {
             code = code.toUpperCase ();
             if (code !== 'USDC') {
-                throw new NotSupported (this.id + 'withdraw() only support USDC');
+                throw new NotSupported (this.id + ' withdraw() only support USDC');
             }
         }
         const currency = this.currency (code);
@@ -2680,7 +2694,7 @@ export default class woofipro extends Exchange {
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} a [position structure]{@link https://docs.ccxt.com/#/?id=position-structure}
      */
-    async fetchPosition (symbol: Str = undefined, params = {}) {
+    async fetchPosition (symbol: Str, params = {}) {
         await this.loadMarkets ();
         const market = this.market (symbol);
         const request: Dict = {
@@ -2726,7 +2740,7 @@ export default class woofipro extends Exchange {
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object[]} a list of [position structure]{@link https://docs.ccxt.com/#/?id=position-structure}
      */
-    async fetchPositions (symbols: Strings = undefined, params = {}) {
+    async fetchPositions (symbols: Strings = undefined, params = {}): Promise<Position[]> {
         await this.loadMarkets ();
         const response = await this.v1PrivateGetPositions (params);
         //
@@ -2809,9 +2823,13 @@ export default class woofipro extends Exchange {
             let auth = '';
             const ts = this.nonce ().toString ();
             url += pathWithParams;
+            let apiKey = this.apiKey;
+            if (apiKey.indexOf ('ed25519:') < 0) {
+                apiKey = 'ed25519:' + apiKey;
+            }
             headers = {
                 'orderly-account-id': this.accountId,
-                'orderly-key': this.apiKey,
+                'orderly-key': apiKey,
                 'orderly-timestamp': ts,
             };
             auth = ts + method + '/' + version + '/' + pathWithParams;

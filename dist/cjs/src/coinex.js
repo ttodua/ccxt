@@ -7,7 +7,7 @@ var number = require('./base/functions/number.js');
 var sha256 = require('./static_dependencies/noble-hashes/sha256.js');
 var md5 = require('./static_dependencies/noble-hashes/md5.js');
 
-//  ---------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 //  ---------------------------------------------------------------------------
 /**
  * @class coinex
@@ -467,7 +467,7 @@ class coinex extends coinex$1 {
                     'ERC20': 'ERC20',
                     'BRC20': 'BRC20',
                     'SOL': 'SOL',
-                    'TON': 'SOL',
+                    'TON': 'TON',
                     'BSV': 'BSV',
                     'AVAXC': 'AVA_C',
                     'AVAXX': 'AVA',
@@ -533,17 +533,20 @@ class coinex extends coinex$1 {
                         'limit': 1000,
                         'daysBack': undefined,
                         'untilDays': 100000,
+                        'symbolRequired': true,
                     },
                     'fetchOrder': {
                         'marginMode': false,
                         'trigger': false,
                         'trailing': false,
+                        'symbolRequired': true,
                     },
                     'fetchOpenOrders': {
                         'marginMode': true,
                         'limit': 1000,
                         'trigger': true,
                         'trailing': false,
+                        'symbolRequired': false,
                     },
                     'fetchOrders': undefined,
                     'fetchClosedOrders': {
@@ -554,6 +557,7 @@ class coinex extends coinex$1 {
                         'untilDays': undefined,
                         'trigger': true,
                         'trailing': false,
+                        'symbolRequired': false,
                     },
                     'fetchOHLCV': {
                         'limit': 1000,
@@ -717,42 +721,19 @@ class coinex extends coinex$1 {
             const canWithdraw = this.safeBool(asset, 'withdraw_enabled');
             const firstChain = this.safeDict(chains, 0, {});
             const firstPrecisionString = this.parsePrecision(this.safeString(firstChain, 'withdrawal_precision'));
-            result[code] = {
-                'id': currencyId,
-                'code': code,
-                'name': undefined,
-                'active': canDeposit && canWithdraw,
-                'deposit': canDeposit,
-                'withdraw': canWithdraw,
-                'fee': undefined,
-                'precision': this.parseNumber(firstPrecisionString),
-                'limits': {
-                    'amount': {
-                        'min': undefined,
-                        'max': undefined,
-                    },
-                    'deposit': {
-                        'min': undefined,
-                        'max': undefined,
-                    },
-                    'withdraw': {
-                        'min': undefined,
-                        'max': undefined,
-                    },
-                },
-                'networks': {},
-                'info': coin,
-            };
             for (let j = 0; j < chains.length; j++) {
                 const chain = chains[j];
                 const networkId = this.safeString(chain, 'chain');
+                if (networkId === undefined) {
+                    continue;
+                }
                 const precisionString = this.parsePrecision(this.safeString(chain, 'withdrawal_precision'));
                 const feeString = this.safeString(chain, 'withdrawal_fee');
                 const minNetworkDepositString = this.safeString(chain, 'min_deposit_amount');
                 const minNetworkWithdrawString = this.safeString(chain, 'min_withdraw_amount');
                 const canDepositChain = this.safeBool(chain, 'deposit_enabled');
                 const canWithdrawChain = this.safeBool(chain, 'withdraw_enabled');
-                const network = {
+                ({
                     'id': networkId,
                     'network': networkId,
                     'name': undefined,
@@ -776,11 +757,35 @@ class coinex extends coinex$1 {
                         },
                     },
                     'info': chain,
-                };
-                const networks = this.safeDict(result[code], 'networks', {});
-                networks[networkId] = network;
-                result[code]['networks'] = networks;
+                });
             }
+            result[code] = this.safeCurrencyStructure({
+                'id': currencyId,
+                'code': code,
+                'name': undefined,
+                'active': canDeposit && canWithdraw,
+                'deposit': canDeposit,
+                'withdraw': canWithdraw,
+                'fee': undefined,
+                'precision': this.parseNumber(firstPrecisionString),
+                'limits': {
+                    'amount': {
+                        'min': undefined,
+                        'max': undefined,
+                    },
+                    'deposit': {
+                        'min': undefined,
+                        'max': undefined,
+                    },
+                    'withdraw': {
+                        'min': undefined,
+                        'max': undefined,
+                    },
+                },
+                'networks': {},
+                'type': 'crypto',
+                'info': coin,
+            });
         }
         return result;
     }
@@ -3928,7 +3933,7 @@ class coinex extends coinex$1 {
             'currency': this.safeCurrencyCode(undefined, currency),
             'network': undefined,
             'address': address,
-            'tag': tag,
+            'tag': this.safeString(depositAddress, 'memo', tag),
         };
     }
     /**
@@ -4782,8 +4787,7 @@ class coinex extends coinex$1 {
         //     }
         //
         const data = this.safeList(response, 'data', []);
-        const result = this.parseFundingRates(data, market);
-        return this.filterByArray(result, 'symbol', symbols);
+        return this.parseFundingRates(data, symbols);
     }
     /**
      * @method
@@ -4803,14 +4807,14 @@ class coinex extends coinex$1 {
         this.checkAddress(address);
         await this.loadMarkets();
         const currency = this.currency(code);
-        if (tag) {
-            address = address + ':' + tag;
-        }
         const request = {
             'ccy': currency['id'],
             'to_address': address,
-            'amount': this.numberToString(amount), // the actual amount without fees, https://www.coinex.com/fees
+            'amount': this.currencyToPrecision(code, amount), // the actual amount without fees, https://www.coinex.com/fees
         };
+        if (tag !== undefined) {
+            request['memo'] = tag;
+        }
         let networkCode = undefined;
         [networkCode, params] = this.handleNetworkCodeAndParams(params);
         if (networkCode !== undefined) {

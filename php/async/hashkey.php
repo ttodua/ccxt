@@ -12,12 +12,12 @@ use ccxt\ArgumentsRequired;
 use ccxt\BadRequest;
 use ccxt\NotSupported;
 use ccxt\Precise;
-use React\Async;
-use React\Promise\PromiseInterface;
+use \React\Async;
+use \React\Promise\PromiseInterface;
 
 class hashkey extends Exchange {
 
-    public function describe() {
+    public function describe(): mixed {
         return $this->deep_extend(parent::describe(), array(
             'id' => 'hashkey',
             'name' => 'HashKey Global',
@@ -373,17 +373,20 @@ class hashkey extends Exchange {
                         'limit' => 1000,
                         'daysBack' => 30,
                         'untilDays' => 30,
+                        'symbolRequired' => false,
                     ),
                     'fetchOrder' => array(
                         'marginMode' => false,
                         'trigger' => false,
                         'trailing' => false,
+                        'symbolRequired' => false,
                     ),
                     'fetchOpenOrders' => array(
                         'marginMode' => false,
                         'limit' => 1000,
                         'trigger' => false,
                         'trailing' => false,
+                        'symbolRequired' => false,
                     ),
                     'fetchOrders' => null,
                     'fetchClosedOrders' => null, // todo
@@ -1146,48 +1149,44 @@ class hashkey extends Exchange {
                 $currecy = $coins[$i];
                 $currencyId = $this->safe_string($currecy, 'coinId');
                 $code = $this->safe_currency_code($currencyId);
-                $allowWithdraw = $this->safe_bool($currecy, 'allowWithdraw');
-                $allowDeposit = $this->safe_bool($currecy, 'allowDeposit');
                 $networks = $this->safe_list($currecy, 'chainTypes');
-                $networksById = $this->safe_dict($this->options, 'networksById');
                 $parsedNetworks = array();
                 for ($j = 0; $j < count($networks); $j++) {
                     $network = $networks[$j];
                     $networkId = $this->safe_string($network, 'chainType');
-                    $networkName = $this->safe_string($networksById, $networkId, $networkId);
-                    $maxWithdrawQuantity = $this->omit_zero($this->safe_string($network, 'maxWithdrawQuantity'));
-                    $networkDeposit = $this->safe_bool($network, 'allowDeposit');
-                    $networkWithdraw = $this->safe_bool($network, 'allowWithdraw');
-                    $parsedNetworks[$networkName] = array(
+                    $networkCode = $this->network_code_to_id($networkId);
+                    $parsedNetworks[$networkCode] = array(
                         'id' => $networkId,
-                        'network' => $networkName,
+                        'network' => $networkCode,
                         'limits' => array(
                             'withdraw' => array(
                                 'min' => $this->safe_number($network, 'minWithdrawQuantity'),
-                                'max' => $this->parse_number($maxWithdrawQuantity),
+                                'max' => $this->parse_number($this->omit_zero($this->safe_string($network, 'maxWithdrawQuantity'))),
                             ),
                             'deposit' => array(
                                 'min' => $this->safe_number($network, 'minDepositQuantity'),
                                 'max' => null,
                             ),
                         ),
-                        'active' => $networkDeposit && $networkWithdraw,
-                        'deposit' => $networkDeposit,
-                        'withdraw' => $networkWithdraw,
+                        'active' => null,
+                        'deposit' => $this->safe_bool($network, 'allowDeposit'),
+                        'withdraw' => $this->safe_bool($network, 'allowWithdraw'),
                         'fee' => $this->safe_number($network, 'withdrawFee'),
                         'precision' => null,
                         'info' => $network,
                     );
                 }
-                $result[$code] = array(
+                $rawType = $this->safe_string($currecy, 'tokenType');
+                $type = ($rawType === 'REAL_MONEY') ? 'fiat' : 'crypto';
+                $result[$code] = $this->safe_currency_structure(array(
                     'id' => $currencyId,
                     'code' => $code,
                     'precision' => null,
-                    'type' => $this->parse_currency_type($this->safe_string($currecy, 'tokenType')),
+                    'type' => $type,
                     'name' => $this->safe_string($currecy, 'coinFullName'),
-                    'active' => $allowWithdraw && $allowDeposit,
-                    'deposit' => $allowDeposit,
-                    'withdraw' => $allowWithdraw,
+                    'active' => null,
+                    'deposit' => $this->safe_bool($currecy, 'allowDeposit'),
+                    'withdraw' => $this->safe_bool($currecy, 'allowWithdraw'),
                     'fee' => null,
                     'limits' => array(
                         'deposit' => array(
@@ -1201,20 +1200,10 @@ class hashkey extends Exchange {
                     ),
                     'networks' => $parsedNetworks,
                     'info' => $currecy,
-                );
+                ));
             }
             return $result;
         }) ();
-    }
-
-    public function parse_currency_type($type) {
-        $types = array(
-            'CHAIN_TOKEN' => 'crypto',
-            'ERC20_TOKEN' => 'crypto',
-            'BSC_TOKEN' => 'crypto',
-            'REAL_MONEY' => 'fiat',
-        );
-        return $this->safe_string($types, $type);
     }
 
     public function fetch_order_book(string $symbol, ?int $limit = null, $params = array ()): PromiseInterface {
@@ -1479,9 +1468,15 @@ class hashkey extends Exchange {
             $side = $isBuyer ? 'buy' : 'sell';
         }
         $takerOrMaker = null;
-        $isMaker = $this->safe_bool_n($trade, array( 'isMaker', 'isMarker', 'ibm' ));
+        $isMaker = $this->safe_bool_n($trade, array( 'isMaker', 'isMarker' ));
         if ($isMaker !== null) {
             $takerOrMaker = $isMaker ? 'maker' : 'taker';
+        }
+        $isBuyerMaker = $this->safe_bool($trade, 'ibm');
+        // if public $trade
+        if ($isBuyerMaker !== null) {
+            $takerOrMaker = 'taker';
+            $side = $isBuyerMaker ? 'sell' : 'buy';
         }
         $feeCost = $this->safe_string($trade, 'commission');
         $feeCurrncyId = $this->safe_string($trade, 'commissionAsset');
@@ -3846,8 +3841,7 @@ class hashkey extends Exchange {
             //         array( "symbol" => "ETHUSDT-PERPETUAL", "rate" => "0.0001", "nextSettleTime" => "1722297600000" )
             //     )
             //
-            $fundingRates = $this->parse_funding_rates($response);
-            return $this->filter_by_array($fundingRates, 'symbol', $symbols);
+            return $this->parse_funding_rates($response, $symbols);
         }) ();
     }
 

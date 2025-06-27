@@ -450,7 +450,7 @@ public partial class coinex : Exchange
                     { "ERC20", "ERC20" },
                     { "BRC20", "BRC20" },
                     { "SOL", "SOL" },
-                    { "TON", "SOL" },
+                    { "TON", "TON" },
                     { "BSV", "BSV" },
                     { "AVAXC", "AVA_C" },
                     { "AVAXX", "AVA" },
@@ -515,17 +515,20 @@ public partial class coinex : Exchange
                         { "limit", 1000 },
                         { "daysBack", null },
                         { "untilDays", 100000 },
+                        { "symbolRequired", true },
                     } },
                     { "fetchOrder", new Dictionary<string, object>() {
                         { "marginMode", false },
                         { "trigger", false },
                         { "trailing", false },
+                        { "symbolRequired", true },
                     } },
                     { "fetchOpenOrders", new Dictionary<string, object>() {
                         { "marginMode", true },
                         { "limit", 1000 },
                         { "trigger", true },
                         { "trailing", false },
+                        { "symbolRequired", false },
                     } },
                     { "fetchOrders", null },
                     { "fetchClosedOrders", new Dictionary<string, object>() {
@@ -536,6 +539,7 @@ public partial class coinex : Exchange
                         { "untilDays", null },
                         { "trigger", true },
                         { "trailing", false },
+                        { "symbolRequired", false },
                     } },
                     { "fetchOHLCV", new Dictionary<string, object>() {
                         { "limit", 1000 },
@@ -703,36 +707,15 @@ public partial class coinex : Exchange
             object canWithdraw = this.safeBool(asset, "withdraw_enabled");
             object firstChain = this.safeDict(chains, 0, new Dictionary<string, object>() {});
             object firstPrecisionString = this.parsePrecision(this.safeString(firstChain, "withdrawal_precision"));
-            ((IDictionary<string,object>)result)[(string)code] = new Dictionary<string, object>() {
-                { "id", currencyId },
-                { "code", code },
-                { "name", null },
-                { "active", isTrue(canDeposit) && isTrue(canWithdraw) },
-                { "deposit", canDeposit },
-                { "withdraw", canWithdraw },
-                { "fee", null },
-                { "precision", this.parseNumber(firstPrecisionString) },
-                { "limits", new Dictionary<string, object>() {
-                    { "amount", new Dictionary<string, object>() {
-                        { "min", null },
-                        { "max", null },
-                    } },
-                    { "deposit", new Dictionary<string, object>() {
-                        { "min", null },
-                        { "max", null },
-                    } },
-                    { "withdraw", new Dictionary<string, object>() {
-                        { "min", null },
-                        { "max", null },
-                    } },
-                } },
-                { "networks", new Dictionary<string, object>() {} },
-                { "info", coin },
-            };
+            object networks = new Dictionary<string, object>() {};
             for (object j = 0; isLessThan(j, getArrayLength(chains)); postFixIncrement(ref j))
             {
                 object chain = getValue(chains, j);
                 object networkId = this.safeString(chain, "chain");
+                if (isTrue(isEqual(networkId, null)))
+                {
+                    continue;
+                }
                 object precisionString = this.parsePrecision(this.safeString(chain, "withdrawal_precision"));
                 object feeString = this.safeString(chain, "withdrawal_fee");
                 object minNetworkDepositString = this.safeString(chain, "min_deposit_amount");
@@ -764,10 +747,35 @@ public partial class coinex : Exchange
                     } },
                     { "info", chain },
                 };
-                object networks = this.safeDict(getValue(result, code), "networks", new Dictionary<string, object>() {});
                 ((IDictionary<string,object>)networks)[(string)networkId] = network;
-                ((IDictionary<string,object>)getValue(result, code))["networks"] = networks;
             }
+            ((IDictionary<string,object>)result)[(string)code] = this.safeCurrencyStructure(new Dictionary<string, object>() {
+                { "id", currencyId },
+                { "code", code },
+                { "name", null },
+                { "active", isTrue(canDeposit) && isTrue(canWithdraw) },
+                { "deposit", canDeposit },
+                { "withdraw", canWithdraw },
+                { "fee", null },
+                { "precision", this.parseNumber(firstPrecisionString) },
+                { "limits", new Dictionary<string, object>() {
+                    { "amount", new Dictionary<string, object>() {
+                        { "min", null },
+                        { "max", null },
+                    } },
+                    { "deposit", new Dictionary<string, object>() {
+                        { "min", null },
+                        { "max", null },
+                    } },
+                    { "withdraw", new Dictionary<string, object>() {
+                        { "min", null },
+                        { "max", null },
+                    } },
+                } },
+                { "networks", new Dictionary<string, object>() {} },
+                { "type", "crypto" },
+                { "info", coin },
+            });
         }
         return result;
     }
@@ -3020,7 +3028,7 @@ public partial class coinex : Exchange
             { "currency", this.safeCurrencyCode(null, currency) },
             { "network", null },
             { "address", address },
-            { "tag", tag },
+            { "tag", this.safeString(depositAddress, "memo", tag) },
         };
     }
 
@@ -3900,8 +3908,7 @@ public partial class coinex : Exchange
         //     }
         //
         object data = this.safeList(response, "data", new List<object>() {});
-        object result = this.parseFundingRates(data, market);
-        return this.filterByArray(result, "symbol", symbols);
+        return this.parseFundingRates(data, symbols);
     }
 
     /**
@@ -3926,15 +3933,15 @@ public partial class coinex : Exchange
         this.checkAddress(address);
         await this.loadMarkets();
         object currency = this.currency(code);
-        if (isTrue(tag))
-        {
-            address = add(add(address, ":"), tag);
-        }
         object request = new Dictionary<string, object>() {
             { "ccy", getValue(currency, "id") },
             { "to_address", address },
-            { "amount", this.numberToString(amount) },
+            { "amount", this.currencyToPrecision(code, amount) },
         };
+        if (isTrue(!isEqual(tag, null)))
+        {
+            ((IDictionary<string,object>)request)["memo"] = tag;
+        }
         object networkCode = null;
         var networkCodeparametersVariable = this.handleNetworkCodeAndParams(parameters);
         networkCode = ((IList<object>)networkCodeparametersVariable)[0];

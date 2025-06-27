@@ -237,7 +237,7 @@ public partial class gemini : Exchange
                 { "fetchMarketFromWebRetries", 10 },
                 { "fetchMarketsFromAPI", new Dictionary<string, object>() {
                     { "fetchDetailsForAllSymbols", false },
-                    { "quoteCurrencies", new List<object>() {"USDT", "GUSD", "USD", "DAI", "EUR", "GBP", "SGD", "BTC", "ETH", "LTC", "BCH"} },
+                    { "quoteCurrencies", new List<object>() {"USDT", "GUSD", "USD", "DAI", "EUR", "GBP", "SGD", "BTC", "ETH", "LTC", "BCH", "SOL"} },
                 } },
                 { "fetchMarkets", new Dictionary<string, object>() {
                     { "webApiEnable", true },
@@ -303,17 +303,20 @@ public partial class gemini : Exchange
                         { "limit", 500 },
                         { "daysBack", null },
                         { "untilDays", null },
+                        { "symbolRequired", true },
                     } },
                     { "fetchOrder", new Dictionary<string, object>() {
                         { "marginMode", false },
                         { "trigger", false },
                         { "trailing", false },
+                        { "symbolRequired", false },
                     } },
                     { "fetchOpenOrders", new Dictionary<string, object>() {
                         { "marginMode", false },
                         { "limit", null },
                         { "trigger", false },
                         { "trailing", false },
+                        { "symbolRequired", false },
                     } },
                     { "fetchOrders", null },
                     { "fetchClosedOrders", null },
@@ -403,9 +406,6 @@ public partial class gemini : Exchange
             if (isTrue(!isEqual(networkId, null)))
             {
                 networkCode = this.networkIdToCode(networkId);
-            }
-            if (isTrue(!isEqual(networkCode, null)))
-            {
                 ((IDictionary<string,object>)networks)[(string)networkCode] = new Dictionary<string, object>() {
                     { "info", currency },
                     { "id", networkId },
@@ -427,7 +427,7 @@ public partial class gemini : Exchange
                     } },
                 };
             }
-            ((IDictionary<string,object>)result)[(string)code] = new Dictionary<string, object>() {
+            ((IDictionary<string,object>)result)[(string)code] = this.safeCurrencyStructure(new Dictionary<string, object>() {
                 { "info", currency },
                 { "id", id },
                 { "code", code },
@@ -449,7 +449,7 @@ public partial class gemini : Exchange
                     } },
                 } },
                 { "networks", networks },
-            };
+            });
         }
         return result;
     }
@@ -2117,6 +2117,7 @@ public partial class gemini : Exchange
             { "currency", code },
             { "address", address },
             { "tag", null },
+            { "network", null },
             { "info", response },
         };
     }

@@ -10,7 +10,7 @@ use ccxt\abstract\gemini as Exchange;
 
 class gemini extends Exchange {
 
-    public function describe() {
+    public function describe(): mixed {
         return $this->deep_extend(parent::describe(), array(
             'id' => 'gemini',
             'name' => 'Gemini',
@@ -258,7 +258,7 @@ class gemini extends Exchange {
                 'fetchMarketFromWebRetries' => 10,
                 'fetchMarketsFromAPI' => array(
                     'fetchDetailsForAllSymbols' => false,
-                    'quoteCurrencies' => array( 'USDT', 'GUSD', 'USD', 'DAI', 'EUR', 'GBP', 'SGD', 'BTC', 'ETH', 'LTC', 'BCH' ),
+                    'quoteCurrencies' => array( 'USDT', 'GUSD', 'USD', 'DAI', 'EUR', 'GBP', 'SGD', 'BTC', 'ETH', 'LTC', 'BCH', 'SOL' ),
                 ),
                 'fetchMarkets' => array(
                     'webApiEnable' => true, // fetches from WEB
@@ -324,17 +324,20 @@ class gemini extends Exchange {
                         'limit' => 500,
                         'daysBack' => null,
                         'untilDays' => null,
+                        'symbolRequired' => true,
                     ),
                     'fetchOrder' => array(
                         'marginMode' => false,
                         'trigger' => false,
                         'trailing' => false,
+                        'symbolRequired' => false,
                     ),
                     'fetchOpenOrders' => array(
                         'marginMode' => false,
                         'limit' => null,
                         'trigger' => false,
                         'trailing' => false,
+                        'symbolRequired' => false,
                     ),
                     'fetchOrders' => null,
                     'fetchClosedOrders' => null, // todo => implement
@@ -413,8 +416,6 @@ class gemini extends Exchange {
             $networkCode = null;
             if ($networkId !== null) {
                 $networkCode = $this->network_id_to_code($networkId);
-            }
-            if ($networkCode !== null) {
                 $networks[$networkCode] = array(
                     'info' => $currency,
                     'id' => $networkId,
@@ -436,7 +437,7 @@ class gemini extends Exchange {
                     ),
                 );
             }
-            $result[$code] = array(
+            $result[$code] = $this->safe_currency_structure(array(
                 'info' => $currency,
                 'id' => $id,
                 'code' => $code,
@@ -458,7 +459,7 @@ class gemini extends Exchange {
                     ),
                 ),
                 'networks' => $networks,
-            );
+            ));
         }
         return $result;
     }
@@ -1959,7 +1960,7 @@ class gemini extends Exchange {
         return null;
     }
 
-    public function create_deposit_address(string $code, $params = array ()) {
+    public function create_deposit_address(string $code, $params = array ()): array {
         /**
          * create a $currency deposit $address
          *
@@ -1981,6 +1982,7 @@ class gemini extends Exchange {
             'currency' => $code,
             'address' => $address,
             'tag' => null,
+            'network' => null,
             'info' => $response,
         );
     }

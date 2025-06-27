@@ -6,7 +6,7 @@ var number = require('./base/functions/number.js');
 var Precise = require('./base/Precise.js');
 var sha256 = require('./static_dependencies/noble-hashes/sha256.js');
 
-// ---------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 /**
  * @class mexc
@@ -443,6 +443,7 @@ class mexc extends mexc$1 {
                         '1h': '60m',
                         '4h': '4h',
                         '1d': '1d',
+                        '1w': '1W',
                         '1M': '1M',
                     },
                     'swap': {
@@ -711,17 +712,20 @@ class mexc extends mexc$1 {
                         'limit': 100,
                         'daysBack': 30,
                         'untilDays': undefined,
+                        'symbolRequired': true,
                     },
                     'fetchOrder': {
                         'marginMode': false,
                         'trigger': false,
                         'trailing': false,
+                        'symbolRequired': true,
                     },
                     'fetchOpenOrders': {
                         'marginMode': true,
                         'limit': undefined,
                         'trigger': false,
                         'trailing': false,
+                        'symbolRequired': true,
                     },
                     'fetchOrders': {
                         'marginMode': true,
@@ -730,6 +734,7 @@ class mexc extends mexc$1 {
                         'untilDays': 7,
                         'trigger': false,
                         'trailing': false,
+                        'symbolRequired': true,
                     },
                     'fetchClosedOrders': {
                         'marginMode': true,
@@ -739,6 +744,7 @@ class mexc extends mexc$1 {
                         'untilDays': 7,
                         'trigger': false,
                         'trailing': false,
+                        'symbolRequired': true,
                     },
                     'fetchOHLCV': {
                         'limit': 1000,
@@ -834,6 +840,7 @@ class mexc extends mexc$1 {
                 'PROS': 'PROSFINANCE',
                 'SIN': 'SINCITYTOKEN',
                 'SOUL': 'SOULSWAP',
+                'XBT': 'XBT', // restore original mapping
             },
             'exceptions': {
                 'exact': {
@@ -1081,88 +1088,49 @@ class mexc extends mexc$1 {
             const currency = response[i];
             const id = this.safeString(currency, 'coin');
             const code = this.safeCurrencyCode(id);
-            const name = this.safeString(currency, 'name');
-            let currencyActive = false;
-            let currencyFee = undefined;
-            let currencyWithdrawMin = undefined;
-            let currencyWithdrawMax = undefined;
-            let depositEnabled = false;
-            let withdrawEnabled = false;
             const networks = {};
             const chains = this.safeValue(currency, 'networkList', []);
             for (let j = 0; j < chains.length; j++) {
                 const chain = chains[j];
                 const networkId = this.safeString2(chain, 'netWork', 'network');
                 const network = this.networkIdToCode(networkId);
-                const isDepositEnabled = this.safeBool(chain, 'depositEnable', false);
-                const isWithdrawEnabled = this.safeBool(chain, 'withdrawEnable', false);
-                const active = (isDepositEnabled && isWithdrawEnabled);
-                currencyActive = active || currencyActive;
-                const withdrawMin = this.safeString(chain, 'withdrawMin');
-                const withdrawMax = this.safeString(chain, 'withdrawMax');
-                currencyWithdrawMin = (currencyWithdrawMin === undefined) ? withdrawMin : currencyWithdrawMin;
-                currencyWithdrawMax = (currencyWithdrawMax === undefined) ? withdrawMax : currencyWithdrawMax;
-                const fee = this.safeNumber(chain, 'withdrawFee');
-                currencyFee = (currencyFee === undefined) ? fee : currencyFee;
-                if (Precise["default"].stringGt(currencyWithdrawMin, withdrawMin)) {
-                    currencyWithdrawMin = withdrawMin;
-                }
-                if (Precise["default"].stringLt(currencyWithdrawMax, withdrawMax)) {
-                    currencyWithdrawMax = withdrawMax;
-                }
-                if (isDepositEnabled) {
-                    depositEnabled = true;
-                }
-                if (isWithdrawEnabled) {
-                    withdrawEnabled = true;
-                }
                 networks[network] = {
                     'info': chain,
                     'id': networkId,
                     'network': network,
-                    'active': active,
-                    'deposit': isDepositEnabled,
-                    'withdraw': isWithdrawEnabled,
-                    'fee': fee,
+                    'active': undefined,
+                    'deposit': this.safeBool(chain, 'depositEnable', false),
+                    'withdraw': this.safeBool(chain, 'withdrawEnable', false),
+                    'fee': this.safeNumber(chain, 'withdrawFee'),
                     'precision': undefined,
                     'limits': {
                         'withdraw': {
-                            'min': withdrawMin,
-                            'max': withdrawMax,
+                            'min': this.safeString(chain, 'withdrawMin'),
+                            'max': this.safeString(chain, 'withdrawMax'),
                         },
                     },
+                    'contract': this.safeString(chain, 'contract'),
                 };
             }
-            const networkKeys = Object.keys(networks);
-            const networkKeysLength = networkKeys.length;
-            if ((networkKeysLength === 1) || ('NONE' in networks)) {
-                const defaultNetwork = this.safeValue2(networks, 'NONE', networkKeysLength - 1);
-                if (defaultNetwork !== undefined) {
-                    currencyFee = defaultNetwork['fee'];
-                }
-            }
-            result[code] = {
+            result[code] = this.safeCurrencyStructure({
                 'info': currency,
                 'id': id,
                 'code': code,
-                'name': name,
-                'active': currencyActive,
-                'deposit': depositEnabled,
-                'withdraw': withdrawEnabled,
-                'fee': currencyFee,
+                'name': this.safeString(currency, 'name'),
+                'active': undefined,
+                'deposit': undefined,
+                'withdraw': undefined,
+                'fee': undefined,
                 'precision': undefined,
                 'limits': {
                     'amount': {
                         'min': undefined,
                         'max': undefined,
                     },
-                    'withdraw': {
-                        'min': currencyWithdrawMin,
-                        'max': currencyWithdrawMax,
-                    },
                 },
+                'type': 'crypto',
                 'networks': networks,
-            };
+            });
         }
         return result;
     }
@@ -1380,6 +1348,7 @@ class mexc extends mexc$1 {
             const quote = this.safeCurrencyCode(quoteId);
             const settle = this.safeCurrencyCode(settleId);
             const state = this.safeString(market, 'state');
+            const isLinear = quote === settle;
             result.push({
                 'id': id,
                 'symbol': base + '/' + quote + ':' + settle,
@@ -1397,8 +1366,8 @@ class mexc extends mexc$1 {
                 'option': false,
                 'active': (state === '0'),
                 'contract': true,
-                'linear': true,
-                'inverse': false,
+                'linear': isLinear,
+                'inverse': !isLinear,
                 'taker': this.safeNumber(market, 'takerFeeRate'),
                 'maker': this.safeNumber(market, 'makerFeeRate'),
                 'contractSize': this.safeNumber(market, 'contractSize'),
@@ -2294,7 +2263,7 @@ class mexc extends mexc$1 {
      * @param {bool} [params.postOnly] if true, the order will only be posted if it will be a maker order
      * @param {bool} [params.reduceOnly] *contract only* indicates if this order is to reduce the size of a position
      * @param {bool} [params.hedged] *swap only* true for hedged mode, false for one way mode, default is false
-     *
+     * @param {string} [params.timeInForce] 'IOC' or 'FOK', default is 'GTC'
      * EXCHANGE SPECIFIC PARAMETERS
      * @param {int} [params.leverage] *contract only* leverage is necessary on isolated margin
      * @param {long} [params.positionId] *contract only* it is recommended to fill in this parameter when closing a position
@@ -2362,6 +2331,16 @@ class mexc extends mexc$1 {
         [postOnly, params] = this.handlePostOnly(type === 'market', type === 'LIMIT_MAKER', params);
         if (postOnly) {
             request['type'] = 'LIMIT_MAKER';
+        }
+        const tif = this.safeString(params, 'timeInForce');
+        if (tif !== undefined) {
+            params = this.omit(params, 'timeInForce');
+            if (tif === 'IOC') {
+                request['type'] = 'IMMEDIATE_OR_CANCEL';
+            }
+            else if (tif === 'FOK') {
+                request['type'] = 'FILL_OR_KILL';
+            }
         }
         return this.extend(request, params);
     }
@@ -3408,13 +3387,27 @@ class mexc extends mexc$1 {
     }
     parseOrder(order, market = undefined) {
         //
-        // spot: createOrder
+        // spot
+        //    createOrder
         //
-        //     {
+        //    {
+        //        "symbol": "FARTCOINUSDT",
+        //        "orderId": "C02__342252993005723644225",
+        //        "orderListId": "-1",
+        //        "price": "1.1",
+        //        "origQty": "6.3",
+        //        "type": "IMMEDIATE_OR_CANCEL",
+        //        "side": "SELL",
+        //        "transactTime": "1745852205223"
+        //    }
+        //
+        //    unknown endpoint on spot
+        //
+        //    {
         //         "symbol": "BTCUSDT",
         //         "orderId": "123738410679123456",
         //         "orderListId": -1
-        //     }
+        //    }
         //
         // margin: createOrder
         //
@@ -3579,6 +3572,11 @@ class mexc extends mexc$1 {
         else {
             id = this.safeString2(order, 'orderId', 'id');
         }
+        let timeInForce = this.parseOrderTimeInForce(this.safeString(order, 'timeInForce'));
+        const typeRaw = this.safeString(order, 'type');
+        if (timeInForce === undefined) {
+            timeInForce = this.getTifFromRawOrderType(typeRaw);
+        }
         const marketId = this.safeString(order, 'symbol');
         market = this.safeMarket(marketId, market);
         const timestamp = this.safeIntegerN(order, ['time', 'createTime', 'transactTime']);
@@ -3601,8 +3599,8 @@ class mexc extends mexc$1 {
             'lastTradeTimestamp': undefined,
             'status': this.parseOrderStatus(this.safeString2(order, 'status', 'state')),
             'symbol': market['symbol'],
-            'type': this.parseOrderType(this.safeString(order, 'type')),
-            'timeInForce': this.parseOrderTimeInForce(this.safeString(order, 'timeInForce')),
+            'type': this.parseOrderType(typeRaw),
+            'timeInForce': timeInForce,
             'side': this.parseOrderSide(this.safeString(order, 'side')),
             'price': this.safeNumber(order, 'price'),
             'triggerPrice': this.safeNumber2(order, 'stopPrice', 'triggerPrice'),
@@ -3631,6 +3629,9 @@ class mexc extends mexc$1 {
             'MARKET': 'market',
             'LIMIT': 'limit',
             'LIMIT_MAKER': 'limit',
+            // on spot, during submission below types are used only accepted as limit order
+            'IMMEDIATE_OR_CANCEL': 'limit',
+            'FILL_OR_KILL': 'limit',
         };
         return this.safeString(statuses, status, status);
     }
@@ -3657,6 +3658,16 @@ class mexc extends mexc$1 {
             'IOC': 'IOC',
         };
         return this.safeString(statuses, status, status);
+    }
+    getTifFromRawOrderType(orderType = undefined) {
+        const statuses = {
+            'LIMIT': 'GTC',
+            'LIMIT_MAKER': 'POST_ONLY',
+            'IMMEDIATE_OR_CANCEL': 'IOC',
+            'FILL_OR_KILL': 'FOK',
+            'MARKET': 'IOC',
+        };
+        return this.safeString(statuses, orderType, orderType);
     }
     async fetchAccountHelper(type, params) {
         if (type === 'spot') {
@@ -4693,7 +4704,7 @@ class mexc extends mexc$1 {
         return {
             'info': depositAddress,
             'currency': this.safeCurrencyCode(currencyId, currency),
-            'network': this.networkIdToCode(networkId),
+            'network': this.networkIdToCode(networkId, currencyId),
             'address': address,
             'tag': this.safeString(depositAddress, 'memo'),
         };
@@ -4855,7 +4866,7 @@ class mexc extends mexc$1 {
             const rawNetwork = this.safeString(params, 'network');
             if (rawNetwork !== undefined) {
                 params = this.omit(params, 'network');
-                request['coin'] += '-' + rawNetwork;
+                request['coin'] = request['coin'] + '-' + rawNetwork;
             }
         }
         if (since !== undefined) {
@@ -5988,13 +5999,23 @@ class mexc extends mexc$1 {
             else {
                 url = this.urls['api'][section][access] + '/api/' + this.version + '/' + path;
             }
-            let paramsEncoded = '';
+            let urlParams = params;
             if (access === 'private') {
-                params['timestamp'] = this.nonce();
-                params['recvWindow'] = this.safeInteger(this.options, 'recvWindow', 5000);
+                if (section === 'broker' && ((method === 'POST') || (method === 'PUT') || (method === 'DELETE'))) {
+                    urlParams = {
+                        'timestamp': this.nonce(),
+                        'recvWindow': this.safeInteger(this.options, 'recvWindow', 5000),
+                    };
+                    body = this.json(params);
+                }
+                else {
+                    urlParams['timestamp'] = this.nonce();
+                    urlParams['recvWindow'] = this.safeInteger(this.options, 'recvWindow', 5000);
+                }
             }
-            if (Object.keys(params).length) {
-                paramsEncoded = this.urlencode(params);
+            let paramsEncoded = '';
+            if (Object.keys(urlParams).length) {
+                paramsEncoded = this.urlencode(urlParams);
                 url += '?' + paramsEncoded;
             }
             if (access === 'private') {

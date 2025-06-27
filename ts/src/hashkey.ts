@@ -15,7 +15,7 @@ import type { Account, Balances, Bool, Currencies, Currency, Dict, FundingRateHi
  * @augments Exchange
  */
 export default class hashkey extends Exchange {
-    describe () {
+    describe (): any {
         return this.deepExtend (super.describe (), {
             'id': 'hashkey',
             'name': 'HashKey Global',
@@ -371,17 +371,20 @@ export default class hashkey extends Exchange {
                         'limit': 1000,
                         'daysBack': 30,
                         'untilDays': 30,
+                        'symbolRequired': false,
                     },
                     'fetchOrder': {
                         'marginMode': false,
                         'trigger': false,
                         'trailing': false,
+                        'symbolRequired': false,
                     },
                     'fetchOpenOrders': {
                         'marginMode': false,
                         'limit': 1000,
                         'trigger': false,
                         'trailing': false,
+                        'symbolRequired': false,
                     },
                     'fetchOrders': undefined,
                     'fetchClosedOrders': undefined, // todo
@@ -1137,48 +1140,44 @@ export default class hashkey extends Exchange {
             const currecy = coins[i];
             const currencyId = this.safeString (currecy, 'coinId');
             const code = this.safeCurrencyCode (currencyId);
-            const allowWithdraw = this.safeBool (currecy, 'allowWithdraw');
-            const allowDeposit = this.safeBool (currecy, 'allowDeposit');
             const networks = this.safeList (currecy, 'chainTypes');
-            const networksById = this.safeDict (this.options, 'networksById');
             const parsedNetworks: Dict = {};
             for (let j = 0; j < networks.length; j++) {
                 const network = networks[j];
                 const networkId = this.safeString (network, 'chainType');
-                const networkName = this.safeString (networksById, networkId, networkId);
-                const maxWithdrawQuantity = this.omitZero (this.safeString (network, 'maxWithdrawQuantity'));
-                const networkDeposit = this.safeBool (network, 'allowDeposit');
-                const networkWithdraw = this.safeBool (network, 'allowWithdraw');
-                parsedNetworks[networkName] = {
+                const networkCode = this.networkCodeToId (networkId);
+                parsedNetworks[networkCode] = {
                     'id': networkId,
-                    'network': networkName,
+                    'network': networkCode,
                     'limits': {
                         'withdraw': {
                             'min': this.safeNumber (network, 'minWithdrawQuantity'),
-                            'max': this.parseNumber (maxWithdrawQuantity),
+                            'max': this.parseNumber (this.omitZero (this.safeString (network, 'maxWithdrawQuantity'))),
                         },
                         'deposit': {
                             'min': this.safeNumber (network, 'minDepositQuantity'),
                             'max': undefined,
                         },
                     },
-                    'active': networkDeposit && networkWithdraw,
-                    'deposit': networkDeposit,
-                    'withdraw': networkWithdraw,
+                    'active': undefined,
+                    'deposit': this.safeBool (network, 'allowDeposit'),
+                    'withdraw': this.safeBool (network, 'allowWithdraw'),
                     'fee': this.safeNumber (network, 'withdrawFee'),
                     'precision': undefined,
                     'info': network,
                 };
             }
-            result[code] = {
+            const rawType = this.safeString (currecy, 'tokenType');
+            const type = (rawType === 'REAL_MONEY') ? 'fiat' : 'crypto';
+            result[code] = this.safeCurrencyStructure ({
                 'id': currencyId,
                 'code': code,
                 'precision': undefined,
-                'type': this.parseCurrencyType (this.safeString (currecy, 'tokenType')),
+                'type': type,
                 'name': this.safeString (currecy, 'coinFullName'),
-                'active': allowWithdraw && allowDeposit,
-                'deposit': allowDeposit,
-                'withdraw': allowWithdraw,
+                'active': undefined,
+                'deposit': this.safeBool (currecy, 'allowDeposit'),
+                'withdraw': this.safeBool (currecy, 'allowWithdraw'),
                 'fee': undefined,
                 'limits': {
                     'deposit': {
@@ -1192,19 +1191,9 @@ export default class hashkey extends Exchange {
                 },
                 'networks': parsedNetworks,
                 'info': currecy,
-            };
+            });
         }
         return result;
-    }
-
-    parseCurrencyType (type) {
-        const types = {
-            'CHAIN_TOKEN': 'crypto',
-            'ERC20_TOKEN': 'crypto',
-            'BSC_TOKEN': 'crypto',
-            'REAL_MONEY': 'fiat',
-        };
-        return this.safeString (types, type);
     }
 
     /**
@@ -1463,9 +1452,15 @@ export default class hashkey extends Exchange {
             side = isBuyer ? 'buy' : 'sell';
         }
         let takerOrMaker = undefined;
-        const isMaker = this.safeBoolN (trade, [ 'isMaker', 'isMarker', 'ibm' ]);
+        const isMaker = this.safeBoolN (trade, [ 'isMaker', 'isMarker' ]);
         if (isMaker !== undefined) {
             takerOrMaker = isMaker ? 'maker' : 'taker';
+        }
+        const isBuyerMaker = this.safeBool (trade, 'ibm');
+        // if public trade
+        if (isBuyerMaker !== undefined) {
+            takerOrMaker = 'taker';
+            side = isBuyerMaker ? 'sell' : 'buy';
         }
         let feeCost = this.safeString (trade, 'commission');
         let feeCurrncyId = this.safeString (trade, 'commissionAsset');
@@ -3783,8 +3778,7 @@ export default class hashkey extends Exchange {
         //         { "symbol": "ETHUSDT-PERPETUAL", "rate": "0.0001", "nextSettleTime": "1722297600000" }
         //     ]
         //
-        const fundingRates = this.parseFundingRates (response);
-        return this.filterByArray (fundingRates, 'symbol', symbols);
+        return this.parseFundingRates (response, symbols);
     }
 
     parseFundingRate (contract, market: Market = undefined): FundingRate {

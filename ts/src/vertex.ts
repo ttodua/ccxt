@@ -8,7 +8,7 @@ import { TICK_SIZE } from './base/functions/number.js';
 import { keccak_256 as keccak } from './static_dependencies/noble-hashes/sha3.js';
 import { secp256k1 } from './static_dependencies/noble-curves/secp256k1.js';
 import { ecdsa } from './base/functions/crypto.js';
-import type { Market, Ticker, Tickers, TradingFees, Balances, Int, OrderBook, OHLCV, Str, Order, OrderType, OrderSide, Trade, Strings, Dict, Num, Currencies, FundingRate, FundingRates, Currency, Transaction, OpenInterests } from './base/types.js';
+import type { Market, Ticker, Tickers, TradingFees, Balances, Int, OrderBook, OHLCV, Str, Order, OrderType, OrderSide, Trade, Strings, Dict, Num, Currencies, FundingRate, FundingRates, Currency, Transaction, OpenInterests, Position } from './base/types.js';
 
 //  ---------------------------------------------------------------------------
 
@@ -17,7 +17,7 @@ import type { Market, Ticker, Tickers, TradingFees, Balances, Int, OrderBook, OH
  * @augments Exchange
  */
 export default class vertex extends Exchange {
-    describe () {
+    describe (): any {
         return this.deepExtend (super.describe (), {
             'id': 'vertex',
             'name': 'Vertex',
@@ -325,6 +325,72 @@ export default class vertex extends Exchange {
                 'timeDifference': 0, // the difference between system clock and exchange server clock
                 'brokerId': 5930043274845996,
             },
+            'features': {
+                'default': {
+                    'sandbox': true,
+                    'createOrder': {
+                        'marginMode': false,
+                        'triggerPrice': true, // todo
+                        'triggerDirection': false,
+                        'triggerPriceType': undefined,
+                        'stopLossPrice': true, // todo
+                        'takeProfitPrice': true, // todo
+                        'attachedStopLossTakeProfit': undefined,
+                        'timeInForce': {
+                            'IOC': false,
+                            'FOK': false,
+                            'PO': true,
+                            'GTD': true,
+                        },
+                        'hedged': false,
+                        'trailing': false,
+                        'leverage': false,
+                        'marketBuyByCost': true, // todo
+                        'marketBuyRequiresPrice': true, // todo fix implementation
+                        'selfTradePrevention': false,
+                        'iceberg': false,
+                    },
+                    'createOrders': undefined,
+                    'fetchMyTrades': {
+                        'marginMode': false,
+                        'limit': 500,
+                        'daysBack': 100000, // todo
+                        'untilDays': undefined,
+                        'symbolRequired': false,
+                    },
+                    'fetchOrder': {
+                        'marginMode': false,
+                        'trigger': false,
+                        'trailing': false,
+                        'symbolRequired': true,
+                    },
+                    'fetchOpenOrders': {
+                        'marginMode': false,
+                        'limit': 500,
+                        'trigger': true,
+                        'trailing': false,
+                        'symbolRequired': false,
+                    },
+                    'fetchOrders': undefined, // todo, only for trigger
+                    'fetchClosedOrders': undefined, // todo through fetchOrders
+                    'fetchOHLCV': {
+                        'limit': 1000,
+                    },
+                },
+                'spot': {
+                    'extends': 'default',
+                },
+                'swap': {
+                    'linear': {
+                        'extends': 'default',
+                    },
+                    'inverse': undefined,
+                },
+                'future': {
+                    'linear': undefined,
+                    'inverse': undefined,
+                },
+            },
         });
     }
 
@@ -393,11 +459,10 @@ export default class vertex extends Exchange {
             if ((tickerId !== undefined) && (tickerId.indexOf ('PERP') > 0)) {
                 continue;
             }
-            const id = this.safeString (data, 'product_id');
             const name = this.safeString (data, 'symbol');
             const code = this.safeCurrencyCode (name);
-            result[code] = {
-                'id': id,
+            result[code] = this.safeCurrencyStructure ({
+                'id': this.safeString (data, 'product_id'),
                 'name': name,
                 'code': code,
                 'precision': undefined,
@@ -417,7 +482,7 @@ export default class vertex extends Exchange {
                         'max': undefined,
                     },
                 },
-            };
+            });
         }
         return result;
     }
@@ -571,10 +636,10 @@ export default class vertex extends Exchange {
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {int} the current integer timestamp in milliseconds from the exchange server
      */
-    async fetchTime (params = {}) {
+    async fetchTime (params = {}): Promise<Int> {
         const response = await this.v1GatewayGetTime (params);
         // 1717481623452
-        return this.parseNumber (response);
+        return this.parseToInt (response);
     }
 
     /**
@@ -1507,7 +1572,7 @@ export default class vertex extends Exchange {
         if (base.indexOf ('PERP') > 0) {
             marketId = marketId.replace ('-PERP', '') + ':USDC';
         }
-        market = this.market (marketId);
+        market = this.safeMarket (marketId, market);
         const last = this.safeString (ticker, 'last_price');
         return this.safeTicker ({
             'symbol': market['symbol'],
@@ -2205,7 +2270,7 @@ export default class vertex extends Exchange {
             //       "product_id": 1,
             //       "orders": [
             //         {
-            //           "product_id": 1,
+            //           "product_id": 2,
             //           "sender": "0x7a5ec2748e9065794491a8d29dcf3f9edb8d7c43000000000000000000000000",
             //           "price_x18": "1000000000000000000",
             //           "amount": "1000000000000000000",
@@ -2214,7 +2279,7 @@ export default class vertex extends Exchange {
             //           "order_type": "default",
             //           "unfilled_amount": "1000000000000000000",
             //           "digest": "0x0000000000000000000000000000000000000000000000000000000000000000",
-            //           "placed_at": 1682437739,
+            //           "placed_at": 1682437737,
             //           "order_type": "ioc"
             //         }
             //       ]
@@ -2444,15 +2509,16 @@ export default class vertex extends Exchange {
             'digests': ids,
             'nonce': nonce,
         };
+        const productIds = cancels['productIds'];
         const marketIdNum = this.parseToNumeric (marketId);
         for (let i = 0; i < ids.length; i++) {
-            cancels['productIds'].push (marketIdNum);
+            productIds.push (marketIdNum);
         }
         const request = {
             'cancel_orders': {
                 'tx': {
                     'sender': cancels['sender'],
-                    'productIds': cancels['productIds'],
+                    'productIds': productIds,
                     'digests': cancels['digests'],
                     'nonce': this.numberToString (cancels['nonce']),
                 },
@@ -2923,7 +2989,7 @@ export default class vertex extends Exchange {
      * @param {string} [params.user] user address, will default to this.walletAddress if not provided
      * @returns {object[]} a list of [position structure]{@link https://docs.ccxt.com/#/?id=position-structure}
      */
-    async fetchPositions (symbols: Strings = undefined, params = {}) {
+    async fetchPositions (symbols: Strings = undefined, params = {}): Promise<Position[]> {
         let userAddress = undefined;
         [ userAddress, params ] = this.handlePublicAddress ('fetchPositions', params);
         const request = {

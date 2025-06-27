@@ -12,12 +12,12 @@ use ccxt\BadRequest;
 use ccxt\InvalidOrder;
 use ccxt\NotSupported;
 use ccxt\Precise;
-use React\Async;
-use React\Promise\PromiseInterface;
+use \React\Async;
+use \React\Promise\PromiseInterface;
 
 class kucoinfutures extends kucoin {
 
-    public function describe() {
+    public function describe(): mixed {
         return $this->deep_extend(parent::describe(), array(
             'id' => 'kucoinfutures',
             'name' => 'KuCoin Futures',
@@ -403,17 +403,20 @@ class kucoinfutures extends kucoin {
                         'limit' => 1000,
                         'daysBack' => null,
                         'untilDays' => 7,
+                        'symbolRequired' => false,
                     ),
                     'fetchOrder' => array(
                         'marginMode' => false,
                         'trigger' => false,
                         'trailing' => false,
+                        'symbolRequired' => false,
                     ),
                     'fetchOpenOrders' => array(
                         'marginMode' => false,
                         'limit' => 1000,
                         'trigger' => true,
                         'trailing' => false,
+                        'symbolRequired' => false,
                     ),
                     'fetchOrders' => null,
                     'fetchClosedOrders' => array(
@@ -424,6 +427,7 @@ class kucoinfutures extends kucoin {
                         'untilDays' => null,
                         'trigger' => true,
                         'trailing' => false,
+                        'symbolRequired' => false,
                     ),
                     'fetchOHLCV' => array(
                         'limit' => 500,
@@ -649,7 +653,7 @@ class kucoinfutures extends kucoin {
         }) ();
     }
 
-    public function fetch_time($params = array ()) {
+    public function fetch_time($params = array ()): PromiseInterface {
         return Async\async(function () use ($params) {
             /**
              * fetches the current integer timestamp in milliseconds from the exchange server
@@ -1277,7 +1281,7 @@ class kucoinfutures extends kucoin {
         }) ();
     }
 
-    public function fetch_positions(?array $symbols = null, $params = array ()) {
+    public function fetch_positions(?array $symbols = null, $params = array ()): PromiseInterface {
         return Async\async(function () use ($symbols, $params) {
             /**
              * fetch all open positions
@@ -1570,6 +1574,7 @@ class kucoinfutures extends kucoin {
              * @param {string} [$params->timeInForce] GTC, GTT, IOC, or FOK, default is GTC, limit orders only
              * @param {string} [$params->postOnly] Post only flag, invalid when timeInForce is IOC or FOK
              * @param {float} [$params->cost] the cost of the order in units of USDT
+             * @param {string} [$params->marginMode] 'cross' or 'isolated', default is 'isolated'
              * ----------------- Exchange Specific Parameters -----------------
              * @param {float} [$params->leverage] Leverage size of the order (mandatory param in request, default is 1)
              * @param {string} [$params->clientOid] client order id, defaults to uuid if not passed
@@ -1675,6 +1680,11 @@ class kucoinfutures extends kucoin {
             'type' => $type, // limit or $market
             'leverage' => 1,
         );
+        $marginModeUpper = $this->safe_string_upper($params, 'marginMode');
+        if ($marginModeUpper !== null) {
+            $params = $this->omit($params, 'marginMode');
+            $request['marginMode'] = $marginModeUpper;
+        }
         $cost = $this->safe_string($params, 'cost');
         $params = $this->omit($params, 'cost');
         if ($cost !== null) {
@@ -2222,7 +2232,7 @@ class kucoinfutures extends kucoin {
         }) ();
     }
 
-    public function fetch_order(?string $id = null, ?string $symbol = null, $params = array ()) {
+    public function fetch_order(?string $id, ?string $symbol = null, $params = array ()) {
         return Async\async(function () use ($id, $symbol, $params) {
             /**
              * fetches information on an order made by the user

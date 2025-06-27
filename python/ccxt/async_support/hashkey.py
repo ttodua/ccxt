@@ -6,7 +6,7 @@
 from ccxt.async_support.base.exchange import Exchange
 from ccxt.abstract.hashkey import ImplicitAPI
 import hashlib
-from ccxt.base.types import Account, Balances, Bool, Currencies, Currency, DepositAddress, Int, LastPrice, LastPrices, LedgerEntry, Leverage, LeverageTier, LeverageTiers, Market, Num, Order, OrderBook, OrderRequest, OrderSide, OrderType, Position, Str, Strings, Ticker, Tickers, FundingRate, FundingRates, Trade, TradingFeeInterface, TradingFees, Transaction, TransferEntry
+from ccxt.base.types import Account, Any, Balances, Bool, Currencies, Currency, DepositAddress, Int, LastPrice, LastPrices, LedgerEntry, Leverage, LeverageTier, LeverageTiers, Market, Num, Order, OrderBook, OrderRequest, OrderSide, OrderType, Position, Str, Strings, Ticker, Tickers, FundingRate, FundingRates, Trade, TradingFeeInterface, TradingFees, Transaction, TransferEntry
 from typing import List
 from ccxt.base.errors import ExchangeError
 from ccxt.base.errors import AuthenticationError
@@ -38,7 +38,7 @@ from ccxt.base.precise import Precise
 
 class hashkey(Exchange, ImplicitAPI):
 
-    def describe(self):
+    def describe(self) -> Any:
         return self.deep_extend(super(hashkey, self).describe(), {
             'id': 'hashkey',
             'name': 'HashKey Global',
@@ -394,17 +394,20 @@ class hashkey(Exchange, ImplicitAPI):
                         'limit': 1000,
                         'daysBack': 30,
                         'untilDays': 30,
+                        'symbolRequired': False,
                     },
                     'fetchOrder': {
                         'marginMode': False,
                         'trigger': False,
                         'trailing': False,
+                        'symbolRequired': False,
                     },
                     'fetchOpenOrders': {
                         'marginMode': False,
                         'limit': 1000,
                         'trigger': False,
                         'trailing': False,
+                        'symbolRequired': False,
                     },
                     'fetchOrders': None,
                     'fetchClosedOrders': None,  # todo
@@ -1148,47 +1151,43 @@ class hashkey(Exchange, ImplicitAPI):
             currecy = coins[i]
             currencyId = self.safe_string(currecy, 'coinId')
             code = self.safe_currency_code(currencyId)
-            allowWithdraw = self.safe_bool(currecy, 'allowWithdraw')
-            allowDeposit = self.safe_bool(currecy, 'allowDeposit')
             networks = self.safe_list(currecy, 'chainTypes')
-            networksById = self.safe_dict(self.options, 'networksById')
             parsedNetworks: dict = {}
             for j in range(0, len(networks)):
                 network = networks[j]
                 networkId = self.safe_string(network, 'chainType')
-                networkName = self.safe_string(networksById, networkId, networkId)
-                maxWithdrawQuantity = self.omit_zero(self.safe_string(network, 'maxWithdrawQuantity'))
-                networkDeposit = self.safe_bool(network, 'allowDeposit')
-                networkWithdraw = self.safe_bool(network, 'allowWithdraw')
-                parsedNetworks[networkName] = {
+                networkCode = self.network_code_to_id(networkId)
+                parsedNetworks[networkCode] = {
                     'id': networkId,
-                    'network': networkName,
+                    'network': networkCode,
                     'limits': {
                         'withdraw': {
                             'min': self.safe_number(network, 'minWithdrawQuantity'),
-                            'max': self.parse_number(maxWithdrawQuantity),
+                            'max': self.parse_number(self.omit_zero(self.safe_string(network, 'maxWithdrawQuantity'))),
                         },
                         'deposit': {
                             'min': self.safe_number(network, 'minDepositQuantity'),
                             'max': None,
                         },
                     },
-                    'active': networkDeposit and networkWithdraw,
-                    'deposit': networkDeposit,
-                    'withdraw': networkWithdraw,
+                    'active': None,
+                    'deposit': self.safe_bool(network, 'allowDeposit'),
+                    'withdraw': self.safe_bool(network, 'allowWithdraw'),
                     'fee': self.safe_number(network, 'withdrawFee'),
                     'precision': None,
                     'info': network,
                 }
-            result[code] = {
+            rawType = self.safe_string(currecy, 'tokenType')
+            type = 'fiat' if (rawType == 'REAL_MONEY') else 'crypto'
+            result[code] = self.safe_currency_structure({
                 'id': currencyId,
                 'code': code,
                 'precision': None,
-                'type': self.parse_currency_type(self.safe_string(currecy, 'tokenType')),
+                'type': type,
                 'name': self.safe_string(currecy, 'coinFullName'),
-                'active': allowWithdraw and allowDeposit,
-                'deposit': allowDeposit,
-                'withdraw': allowWithdraw,
+                'active': None,
+                'deposit': self.safe_bool(currecy, 'allowDeposit'),
+                'withdraw': self.safe_bool(currecy, 'allowWithdraw'),
                 'fee': None,
                 'limits': {
                     'deposit': {
@@ -1202,17 +1201,8 @@ class hashkey(Exchange, ImplicitAPI):
                 },
                 'networks': parsedNetworks,
                 'info': currecy,
-            }
+            })
         return result
-
-    def parse_currency_type(self, type):
-        types = {
-            'CHAIN_TOKEN': 'crypto',
-            'ERC20_TOKEN': 'crypto',
-            'BSC_TOKEN': 'crypto',
-            'REAL_MONEY': 'fiat',
-        }
-        return self.safe_string(types, type)
 
     async def fetch_order_book(self, symbol: str, limit: Int = None, params={}) -> OrderBook:
         """
@@ -1454,9 +1444,14 @@ class hashkey(Exchange, ImplicitAPI):
         if isBuyer is not None:
             side = 'buy' if isBuyer else 'sell'
         takerOrMaker = None
-        isMaker = self.safe_bool_n(trade, ['isMaker', 'isMarker', 'ibm'])
+        isMaker = self.safe_bool_n(trade, ['isMaker', 'isMarker'])
         if isMaker is not None:
             takerOrMaker = 'maker' if isMaker else 'taker'
+        isBuyerMaker = self.safe_bool(trade, 'ibm')
+        # if public trade
+        if isBuyerMaker is not None:
+            takerOrMaker = 'taker'
+            side = 'sell' if isBuyerMaker else 'buy'
         feeCost = self.safe_string(trade, 'commission')
         feeCurrncyId = self.safe_string(trade, 'commissionAsset')
         feeInfo = self.safe_dict(trade, 'fee')
@@ -3618,8 +3613,7 @@ class hashkey(Exchange, ImplicitAPI):
         #         {"symbol": "ETHUSDT-PERPETUAL", "rate": "0.0001", "nextSettleTime": "1722297600000"}
         #     ]
         #
-        fundingRates = self.parse_funding_rates(response)
-        return self.filter_by_array(fundingRates, 'symbol', symbols)
+        return self.parse_funding_rates(response, symbols)
 
     def parse_funding_rate(self, contract, market: Market = None) -> FundingRate:
         #

@@ -10,7 +10,7 @@ use ccxt\abstract\exmo as Exchange;
 
 class exmo extends Exchange {
 
-    public function describe() {
+    public function describe(): mixed {
         return $this->deep_extend(parent::describe(), array(
             'id' => 'exmo',
             'name' => 'EXMO',
@@ -203,6 +203,67 @@ class exmo extends Exchange {
                 ),
                 'margin' => array(
                     'fillResponseFromRequest' => true,
+                ),
+            ),
+            'features' => array(
+                'spot' => array(
+                    'sandbox' => false,
+                    'createOrder' => array(
+                        'marginMode' => true, // todo revise
+                        'triggerPrice' => true, // todo => endpoint lacks other features
+                        'triggerPriceType' => null,
+                        'triggerDirection' => false,
+                        'stopLossPrice' => false,
+                        'takeProfitPrice' => false,
+                        'attachedStopLossTakeProfit' => null,
+                        'timeInForce' => array(
+                            'IOC' => true,
+                            'FOK' => true,
+                            'PO' => true,
+                            'GTD' => true,
+                        ),
+                        'hedged' => false,
+                        'selfTradePrevention' => false,
+                        'trailing' => false,
+                        'leverage' => true,
+                        'marketBuyByCost' => true,
+                        'marketBuyRequiresPrice' => false,
+                        'iceberg' => false,
+                    ),
+                    'createOrders' => null,
+                    'fetchMyTrades' => array(
+                        'marginMode' => true,
+                        'limit' => 100,
+                        'daysBack' => null,
+                        'untilDays' => null,
+                        'symbolRequired' => true,
+                    ),
+                    'fetchOrder' => array(
+                        'marginMode' => false,
+                        'trigger' => false,
+                        'trailing' => false,
+                        'symbolRequired' => false,
+                    ),
+                    'fetchOpenOrders' => array(
+                        'marginMode' => false,
+                        'limit' => null,
+                        'trigger' => false,
+                        'trailing' => false,
+                        'symbolRequired' => false,
+                    ),
+                    'fetchOrders' => null,
+                    'fetchClosedOrders' => null,
+                    'fetchOHLCV' => array(
+                        'limit' => 1000, // todo, not in request
+                    ),
+                ),
+                'swap' => array(
+                    'linear' => null,
+                    'inverse' => null,
+                ),
+                'future' => array(
+                    'linear' => null,
+                    'inverse' => null,
                 ),
             ),
             'commonCurrencies' => array(
@@ -616,8 +677,9 @@ class exmo extends Exchange {
          * @param {array} [$params] extra parameters specific to the exchange API endpoint
          * @return {array} an associative dictionary of currencies
          */
+        $promises = array();
         //
-        $currencyList = $this->publicGetCurrencyListExtended ($params);
+        $promises[] = $this->publicGetCurrencyListExtended ($params);
         //
         //     array(
         //         array("name":"VLX","description":"Velas"),
@@ -626,7 +688,7 @@ class exmo extends Exchange {
         //         array("name":"USD","description":"US Dollar")
         //     )
         //
-        $cryptoList = $this->publicGetPaymentsProvidersCryptoList ($params);
+        $promises[] = $this->publicGetPaymentsProvidersCryptoList ($params);
         //
         //     {
         //         "BTC":array(
@@ -651,6 +713,9 @@ class exmo extends Exchange {
         //         ),
         //     }
         //
+        $responses = $promises;
+        $currencyList = $responses[0];
+        $cryptoList = $responses[1];
         $result = array();
         for ($i = 0; $i < count($currencyList); $i++) {
             $currency = $currencyList[$i];
@@ -713,6 +778,10 @@ class exmo extends Exchange {
                 }
             }
             $code = $this->safe_currency_code($currencyId);
+            $info = array(
+                'currency' => $currency,
+                'providers' => $providers,
+            );
             $result[$code] = array(
                 'id' => $currencyId,
                 'code' => $code,
@@ -724,7 +793,7 @@ class exmo extends Exchange {
                 'fee' => $fee,
                 'precision' => $this->parse_number('1e-8'),
                 'limits' => $limits,
-                'info' => $providers,
+                'info' => $info,
                 'networks' => array(),
             );
         }
@@ -740,7 +809,8 @@ class exmo extends Exchange {
          * @param {array} [$params] extra parameters specific to the exchange API endpoint
          * @return {array[]} an array of objects representing $market data
          */
-        $response = $this->publicGetPairSettings ($params);
+        $promises = array();
+        $promises[] = $this->publicGetPairSettings ($params);
         //
         //     {
         //         "BTC_USD":array(
@@ -757,8 +827,9 @@ class exmo extends Exchange {
         //     }
         //
         $marginPairsDict = array();
-        if ($this->check_required_credentials(false)) {
-            $marginPairs = $this->privatePostMarginPairList ($params);
+        $fetchMargin = $this->check_required_credentials(false);
+        if ($fetchMargin) {
+            $promises[] = $this->privatePostMarginPairList ($params);
             //
             //    {
             //        "pairs" => array(
@@ -788,15 +859,20 @@ class exmo extends Exchange {
             //        )
             //    }
             //
-            $pairs = $this->safe_value($marginPairs, 'pairs');
+        }
+        $responses = $promises;
+        $spotResponse = $responses[0];
+        if ($fetchMargin) {
+            $marginPairs = $responses[1];
+            $pairs = $this->safe_list($marginPairs, 'pairs');
             $marginPairsDict = $this->index_by($pairs, 'name');
         }
-        $keys = is_array($response) ? array_keys($response) : array();
+        $keys = is_array($spotResponse) ? array_keys($spotResponse) : array();
         $result = array();
         for ($i = 0; $i < count($keys); $i++) {
             $id = $keys[$i];
-            $market = $response[$id];
-            $marginMarket = $this->safe_value($marginPairsDict, $id);
+            $market = $spotResponse[$id];
+            $marginMarket = $this->safe_dict($marginPairsDict, $id);
             $symbol = str_replace('_', '/', $id);
             list($baseId, $quoteId) = explode('/', $symbol);
             $base = $this->safe_currency_code($baseId);
@@ -1052,7 +1128,7 @@ class exmo extends Exchange {
         return $this->parse_order_book($result, $market['symbol'], null, 'bid', 'ask');
     }
 
-    public function fetch_order_books(?array $symbols = null, ?int $limit = null, $params = array ()) {
+    public function fetch_order_books(?array $symbols = null, ?int $limit = null, $params = array ()): OrderBooks {
         /**
          * fetches information on open orders with bid (buy) and ask (sell) prices, volumes and other data for multiple markets
          *
@@ -1347,7 +1423,7 @@ class exmo extends Exchange {
         $marginMode = null;
         list($marginMode, $params) = $this->handle_margin_mode_and_params('fetchMyTrades', $params);
         if ($marginMode === 'cross') {
-            throw new BadRequest($this->id . 'only isolated margin is supported');
+            throw new BadRequest($this->id . ' only isolated margin is supported');
         }
         $this->load_markets();
         $market = $this->market($symbol);
@@ -2566,7 +2642,7 @@ class exmo extends Exchange {
         return $this->parse_transaction($first, $currency);
     }
 
-    public function fetch_deposit($id = null, ?string $code = null, $params = array ()) {
+    public function fetch_deposit(string $id, ?string $code = null, $params = array ()) {
         /**
          * fetch information on a deposit
          *

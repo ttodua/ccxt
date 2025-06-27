@@ -320,17 +320,20 @@ public partial class woofipro : Exchange
                         { "limit", 500 },
                         { "daysBack", null },
                         { "untilDays", 100000 },
+                        { "symbolRequired", false },
                     } },
                     { "fetchOrder", new Dictionary<string, object>() {
                         { "marginMode", false },
                         { "trigger", true },
                         { "trailing", false },
+                        { "symbolRequired", false },
                     } },
                     { "fetchOpenOrders", new Dictionary<string, object>() {
                         { "marginMode", false },
                         { "limit", 500 },
                         { "trigger", true },
                         { "trailing", false },
+                        { "symbolRequired", false },
                     } },
                     { "fetchOrders", null },
                     { "fetchClosedOrders", new Dictionary<string, object>() {
@@ -341,6 +344,7 @@ public partial class woofipro : Exchange
                         { "untilDays", 100000 },
                         { "trigger", true },
                         { "trailing", false },
+                        { "symbolRequired", false },
                     } },
                     { "fetchOHLCV", new Dictionary<string, object>() {
                         { "limit", 1000 },
@@ -535,7 +539,7 @@ public partial class woofipro : Exchange
             { "active", null },
             { "contract", true },
             { "linear", true },
-            { "inverse", null },
+            { "inverse", false },
             { "contractSize", this.parseNumber("1") },
             { "expiry", null },
             { "expiryDatetime", null },
@@ -624,7 +628,8 @@ public partial class woofipro : Exchange
      * @method
      * @name woofipro#fetchCurrencies
      * @description fetches all available currencies on an exchange
-     * @see https://orderly.network/docs/build-on-evm/evm-api/restful-api/public/get-token-info
+     * @see https://orderly.network/docs/build-on-omnichain/evm-api/restful-api/public/get-supported-collateral-info#get-supported-collateral-info
+     * @see https://orderly.network/docs/build-on-omnichain/evm-api/restful-api/public/get-supported-chains-per-builder#get-supported-chains-per-builder
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} an associative dictionary of currencies
      */
@@ -632,7 +637,7 @@ public partial class woofipro : Exchange
     {
         parameters ??= new Dictionary<string, object>();
         object result = new Dictionary<string, object>() {};
-        object response = await this.v1PublicGetPublicToken(parameters);
+        object tokenPromise = this.v1PublicGetPublicToken(parameters);
         //
         // {
         //     "success": true,
@@ -655,29 +660,32 @@ public partial class woofipro : Exchange
         //     }
         // }
         //
-        object data = this.safeDict(response, "data", new Dictionary<string, object>() {});
-        object tokenRows = this.safeList(data, "rows", new List<object>() {});
+        object chainPromise = this.v1PublicGetPublicChainInfo(parameters);
+        var tokenResponsechainResponseVariable = await promiseAll(new List<object>() {tokenPromise, chainPromise});
+        var tokenResponse = ((IList<object>) tokenResponsechainResponseVariable)[0];
+        var chainResponse = ((IList<object>) tokenResponsechainResponseVariable)[1];
+        object tokenData = this.safeDict(tokenResponse, "data", new Dictionary<string, object>() {});
+        object tokenRows = this.safeList(tokenData, "rows", new List<object>() {});
+        object chainData = this.safeDict(chainResponse, "data", new Dictionary<string, object>() {});
+        object chainRows = this.safeList(chainData, "rows", new List<object>() {});
+        object indexedChains = this.indexBy(chainRows, "chain_id");
         for (object i = 0; isLessThan(i, getArrayLength(tokenRows)); postFixIncrement(ref i))
         {
             object token = getValue(tokenRows, i);
             object currencyId = this.safeString(token, "token");
             object networks = this.safeList(token, "chain_details");
             object code = this.safeCurrencyCode(currencyId);
-            object minPrecision = null;
             object resultingNetworks = new Dictionary<string, object>() {};
             for (object j = 0; isLessThan(j, getArrayLength(networks)); postFixIncrement(ref j))
             {
-                object network = getValue(networks, j);
-                // TODO: transform chain id to human readable name
-                object networkId = this.safeString(network, "chain_id");
-                object precision = this.parsePrecision(this.safeString(network, "decimals"));
-                if (isTrue(!isEqual(precision, null)))
-                {
-                    minPrecision = ((bool) isTrue((isEqual(minPrecision, null)))) ? precision : Precise.stringMin(precision, minPrecision);
-                }
-                ((IDictionary<string,object>)resultingNetworks)[(string)networkId] = new Dictionary<string, object>() {
+                object networkEntry = getValue(networks, j);
+                object networkId = this.safeString(networkEntry, "chain_id");
+                object networkRow = this.safeDict(indexedChains, networkId);
+                object networkName = this.safeString(networkRow, "name");
+                object networkCode = this.networkIdToCode(networkName, code);
+                ((IDictionary<string,object>)resultingNetworks)[(string)networkCode] = new Dictionary<string, object>() {
                     { "id", networkId },
-                    { "network", networkId },
+                    { "network", networkCode },
                     { "limits", new Dictionary<string, object>() {
                         { "withdraw", new Dictionary<string, object>() {
                             { "min", null },
@@ -691,16 +699,16 @@ public partial class woofipro : Exchange
                     { "active", null },
                     { "deposit", null },
                     { "withdraw", null },
-                    { "fee", this.safeNumber(network, "withdrawal_fee") },
-                    { "precision", this.parseNumber(precision) },
-                    { "info", network },
+                    { "fee", this.safeNumber(networkEntry, "withdrawal_fee") },
+                    { "precision", this.parseNumber(this.parsePrecision(this.safeString(networkEntry, "decimals"))) },
+                    { "info", new List<object>() {networkEntry, networkRow} },
                 };
             }
-            ((IDictionary<string,object>)result)[(string)code] = new Dictionary<string, object>() {
+            ((IDictionary<string,object>)result)[(string)code] = this.safeCurrencyStructure(new Dictionary<string, object>() {
                 { "id", currencyId },
-                { "name", currencyId },
+                { "name", null },
                 { "code", code },
-                { "precision", this.parseNumber(minPrecision) },
+                { "precision", null },
                 { "active", null },
                 { "fee", null },
                 { "networks", resultingNetworks },
@@ -717,7 +725,7 @@ public partial class woofipro : Exchange
                     } },
                 } },
                 { "info", token },
-            };
+            });
         }
         return result;
     }
@@ -992,8 +1000,7 @@ public partial class woofipro : Exchange
         //
         object data = this.safeDict(response, "data", new Dictionary<string, object>() {});
         object rows = this.safeList(data, "rows", new List<object>() {});
-        object result = this.parseFundingRates(rows);
-        return this.filterByArray(result, "symbol", symbols);
+        return this.parseFundingRates(rows, symbols);
     }
 
     /**
@@ -1479,6 +1486,7 @@ public partial class woofipro : Exchange
                 { "algo_type", "POSITIONAL_TP_SL" },
                 { "child_orders", new List<object>() {} },
             };
+            object childOrders = getValue(outterOrder, "child_orders");
             object closeSide = ((bool) isTrue((isEqual(orderSide, "BUY")))) ? "SELL" : "BUY";
             if (isTrue(!isEqual(stopLoss, null)))
             {
@@ -1490,7 +1498,7 @@ public partial class woofipro : Exchange
                     { "type", "LIMIT" },
                     { "reduce_only", true },
                 };
-                ((IList<object>)getValue(outterOrder, "child_orders")).Add(stopLossOrder);
+                ((IList<object>)childOrders).Add(stopLossOrder);
             }
             if (isTrue(!isEqual(takeProfit, null)))
             {
@@ -1502,7 +1510,7 @@ public partial class woofipro : Exchange
                     { "type", "LIMIT" },
                     { "reduce_only", true },
                 };
-                ((IList<object>)getValue(outterOrder, "child_orders")).Add(takeProfitOrder);
+                ((IList<object>)outterOrder).Add(takeProfitOrder);
             }
             ((IDictionary<string,object>)request)["child_orders"] = new List<object>() {outterOrder};
         }
@@ -1586,7 +1594,7 @@ public partial class woofipro : Exchange
             object isConditional = isTrue(isTrue(isTrue(!isEqual(triggerPrice, null)) || isTrue(!isEqual(stopLoss, null))) || isTrue(!isEqual(takeProfit, null))) || isTrue((!isEqual(this.safeValue(orderParams, "childOrders"), null)));
             if (isTrue(isConditional))
             {
-                throw new NotSupported ((string)add(this.id, "createOrders() only support non-stop order")) ;
+                throw new NotSupported ((string)add(this.id, " createOrders() only support non-stop order")) ;
             }
             object orderRequest = this.createOrderRequest(marketId, type, side, amount, price, orderParams);
             ((IList<object>)ordersRequests).Add(orderRequest);
@@ -1917,7 +1925,11 @@ public partial class woofipro : Exchange
     {
         parameters ??= new Dictionary<string, object>();
         await this.loadMarkets();
-        object market = ((bool) isTrue((!isEqual(symbol, null)))) ? this.market(symbol) : null;
+        object market = null;
+        if (isTrue(!isEqual(symbol, null)))
+        {
+            market = this.market(symbol);
+        }
         object trigger = this.safeBool2(parameters, "stop", "trigger", false);
         object request = new Dictionary<string, object>() {};
         object clientOrderId = this.safeStringN(parameters, new List<object>() {"clOrdID", "clientOrderId", "client_order_id"});
@@ -2421,9 +2433,9 @@ public partial class woofipro : Exchange
     public async override Task<object> fetchLedger(object code = null, object since = null, object limit = null, object parameters = null)
     {
         parameters ??= new Dictionary<string, object>();
-        var currencyrowsVariable = await this.getAssetHistoryRows(code, since, limit, parameters);
-        var currency = ((IList<object>) currencyrowsVariable)[0];
-        var rows = ((IList<object>) currencyrowsVariable)[1];
+        object currencyRows = await this.getAssetHistoryRows(code, since, limit, parameters);
+        object currency = this.safeValue(currencyRows, 0);
+        object rows = this.safeList(currencyRows, 1);
         return this.parseLedger(rows, currency, since, limit, parameters);
     }
 
@@ -2531,9 +2543,9 @@ public partial class woofipro : Exchange
     {
         parameters ??= new Dictionary<string, object>();
         object request = new Dictionary<string, object>() {};
-        var currencyrowsVariable = await this.getAssetHistoryRows(code, since, limit, this.extend(request, parameters));
-        var currency = ((IList<object>) currencyrowsVariable)[0];
-        var rows = ((IList<object>) currencyrowsVariable)[1];
+        object currencyRows = await this.getAssetHistoryRows(code, since, limit, this.extend(request, parameters));
+        object currency = this.safeValue(currencyRows, 0);
+        object rows = this.safeList(currencyRows, 1);
         //
         //     {
         //         "rows":[],
@@ -2606,7 +2618,7 @@ public partial class woofipro : Exchange
             code = ((string)code).ToUpper();
             if (isTrue(!isEqual(code, "USDC")))
             {
-                throw new NotSupported ((string)add(this.id, "withdraw() only support USDC")) ;
+                throw new NotSupported ((string)add(this.id, " withdraw() only support USDC")) ;
             }
         }
         object currency = this.currency(code);
@@ -2848,7 +2860,7 @@ public partial class woofipro : Exchange
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} a [position structure]{@link https://docs.ccxt.com/#/?id=position-structure}
      */
-    public async override Task<object> fetchPosition(object symbol = null, object parameters = null)
+    public async override Task<object> fetchPosition(object symbol, object parameters = null)
     {
         parameters ??= new Dictionary<string, object>();
         await this.loadMarkets();
@@ -2994,9 +3006,14 @@ public partial class woofipro : Exchange
             object auth = "";
             object ts = ((object)this.nonce()).ToString();
             url = add(url, pathWithParams);
+            object apiKey = this.apiKey;
+            if (isTrue(isLessThan(getIndexOf(apiKey, "ed25519:"), 0)))
+            {
+                apiKey = add("ed25519:", apiKey);
+            }
             headers = new Dictionary<string, object>() {
                 { "orderly-account-id", this.accountId },
-                { "orderly-key", this.apiKey },
+                { "orderly-key", apiKey },
                 { "orderly-timestamp", ts },
             };
             auth = add(add(add(add(add(ts, method), "/"), version), "/"), pathWithParams);

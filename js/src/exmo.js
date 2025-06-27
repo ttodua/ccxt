@@ -211,6 +211,67 @@ export default class exmo extends Exchange {
                     'fillResponseFromRequest': true,
                 },
             },
+            'features': {
+                'spot': {
+                    'sandbox': false,
+                    'createOrder': {
+                        'marginMode': true,
+                        'triggerPrice': true,
+                        'triggerPriceType': undefined,
+                        'triggerDirection': false,
+                        'stopLossPrice': false,
+                        'takeProfitPrice': false,
+                        'attachedStopLossTakeProfit': undefined,
+                        'timeInForce': {
+                            'IOC': true,
+                            'FOK': true,
+                            'PO': true,
+                            'GTD': true,
+                        },
+                        'hedged': false,
+                        'selfTradePrevention': false,
+                        'trailing': false,
+                        'leverage': true,
+                        'marketBuyByCost': true,
+                        'marketBuyRequiresPrice': false,
+                        'iceberg': false,
+                    },
+                    'createOrders': undefined,
+                    'fetchMyTrades': {
+                        'marginMode': true,
+                        'limit': 100,
+                        'daysBack': undefined,
+                        'untilDays': undefined,
+                        'symbolRequired': true,
+                    },
+                    'fetchOrder': {
+                        'marginMode': false,
+                        'trigger': false,
+                        'trailing': false,
+                        'symbolRequired': false,
+                    },
+                    'fetchOpenOrders': {
+                        'marginMode': false,
+                        'limit': undefined,
+                        'trigger': false,
+                        'trailing': false,
+                        'symbolRequired': false,
+                    },
+                    'fetchOrders': undefined,
+                    'fetchClosedOrders': undefined,
+                    'fetchOHLCV': {
+                        'limit': 1000, // todo, not in request
+                    },
+                },
+                'swap': {
+                    'linear': undefined,
+                    'inverse': undefined,
+                },
+                'future': {
+                    'linear': undefined,
+                    'inverse': undefined,
+                },
+            },
             'commonCurrencies': {
                 'GMT': 'GMT Token',
             },
@@ -612,8 +673,9 @@ export default class exmo extends Exchange {
      * @returns {object} an associative dictionary of currencies
      */
     async fetchCurrencies(params = {}) {
+        const promises = [];
         //
-        const currencyList = await this.publicGetCurrencyListExtended(params);
+        promises.push(this.publicGetCurrencyListExtended(params));
         //
         //     [
         //         {"name":"VLX","description":"Velas"},
@@ -622,7 +684,7 @@ export default class exmo extends Exchange {
         //         {"name":"USD","description":"US Dollar"}
         //     ]
         //
-        const cryptoList = await this.publicGetPaymentsProvidersCryptoList(params);
+        promises.push(this.publicGetPaymentsProvidersCryptoList(params));
         //
         //     {
         //         "BTC":[
@@ -647,6 +709,9 @@ export default class exmo extends Exchange {
         //         ],
         //     }
         //
+        const responses = await Promise.all(promises);
+        const currencyList = responses[0];
+        const cryptoList = responses[1];
         const result = {};
         for (let i = 0; i < currencyList.length; i++) {
             const currency = currencyList[i];
@@ -713,6 +778,10 @@ export default class exmo extends Exchange {
                 }
             }
             const code = this.safeCurrencyCode(currencyId);
+            const info = {
+                'currency': currency,
+                'providers': providers,
+            };
             result[code] = {
                 'id': currencyId,
                 'code': code,
@@ -724,7 +793,7 @@ export default class exmo extends Exchange {
                 'fee': fee,
                 'precision': this.parseNumber('1e-8'),
                 'limits': limits,
-                'info': providers,
+                'info': info,
                 'networks': {},
             };
         }
@@ -739,7 +808,8 @@ export default class exmo extends Exchange {
      * @returns {object[]} an array of objects representing market data
      */
     async fetchMarkets(params = {}) {
-        const response = await this.publicGetPairSettings(params);
+        const promises = [];
+        promises.push(this.publicGetPairSettings(params));
         //
         //     {
         //         "BTC_USD":{
@@ -756,8 +826,9 @@ export default class exmo extends Exchange {
         //     }
         //
         let marginPairsDict = {};
-        if (this.checkRequiredCredentials(false)) {
-            const marginPairs = await this.privatePostMarginPairList(params);
+        const fetchMargin = this.checkRequiredCredentials(false);
+        if (fetchMargin) {
+            promises.push(this.privatePostMarginPairList(params));
             //
             //    {
             //        "pairs": [
@@ -787,15 +858,20 @@ export default class exmo extends Exchange {
             //        ]
             //    }
             //
-            const pairs = this.safeValue(marginPairs, 'pairs');
+        }
+        const responses = await Promise.all(promises);
+        const spotResponse = responses[0];
+        if (fetchMargin) {
+            const marginPairs = responses[1];
+            const pairs = this.safeList(marginPairs, 'pairs');
             marginPairsDict = this.indexBy(pairs, 'name');
         }
-        const keys = Object.keys(response);
+        const keys = Object.keys(spotResponse);
         const result = [];
         for (let i = 0; i < keys.length; i++) {
             const id = keys[i];
-            const market = response[id];
-            const marginMarket = this.safeValue(marginPairsDict, id);
+            const market = spotResponse[id];
+            const marginMarket = this.safeDict(marginPairsDict, id);
             const symbol = id.replace('_', '/');
             const [baseId, quoteId] = symbol.split('/');
             const base = this.safeCurrencyCode(baseId);
@@ -1341,7 +1417,7 @@ export default class exmo extends Exchange {
         let marginMode = undefined;
         [marginMode, params] = this.handleMarginModeAndParams('fetchMyTrades', params);
         if (marginMode === 'cross') {
-            throw new BadRequest(this.id + 'only isolated margin is supported');
+            throw new BadRequest(this.id + ' only isolated margin is supported');
         }
         await this.loadMarkets();
         const market = this.market(symbol);
@@ -2569,7 +2645,7 @@ export default class exmo extends Exchange {
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} a [transaction structure]{@link https://docs.ccxt.com/#/?id=transaction-structure}
      */
-    async fetchDeposit(id = undefined, code = undefined, params = {}) {
+    async fetchDeposit(id, code = undefined, params = {}) {
         await this.loadMarkets();
         let currency = undefined;
         const request = {

@@ -432,6 +432,12 @@ public partial class kucoinfutures
     /// </description>
     /// </item>
     /// <item>
+    /// <term>params.marginMode</term>
+    /// <description>
+    /// string : 'cross' or 'isolated', default is 'isolated'
+    /// </description>
+    /// </item>
+    /// <item>
     /// <term>params.leverage</term>
     /// <description>
     /// float : Leverage size of the order (mandatory param in request, default is 1)
@@ -796,7 +802,7 @@ public partial class kucoinfutures
     /// </list>
     /// </remarks>
     /// <returns> <term>object</term> An [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}.</returns>
-    public async Task<Order> FetchOrder(string id = null, string symbol = null, Dictionary<string, object> parameters = null)
+    public async Task<Order> FetchOrder(string id, string symbol = null, Dictionary<string, object> parameters = null)
     {
         var res = await this.fetchOrder(id, symbol, parameters);
         return new Order(res);

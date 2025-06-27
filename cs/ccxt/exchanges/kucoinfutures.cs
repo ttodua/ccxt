@@ -356,17 +356,20 @@ public partial class kucoinfutures : kucoin
                         { "limit", 1000 },
                         { "daysBack", null },
                         { "untilDays", 7 },
+                        { "symbolRequired", false },
                     } },
                     { "fetchOrder", new Dictionary<string, object>() {
                         { "marginMode", false },
                         { "trigger", false },
                         { "trailing", false },
+                        { "symbolRequired", false },
                     } },
                     { "fetchOpenOrders", new Dictionary<string, object>() {
                         { "marginMode", false },
                         { "limit", 1000 },
                         { "trigger", true },
                         { "trailing", false },
+                        { "symbolRequired", false },
                     } },
                     { "fetchOrders", null },
                     { "fetchClosedOrders", new Dictionary<string, object>() {
@@ -377,6 +380,7 @@ public partial class kucoinfutures : kucoin
                         { "untilDays", null },
                         { "trigger", true },
                         { "trailing", false },
+                        { "symbolRequired", false },
                     } },
                     { "fetchOHLCV", new Dictionary<string, object>() {
                         { "limit", 500 },
@@ -1557,6 +1561,7 @@ public partial class kucoinfutures : kucoin
      * @param {string} [params.timeInForce] GTC, GTT, IOC, or FOK, default is GTC, limit orders only
      * @param {string} [params.postOnly] Post only flag, invalid when timeInForce is IOC or FOK
      * @param {float} [params.cost] the cost of the order in units of USDT
+     * @param {string} [params.marginMode] 'cross' or 'isolated', default is 'isolated'
      * ----------------- Exchange Specific Parameters -----------------
      * @param {float} [params.leverage] Leverage size of the order (mandatory param in request, default is 1)
      * @param {string} [params.clientOid] client order id, defaults to uuid if not passed
@@ -1671,6 +1676,12 @@ public partial class kucoinfutures : kucoin
             { "type", type },
             { "leverage", 1 },
         };
+        object marginModeUpper = this.safeStringUpper(parameters, "marginMode");
+        if (isTrue(!isEqual(marginModeUpper, null)))
+        {
+            parameters = this.omit(parameters, "marginMode");
+            ((IDictionary<string,object>)request)["marginMode"] = marginModeUpper;
+        }
         object cost = this.safeString(parameters, "cost");
         parameters = this.omit(parameters, "cost");
         if (isTrue(!isEqual(cost, null)))
@@ -2280,7 +2291,7 @@ public partial class kucoinfutures : kucoin
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} An [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}
      */
-    public async override Task<object> fetchOrder(object id = null, object symbol = null, object parameters = null)
+    public async override Task<object> fetchOrder(object id, object symbol = null, object parameters = null)
     {
         parameters ??= new Dictionary<string, object>();
         await this.loadMarkets();

@@ -401,17 +401,20 @@ export default class kucoinfutures extends kucoin {
                         'limit': 1000,
                         'daysBack': undefined,
                         'untilDays': 7,
+                        'symbolRequired': false,
                     },
                     'fetchOrder': {
                         'marginMode': false,
                         'trigger': false,
                         'trailing': false,
+                        'symbolRequired': false,
                     },
                     'fetchOpenOrders': {
                         'marginMode': false,
                         'limit': 1000,
                         'trigger': true,
                         'trailing': false,
+                        'symbolRequired': false,
                     },
                     'fetchOrders': undefined,
                     'fetchClosedOrders': {
@@ -422,6 +425,7 @@ export default class kucoinfutures extends kucoin {
                         'untilDays': undefined,
                         'trigger': true,
                         'trailing': false,
+                        'symbolRequired': false,
                     },
                     'fetchOHLCV': {
                         'limit': 500,
@@ -1530,6 +1534,7 @@ export default class kucoinfutures extends kucoin {
      * @param {string} [params.timeInForce] GTC, GTT, IOC, or FOK, default is GTC, limit orders only
      * @param {string} [params.postOnly] Post only flag, invalid when timeInForce is IOC or FOK
      * @param {float} [params.cost] the cost of the order in units of USDT
+     * @param {string} [params.marginMode] 'cross' or 'isolated', default is 'isolated'
      * ----------------- Exchange Specific Parameters -----------------
      * @param {float} [params.leverage] Leverage size of the order (mandatory param in request, default is 1)
      * @param {string} [params.clientOid] client order id, defaults to uuid if not passed
@@ -1633,6 +1638,11 @@ export default class kucoinfutures extends kucoin {
             'type': type,
             'leverage': 1,
         };
+        const marginModeUpper = this.safeStringUpper(params, 'marginMode');
+        if (marginModeUpper !== undefined) {
+            params = this.omit(params, 'marginMode');
+            request['marginMode'] = marginModeUpper;
+        }
         const cost = this.safeString(params, 'cost');
         params = this.omit(params, 'cost');
         if (cost !== undefined) {
@@ -2177,7 +2187,7 @@ export default class kucoinfutures extends kucoin {
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} An [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}
      */
-    async fetchOrder(id = undefined, symbol = undefined, params = {}) {
+    async fetchOrder(id, symbol = undefined, params = {}) {
         await this.loadMarkets();
         const request = {};
         let response = undefined;

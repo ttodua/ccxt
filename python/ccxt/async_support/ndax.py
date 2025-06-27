@@ -7,7 +7,7 @@ from ccxt.async_support.base.exchange import Exchange
 from ccxt.abstract.ndax import ImplicitAPI
 import hashlib
 import json
-from ccxt.base.types import Account, Balances, Currencies, Currency, DepositAddress, IndexType, Int, LedgerEntry, Market, Num, Order, OrderBook, OrderSide, OrderType, Str, Ticker, Trade, Transaction
+from ccxt.base.types import Account, Any, Balances, Currencies, Currency, DepositAddress, IndexType, Int, LedgerEntry, Market, Num, Order, OrderBook, OrderSide, OrderType, Str, Ticker, Trade, Transaction
 from typing import List
 from ccxt.base.errors import ExchangeError
 from ccxt.base.errors import AuthenticationError
@@ -20,7 +20,7 @@ from ccxt.base.precise import Precise
 
 class ndax(Exchange, ImplicitAPI):
 
-    def describe(self):
+    def describe(self) -> Any:
         return self.deep_extend(super(ndax, self).describe(), {
             'id': 'ndax',
             'name': 'NDAX',
@@ -264,6 +264,81 @@ class ndax(Exchange, ImplicitAPI):
                     },
                 },
             },
+            'features': {
+                'spot': {
+                    'sandbox': True,
+                    'createOrder': {
+                        'marginMode': False,
+                        'triggerPrice': True,
+                        'triggerDirection': False,
+                        'triggerPriceType': {
+                            'last': True,
+                            'mark': False,
+                            'index': False,
+                            # bid & ask
+                        },
+                        'stopLossPrice': False,  # todo
+                        'takeProfitPrice': False,  # todo
+                        'attachedStopLossTakeProfit': None,
+                        # todo
+                        'timeInForce': {
+                            'IOC': True,
+                            'FOK': True,
+                            'PO': True,
+                            'GTD': False,
+                        },
+                        'hedged': False,
+                        'trailing': False,
+                        'leverage': False,
+                        'marketBuyByCost': False,
+                        'marketBuyRequiresPrice': False,
+                        'selfTradePrevention': False,
+                        'iceberg': True,  # todo
+                    },
+                    'createOrders': None,
+                    'fetchMyTrades': {
+                        'marginMode': False,
+                        'limit': 100,  # todo
+                        'daysBack': 100000,  # todo
+                        'untilDays': 100000,  # todo
+                        'symbolRequired': False,
+                    },
+                    'fetchOrder': {
+                        'marginMode': False,
+                        'trigger': False,
+                        'trailing': False,
+                        'symbolRequired': False,
+                    },
+                    'fetchOpenOrders': {
+                        'marginMode': False,
+                        'limit': None,
+                        'trigger': False,
+                        'trailing': False,
+                        'symbolRequired': False,
+                    },
+                    'fetchOrders': {
+                        'marginMode': False,
+                        'limit': None,
+                        'daysBack': None,
+                        'untilDays': None,
+                        'trigger': False,
+                        'trailing': False,
+                        'symbolRequired': False,
+                    },
+                    'fetchClosedOrders': None,
+                    'fetchOHLCV': {
+                        'limit': None,
+                    },
+                },
+                'swap': {
+                    'linear': None,
+                    'inverse': None,
+                },
+                'future': {
+                    'linear': None,
+                    'inverse': None,
+                },
+            },
             'fees': {
                 'trading': {
                     'tierBased': False,
@@ -379,44 +454,44 @@ class ndax(Exchange, ImplicitAPI):
         }
         response = await self.publicGetGetProducts(self.extend(request, params))
         #
-        #     [
-        #         {
-        #             "OMSId":1,
-        #             "ProductId":1,
-        #             "Product":"BTC",
-        #             "ProductFullName":"Bitcoin",
-        #             "ProductType":"CryptoCurrency",
-        #             "DecimalPlaces":8,
-        #             "TickSize":0.0000000100000000000000000000,
-        #             "NoFees":false,
-        #             "IsDisabled":false,
-        #             "MarginEnabled":false
-        #         },
-        #     ]
+        #    [
+        #        {
+        #            "OMSId": "1",
+        #            "ProductId": "1",
+        #            "Product": "BTC",
+        #            "ProductFullName": "Bitcoin",
+        #            "MasterDataUniqueProductSymbol": "",
+        #            "ProductType": "CryptoCurrency",
+        #            "DecimalPlaces": "8",
+        #            "TickSize": "0.0000000100000000000000000000",
+        #            "DepositEnabled": True,
+        #            "WithdrawEnabled": True,
+        #            "NoFees": False,
+        #            "IsDisabled": False,
+        #            "MarginEnabled": False
+        #        },
+        #        ...
         #
         result: dict = {}
         for i in range(0, len(response)):
             currency = response[i]
             id = self.safe_string(currency, 'ProductId')
-            name = self.safe_string(currency, 'ProductFullName')
+            code = self.safe_currency_code(self.safe_string(currency, 'Product'))
             ProductType = self.safe_string(currency, 'ProductType')
             type = 'fiat' if (ProductType == 'NationalCurrency') else 'crypto'
             if ProductType == 'Unknown':
                 # such currency is just a blanket entry
                 type = 'other'
-            code = self.safe_currency_code(self.safe_string(currency, 'Product'))
-            isDisabled = self.safe_value(currency, 'IsDisabled')
-            active = not isDisabled
-            result[code] = {
+            result[code] = self.safe_currency_structure({
                 'id': id,
-                'name': name,
+                'name': self.safe_string(currency, 'ProductFullName'),
                 'code': code,
                 'type': type,
                 'precision': self.safe_number(currency, 'TickSize'),
                 'info': currency,
-                'active': active,
-                'deposit': None,
-                'withdraw': None,
+                'active': not self.safe_bool(currency, 'IsDisabled'),
+                'deposit': self.safe_bool(currency, 'DepositEnabled'),
+                'withdraw': self.safe_bool(currency, 'WithdrawEnabled'),
                 'fee': None,
                 'limits': {
                     'amount': {
@@ -429,7 +504,8 @@ class ndax(Exchange, ImplicitAPI):
                     },
                 },
                 'networks': {},
-            }
+                'margin': self.safe_bool(currency, 'MarginEnabled'),
+            })
         return result
 
     async def fetch_markets(self, params={}) -> List[Market]:
@@ -579,7 +655,8 @@ class ndax(Exchange, ImplicitAPI):
             bidask = self.parse_bid_ask(level, priceKey, amountKey)
             levelSide = self.safe_integer(level, 9)
             side = asksKey if levelSide else bidsKey
-            result[side].append(bidask)
+            resultSide = result[side]
+            resultSide.append(bidask)
         result['bids'] = self.sort_by(result['bids'], 0, True)
         result['asks'] = self.sort_by(result['asks'], 0)
         result['timestamp'] = timestamp
@@ -2007,7 +2084,7 @@ class ndax(Exchange, ImplicitAPI):
             'tag': tag,
         }
 
-    async def create_deposit_address(self, code: str, params={}):
+    async def create_deposit_address(self, code: str, params={}) -> DepositAddress:
         """
         create a currency deposit address
         :param str code: unified currency code of the currency for the deposit address

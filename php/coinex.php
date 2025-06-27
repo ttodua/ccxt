@@ -10,7 +10,7 @@ use ccxt\abstract\coinex as Exchange;
 
 class coinex extends Exchange {
 
-    public function describe() {
+    public function describe(): mixed {
         return $this->deep_extend(parent::describe(), array(
             'id' => 'coinex',
             'name' => 'CoinEx',
@@ -463,7 +463,7 @@ class coinex extends Exchange {
                     'ERC20' => 'ERC20',
                     'BRC20' => 'BRC20',
                     'SOL' => 'SOL',
-                    'TON' => 'SOL',
+                    'TON' => 'TON',
                     'BSV' => 'BSV',
                     'AVAXC' => 'AVA_C',
                     'AVAXX' => 'AVA',
@@ -529,17 +529,20 @@ class coinex extends Exchange {
                         'limit' => 1000,
                         'daysBack' => null,
                         'untilDays' => 100000,
+                        'symbolRequired' => true,
                     ),
                     'fetchOrder' => array(
                         'marginMode' => false,
                         'trigger' => false,
                         'trailing' => false,
+                        'symbolRequired' => true,
                     ),
                     'fetchOpenOrders' => array(
                         'marginMode' => true,
                         'limit' => 1000,
                         'trigger' => true,
                         'trailing' => false,
+                        'symbolRequired' => false,
                     ),
                     'fetchOrders' => null,
                     'fetchClosedOrders' => array(
@@ -550,6 +553,7 @@ class coinex extends Exchange {
                         'untilDays' => null,
                         'trigger' => true,
                         'trailing' => false,
+                        'symbolRequired' => false,
                     ),
                     'fetchOHLCV' => array(
                         'limit' => 1000,
@@ -714,35 +718,13 @@ class coinex extends Exchange {
             $canWithdraw = $this->safe_bool($asset, 'withdraw_enabled');
             $firstChain = $this->safe_dict($chains, 0, array());
             $firstPrecisionString = $this->parse_precision($this->safe_string($firstChain, 'withdrawal_precision'));
-            $result[$code] = array(
-                'id' => $currencyId,
-                'code' => $code,
-                'name' => null,
-                'active' => $canDeposit && $canWithdraw,
-                'deposit' => $canDeposit,
-                'withdraw' => $canWithdraw,
-                'fee' => null,
-                'precision' => $this->parse_number($firstPrecisionString),
-                'limits' => array(
-                    'amount' => array(
-                        'min' => null,
-                        'max' => null,
-                    ),
-                    'deposit' => array(
-                        'min' => null,
-                        'max' => null,
-                    ),
-                    'withdraw' => array(
-                        'min' => null,
-                        'max' => null,
-                    ),
-                ),
-                'networks' => array(),
-                'info' => $coin,
-            );
+            $networks = array();
             for ($j = 0; $j < count($chains); $j++) {
                 $chain = $chains[$j];
                 $networkId = $this->safe_string($chain, 'chain');
+                if ($networkId === null) {
+                    continue;
+                }
                 $precisionString = $this->parse_precision($this->safe_string($chain, 'withdrawal_precision'));
                 $feeString = $this->safe_string($chain, 'withdrawal_fee');
                 $minNetworkDepositString = $this->safe_string($chain, 'min_deposit_amount');
@@ -774,10 +756,35 @@ class coinex extends Exchange {
                     ),
                     'info' => $chain,
                 );
-                $networks = $this->safe_dict($result[$code], 'networks', array());
                 $networks[$networkId] = $network;
-                $result[$code]['networks'] = $networks;
             }
+            $result[$code] = $this->safe_currency_structure(array(
+                'id' => $currencyId,
+                'code' => $code,
+                'name' => null,
+                'active' => $canDeposit && $canWithdraw,
+                'deposit' => $canDeposit,
+                'withdraw' => $canWithdraw,
+                'fee' => null,
+                'precision' => $this->parse_number($firstPrecisionString),
+                'limits' => array(
+                    'amount' => array(
+                        'min' => null,
+                        'max' => null,
+                    ),
+                    'deposit' => array(
+                        'min' => null,
+                        'max' => null,
+                    ),
+                    'withdraw' => array(
+                        'min' => null,
+                        'max' => null,
+                    ),
+                ),
+                'networks' => array(),
+                'type' => 'crypto',
+                'info' => $coin,
+            ));
         }
         return $result;
     }
@@ -802,7 +809,7 @@ class coinex extends Exchange {
         return $this->array_concat($spotMarkets, $swapMarkets);
     }
 
-    public function fetch_spot_markets($params) {
+    public function fetch_spot_markets($params): array {
         $response = $this->v2PublicGetSpotMarket ($params);
         //
         //     {
@@ -1200,7 +1207,7 @@ class coinex extends Exchange {
         return $this->parse_tickers($data, $symbols);
     }
 
-    public function fetch_time($params = array ()) {
+    public function fetch_time($params = array ()): ?int {
         /**
          * fetches the current integer timestamp in milliseconds from the exchange server
          *
@@ -3799,7 +3806,7 @@ class coinex extends Exchange {
         return $this->fetch_orders_by_status('finished', $symbol, $since, $limit, $params);
     }
 
-    public function create_deposit_address(string $code, $params = array ()) {
+    public function create_deposit_address(string $code, $params = array ()): array {
         /**
          * create a $currency deposit address
          *
@@ -3896,7 +3903,7 @@ class coinex extends Exchange {
             'currency' => $this->safe_currency_code(null, $currency),
             'network' => null,
             'address' => $address,
-            'tag' => $tag,
+            'tag' => $this->safe_string($depositAddress, 'memo', $tag),
         );
     }
 
@@ -3989,7 +3996,7 @@ class coinex extends Exchange {
         return $this->parse_trades($data, $market, $since, $limit);
     }
 
-    public function fetch_positions(?array $symbols = null, $params = array ()) {
+    public function fetch_positions(?array $symbols = null, $params = array ()): array {
         /**
          * fetch all open positions
          *
@@ -4764,8 +4771,7 @@ class coinex extends Exchange {
         //     }
         //
         $data = $this->safe_list($response, 'data', array());
-        $result = $this->parse_funding_rates($data, $market);
-        return $this->filter_by_array($result, 'symbol', $symbols);
+        return $this->parse_funding_rates($data, $symbols);
     }
 
     public function withdraw(string $code, float $amount, string $address, $tag = null, $params = array ()): array {
@@ -4786,14 +4792,14 @@ class coinex extends Exchange {
         $this->check_address($address);
         $this->load_markets();
         $currency = $this->currency($code);
-        if ($tag) {
-            $address = $address . ':' . $tag;
-        }
         $request = array(
             'ccy' => $currency['id'],
             'to_address' => $address, // must be authorized, inter-user transfer by a registered mobile phone number or an email $address is supported
-            'amount' => $this->number_to_string($amount), // the actual $amount without fees, https://www.coinex.com/fees
+            'amount' => $this->currency_to_precision($code, $amount), // the actual $amount without fees, https://www.coinex.com/fees
         );
+        if ($tag !== null) {
+            $request['memo'] = $tag;
+        }
         $networkCode = null;
         list($networkCode, $params) = $this->handle_network_code_and_params($params);
         if ($networkCode !== null) {
