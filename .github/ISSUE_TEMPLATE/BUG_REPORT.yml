@@ -54,8 +54,9 @@ body:
 
   - type: markdown
     attributes:
+      label: Description
       value: |
-        ## Please provide:
+        ### Please provide:
         - Set `exchange.verbose = true` property before calling exchange functions
         - minimal, reproducible example/code
         - surround your code and verbose output with triple backticks:
@@ -67,16 +68,6 @@ body:
 
   - type: textarea
     attributes:
-      label: Description
-      description:  |
-        ## Please provide:
-        - Set `exchange.verbose = true` property before calling exchange functions
-        - minimal, reproducible example/code
-        - surround your code and verbose output with triple backticks:
-          ````markdown
-          ```
-          your codes or output
-          ```
-        - do not expose API keys
+      description: 
     validations:
       required: true
