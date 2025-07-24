@@ -54,7 +54,6 @@ body:
 
   - type: markdown
     attributes:
-      label: Description
       value: |
         ### Please provide:
         - Set `exchange.verbose = true` property before calling exchange functions
@@ -68,6 +67,6 @@ body:
 
   - type: textarea
     attributes:
-      description: textarea
+      label: textarea
     validations:
       required: true
