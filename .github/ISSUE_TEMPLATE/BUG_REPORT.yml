@@ -47,6 +47,8 @@ body:
 
   - type: input
     id: ccxt-version
+    attributes:
+      label: CCXT version 
     validations:
       required: false
 
