@@ -68,6 +68,6 @@ body:
 
   - type: textarea
     attributes:
-      description: 
+      description: textarea
     validations:
       required: true
