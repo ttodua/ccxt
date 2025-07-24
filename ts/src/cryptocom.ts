@@ -533,7 +533,25 @@ export default class cryptocom extends Exchange {
         if (!this.checkRequiredCredentials (false)) {
             return undefined;
         }
-        const response = await this.v1PrivatePostPrivateGetCurrencyNetworks (params);
+        let skipFetchCurrencies = false;
+        [ skipFetchCurrencies, params ] = this.handleOptionAndParams (params, 'fetchCurrencies', 'skipFetchCurrencies', false);
+        if (skipFetchCurrencies) {
+            // sub-accounts can't access this endpoint
+            return undefined;
+        }
+        let response = {};
+        try {
+            response = await this.v1PrivatePostPrivateGetCurrencyNetworks (params);
+        } catch (e) {
+            if (e instanceof ExchangeError) {
+                // sub-accounts can't access this endpoint
+                // {"code":"10001","msg":"SYS_ERROR"}
+                return undefined;
+            }
+            throw e;
+            // do nothing
+            // sub-accounts can't access this endpoint
+        }
         //
         //    {
         //        "id": "1747502328559",
@@ -1680,7 +1698,8 @@ export default class cryptocom extends Exchange {
             market = this.market (symbol);
             request['instrument_name'] = market['id'];
         }
-        return await this.v1PrivatePostPrivateCancelAllOrders (this.extend (request, params));
+        const response = await this.v1PrivatePostPrivateCancelAllOrders (this.extend (request, params));
+        return [ this.safeOrder ({ 'info': response }) ];
     }
 
     /**

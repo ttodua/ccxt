@@ -548,7 +548,22 @@ class cryptocom(Exchange, ImplicitAPI):
         # self endpoint requires authentication
         if not self.check_required_credentials(False):
             return None
-        response = self.v1PrivatePostPrivateGetCurrencyNetworks(params)
+        skipFetchCurrencies = False
+        skipFetchCurrencies, params = self.handle_option_and_params(params, 'fetchCurrencies', 'skipFetchCurrencies', False)
+        if skipFetchCurrencies:
+            # sub-accounts can't access self endpoint
+            return None
+        response = {}
+        try:
+            response = self.v1PrivatePostPrivateGetCurrencyNetworks(params)
+        except Exception as e:
+            if isinstance(e, ExchangeError):
+                # sub-accounts can't access self endpoint
+                # {"code":"10001","msg":"SYS_ERROR"}
+                return None
+            raise e
+            # do nothing
+            # sub-accounts can't access self endpoint
         #
         #    {
         #        "id": "1747502328559",
@@ -1616,7 +1631,8 @@ class cryptocom(Exchange, ImplicitAPI):
         if symbol is not None:
             market = self.market(symbol)
             request['instrument_name'] = market['id']
-        return self.v1PrivatePostPrivateCancelAllOrders(self.extend(request, params))
+        response = self.v1PrivatePostPrivateCancelAllOrders(self.extend(request, params))
+        return [self.safe_order({'info': response})]
 
     def cancel_order(self, id: str, symbol: Str = None, params={}):
         """
