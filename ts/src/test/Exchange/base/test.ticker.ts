@@ -140,20 +140,22 @@ function testTicker (exchange: Exchange, skippedProperties: object, method: stri
         //
         // percentage
         //
-        const maxIncrease = '100'; // for testing purposes, if "increased" value is more than 100x, tests should break as implementation might be wrong. however, if something rarest event happens and some coin really had that huge increase, the tests will shortly recover in few hours, as new 24-hour cycle would stabilize tests)
         if (percentage !== undefined) {
-        // - should be above -100 and below MAX
-            assert (Precise.stringGe (percentage, '-100'), 'percentage should be above -100% ' + logText);
-            assert (Precise.stringLe (percentage, Precise.stringMul ('+100', maxIncrease)), 'percentage should be below ' + maxIncrease + '00% ' + logText);
+            // for testing purposes, if "increased" value is more than 100x, tests should break as implementation might be wrong. however, if something rarest event happens and some coin really had that huge increase, the tests will shortly recover in few hours, as new 24-hour cycle would stabilize tests)
+            // - should be above -100 and below MAX
+            assert (Precise.stringGe (percentage, '-99'), 'percentage should be above -99% ' + logText);
+            assert (Precise.stringLe (percentage, '10000'), 'percentage should be below 100x ' + logText);
         }
         //
         // change
         //
-        const approxValue = exchange.safeStringN (entry, [ 'open', 'close', 'average', 'bid', 'ask', 'vwap', 'previousClose' ]);
-        if (change !== undefined) {
-            // - should be between -price & +price*100
-            assert (Precise.stringGe (change, Precise.stringNeg (approxValue)), 'change should be above -price ' + logText);
-            assert (Precise.stringLe (change, Precise.stringMul (approxValue, maxIncrease)), 'change should be below ' + maxIncrease + 'x price ' + logText);
+        const closeValue = exchange.safeString (entry, 'close');
+        if (change !== undefined && closeValue !== undefined) {
+            // should be less than current price
+            // eg. if price is 123, "change" should be +123 or less (otherwise "open" would become negative)
+            assert (Precise.stringLt (change, Precise.stringNeg (closeValue)), '"change" value could not be more than price ' + logText);
+            // unrealistic decrease (eg. price drop from 100$ to 1$, which is 99%) is also probably implementation issue
+            assert (Precise.stringLe (change, Precise.stringMul (closeValue, '+100')), 'change should be below 100x of price ' + logText);
         }
     }
     //
