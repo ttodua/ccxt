@@ -143,8 +143,8 @@ function testTicker (exchange: Exchange, skippedProperties: object, method: stri
         if (percentage !== undefined) {
             // for testing purposes, if "increased" value is more than 100x, tests should break as implementation might be wrong. however, if something rarest event happens and some coin really had that huge increase, the tests will shortly recover in few hours, as new 24-hour cycle would stabilize tests)
             // - should be above -100 and below MAX
-            assert (Precise.stringGe (percentage, '-99'), 'percentage should be above -99% ' + logText);
-            assert (Precise.stringLe (percentage, '10000'), 'percentage should be below 100x ' + logText);
+            assert (Precise.stringGe (percentage, '-99'), 'percentage should be above -99% ' + logText + ' [MAX_INCREASE_EXCEEDED]');
+            assert (Precise.stringLe (percentage, '10000'), 'percentage should be below 100x ' + logText + ' [MAX_INCREASE_EXCEEDED]');
         }
         //
         // change
@@ -153,9 +153,9 @@ function testTicker (exchange: Exchange, skippedProperties: object, method: stri
         if (change !== undefined && closeValue !== undefined) {
             // should be less than current price
             // eg. if price is 123, "change" should be +123 or less (otherwise "open" would become negative)
-            assert (Precise.stringLt (change, Precise.stringNeg (closeValue)), '"change" value could not be more than price ' + logText);
+            assert (Precise.stringLt (change, Precise.stringNeg (closeValue)), '"change" value could not be more than price ' + logText + ' [MAX_INCREASE_EXCEEDED]');
             // unrealistic decrease (eg. price drop from 100$ to 1$, which is 99%) is also probably implementation issue
-            assert (Precise.stringLe (change, Precise.stringMul (closeValue, '+100')), 'change should be below 100x of price ' + logText);
+            assert (Precise.stringLe (change, Precise.stringMul (closeValue, '+100')), 'change should be below 100x of price ' + logText + ' [MAX_INCREASE_EXCEEDED]');
         }
     }
     //
