@@ -833,6 +833,7 @@ public partial class bybit : Exchange
                     { "170203", typeof(InvalidOrder) },
                     { "170204", typeof(InvalidOrder) },
                     { "170206", typeof(InvalidOrder) },
+                    { "170209", typeof(RestrictedLocation) },
                     { "170210", typeof(InvalidOrder) },
                     { "170213", typeof(OrderNotFound) },
                     { "170217", typeof(InvalidOrder) },
@@ -2968,7 +2969,7 @@ public partial class bybit : Exchange
         parameters = ((IList<object>)paginateparametersVariable)[1];
         if (isTrue(paginate))
         {
-            return await this.fetchPaginatedCallDeterministic("fetchFundingRateHistory", symbol, since, limit, "8h", parameters, 200);
+            return await this.fetchPaginatedCallDynamic("fetchFundingRateHistory", symbol, since, limit, parameters, 200);
         }
         if (isTrue(isEqual(limit, null)))
         {
@@ -2978,6 +2979,7 @@ public partial class bybit : Exchange
             { "limit", limit },
         };
         object market = this.market(symbol);
+        object fundingTimeFrameMins = this.safeInteger(getValue(market, "info"), "fundingInterval");
         symbol = getValue(market, "symbol");
         ((IDictionary<string,object>)request)["symbol"] = getValue(market, "id");
         object type = null;
@@ -3005,7 +3007,11 @@ public partial class bybit : Exchange
             {
                 // end time is required when since is not empty
                 object fundingInterval = multiply(multiply(multiply(60, 60), 8), 1000);
-                ((IDictionary<string,object>)request)["endTime"] = add(since, multiply(limit, fundingInterval));
+                if (isTrue(!isEqual(fundingTimeFrameMins, null)))
+                {
+                    fundingInterval = multiply(multiply(fundingTimeFrameMins, 60), 1000);
+                }
+                ((IDictionary<string,object>)request)["endTime"] = this.sum(since, multiply(limit, fundingInterval));
             }
         }
         object response = await this.publicGetV5MarketFundingHistory(this.extend(request, parameters));
@@ -10163,7 +10169,7 @@ public partial class bybit : Exchange
      * @name bybit#fetchMarginMode
      * @description fetches the margin mode of the trading pair
      * @see https://bybit-exchange.github.io/docs/v5/account/account-info
-     * @param {string} [symbol] unified symbol of the market to fetch the margin mode for (not used by bybit)
+     * @param {string} [symbol] unified symbol of the market to fetch the margin mode for
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @returns {object} a [margin mode structure]{@link https://docs.ccxt.com/?id=margin-mode-structure}
      */
@@ -10171,6 +10177,7 @@ public partial class bybit : Exchange
     {
         parameters ??= new Dictionary<string, object>();
         await this.loadMarkets();
+        object market = this.market(symbol);
         object response = await this.privateGetV5AccountInfo(parameters);
         //
         //     {
@@ -10189,7 +10196,7 @@ public partial class bybit : Exchange
         //     }
         //
         object result = this.safeDict(response, "result", new Dictionary<string, object>() {});
-        return this.parseMarginMode(result);
+        return this.parseMarginMode(result, market);
     }
 
     public override object parseMarginMode(object marginMode, object market = null)
