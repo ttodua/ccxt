@@ -379,6 +379,33 @@ export default class lighter extends Exchange {
         return signer;
     }
 
+    /**
+     * @method
+     * @name lighter#preLoadLighterLibrary
+     * @description if the required credentials are available in options, it will pre-load the lighter Signer to avoid delaying sensitive calls like createOrder the first time they're executed
+     * @param params
+     * @returns {boolean} true if the signer was loaded, false otherwise
+     */
+    async preLoadLighterLibrary (params = {}) {
+        let signer = this.safeDict (this.options, 'signer');
+        if (signer !== undefined) {
+            return true;
+        }
+        let libraryPath = undefined;
+        [ libraryPath, params ] = this.handleOptionAndParams (params, 'loadAccount', 'libraryPath');
+        let apiKeyIndex = undefined;
+        [ apiKeyIndex, params ] = this.handleOptionAndParams2 (params, 'loadAccount', 'apiKeyIndex', 'api_key_index');
+        let accountIndex = undefined;
+        [ accountIndex, params ] = this.handleOptionAndParams2 (params, 'loadAccount', 'accountIndex', 'account_index');
+        const privateKeyIsSet = (this.privateKey !== undefined) && (this.privateKey !== '');
+        if (privateKeyIsSet && (libraryPath !== undefined) && (apiKeyIndex !== undefined) && (accountIndex !== undefined)) {
+            signer = await this.loadLighterLibrary (libraryPath, this.options['chainId'], this.privateKey, apiKeyIndex, accountIndex);
+            this.options['signer'] = signer;
+            return true;
+        }
+        return false;
+    }
+
     async handleAccountIndex (params: object, methodName1: string, optionName1: string, optionName2: string, defaultValue = undefined) {
         let accountIndex = undefined;
         [ accountIndex, params ] = this.handleOptionAndParams2 (params, methodName1, optionName1, optionName2, defaultValue);
@@ -979,6 +1006,7 @@ export default class lighter extends Exchange {
      */
     async fetchCurrencies (params = {}): Promise<Currencies> {
         const response = await this.publicGetAssetDetails (params);
+        await this.preLoadLighterLibrary ();
         //
         //     {
         //         "code": 200,

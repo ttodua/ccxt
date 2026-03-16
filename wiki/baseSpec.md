@@ -3002,6 +3002,7 @@ fetches historical funding rate prices
 * [paradex](/exchanges/paradex.md#fetchfundingratehistory)
 * [phemex](/exchanges/phemex.md#fetchfundingratehistory)
 * [toobit](/exchanges/toobit.md#fetchfundingratehistory)
+* [whitebit](/exchanges/whitebit.md#fetchfundingratehistory)
 * [woo](/exchanges/woo.md#fetchfundingratehistory)
 * [woofipro](/exchanges/woofipro.md#fetchfundingratehistory)
 * [xt](/exchanges/xt.md#fetchfundingratehistory)
@@ -6373,6 +6374,24 @@ calculates the presumptive fee that would be charged for an order
 
 ##### Supported exchanges
 * [&lt;anonymous&gt;](/exchanges/&lt;anonymous&gt;.md#market)
+
+---
+
+<a name="preLoadLighterLibrary" id="preloadlighterlibrary"></a>
+
+## preLoadLighterLibrary
+if the required credentials are available in options, it will pre-load the lighter Signer to avoid delaying sensitive calls like createOrder the first time they're executed
+
+**Kind**: instance   
+**Returns**: <code>boolean</code> - true if the signer was loaded, false otherwise
+
+
+| Param |
+| --- |
+| params | 
+
+##### Supported exchanges
+* [lighter](/exchanges/lighter.md#preloadlighterlibrary)
 
 ---
 

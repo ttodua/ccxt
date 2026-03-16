@@ -52,7 +52,7 @@ from ccxt.test.base.test_capitalize import test_capitalize  # noqa E402
 from ccxt.test.base.test_constants import test_constants  # noqa E402
 
 async def base_tests_init():
-    test_language_specific()
+    await test_language_specific()
     test_constants()
     test_after_constructor()
     test_extend()

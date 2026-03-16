@@ -9,7 +9,7 @@ public partial class BaseTest
 {
         async public Task baseTestsInit()
         {
-            testLanguageSpecific();
+            await testLanguageSpecific();
             testConstants();
             testAfterConstructor();
             testExtend();
