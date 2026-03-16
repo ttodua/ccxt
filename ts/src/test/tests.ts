@@ -1464,22 +1464,22 @@ class testMainClass {
         const exchange = this.initOfflineExchange (exchangeName);
         // read apiKey/secret from the test file
         const apiKey = exchange.safeString (exchangeData, 'apiKey');
-        if (apiKey) {
+        if (exchange.nonEmptyString (apiKey)) {
             // c# to string requirement
             exchange.apiKey = apiKey.toString ();
         }
         const secret = exchange.safeString (exchangeData, 'secret');
-        if (secret) {
+        if (exchange.nonEmptyString (secret)) {
             // c# to string requirement
             exchange.secret = secret.toString ();
         }
         const privateKey = exchange.safeString (exchangeData, 'privateKey');
-        if (privateKey) {
+        if (exchange.nonEmptyString (privateKey)) {
             // c# to string requirement
             exchange.privateKey = privateKey.toString ();
         }
         const walletAddress = exchange.safeString (exchangeData, 'walletAddress');
-        if (walletAddress) {
+        if (exchange.nonEmptyString (walletAddress)) {
             // c# to string requirement
             exchange.walletAddress = walletAddress.toString ();
         }
