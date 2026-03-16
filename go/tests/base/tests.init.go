@@ -8,7 +8,9 @@ func BaseTestsInit() <-chan interface{} {
 	go func() interface{} {
 		defer close(ch)
 		defer ReturnPanicError(ch)
-		TestLanguageSpecific()
+
+		retRes404 := (<-TestLanguageSpecific())
+		PanicOnError(retRes404)
 		TestConstants()
 		TestAfterConstructor()
 		TestExtend()

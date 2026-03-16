@@ -40,7 +40,7 @@ import testKeysort from './test.keysort.js';
 import testCapitalize from './test.capitalize.js';
 import testConstants from './test.constants.js';
 async function baseTestsInit() {
-    testLanguageSpecific();
+    await testLanguageSpecific();
     testConstants();
     testAfterConstructor();
     testExtend();

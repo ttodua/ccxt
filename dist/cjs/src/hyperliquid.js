@@ -575,7 +575,8 @@ class hyperliquid extends hyperliquid$1["default"] {
         for (let i = 1; i < fetchDexes.length; i++) {
             // builder-deployed perp dexs start at 110000
             const dex = fetchDexes[i];
-            const offset = 110000 + (i - 1) * 10000;
+            const secondPart = (i - 1) * 10000;
+            const offset = this.sum(110000, secondPart);
             perpDexesOffset[dex['name']] = offset;
         }
         let fetchDexesList = [];
@@ -869,6 +870,10 @@ class hyperliquid extends hyperliquid$1["default"] {
             const quoteTokenInfo = this.safeDict(tokens, quoteTokenPos, {});
             const baseName = this.safeString(baseTokenInfo, 'name');
             const quoteId = this.safeString(quoteTokenInfo, 'name');
+            if (baseName === undefined || quoteId === undefined) {
+                continue;
+                // why sandbox sending this? check it later
+            }
             // do spot currency mapping
             const spotCurrencyMapping = this.safeDict(this.options, 'spotCurrencyMapping', {});
             const mappedBaseName = this.safeString(spotCurrencyMapping, baseName, baseName);
@@ -4608,16 +4613,18 @@ class hyperliquid extends hyperliquid$1["default"] {
         const id = this.safeString(income, 'hash');
         const timestamp = this.safeInteger(income, 'time');
         const delta = this.safeDict(income, 'delta');
-        const baseId = this.safeString(delta, 'coin');
-        const marketSymbol = baseId + '/USDC:USDC';
-        market = this.safeMarket(marketSymbol);
-        const symbol = market['symbol'];
+        const coin = this.safeString(delta, 'coin');
+        let marketId = undefined;
+        if (coin !== undefined) {
+            marketId = this.coinToMarketId(coin);
+        }
+        market = this.safeMarket(marketId, market);
         const amount = this.safeString(delta, 'usdc');
-        const code = this.safeCurrencyCode('USDC');
+        const code = this.safeString(market, 'settle', 'USDC');
         const rate = this.safeNumber(delta, 'fundingRate');
         return {
             'info': income,
-            'symbol': symbol,
+            'symbol': market['symbol'],
             'code': code,
             'timestamp': timestamp,
             'datetime': this.iso8601(timestamp),

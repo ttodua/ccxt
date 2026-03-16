@@ -358,6 +358,43 @@ public partial class lighter : Exchange
         return signer;
     }
 
+    /**
+     * @method
+     * @name lighter#preLoadLighterLibrary
+     * @description if the required credentials are available in options, it will pre-load the lighter Signer to avoid delaying sensitive calls like createOrder the first time they're executed
+     * @param params
+     * @returns {boolean} true if the signer was loaded, false otherwise
+     */
+    public async virtual Task<object> preLoadLighterLibrary(object parameters = null)
+    {
+        parameters ??= new Dictionary<string, object>();
+        object signer = this.safeDict(this.options, "signer");
+        if (isTrue(!isEqual(signer, null)))
+        {
+            return true;
+        }
+        object libraryPath = null;
+        var libraryPathparametersVariable = this.handleOptionAndParams(parameters, "loadAccount", "libraryPath");
+        libraryPath = ((IList<object>)libraryPathparametersVariable)[0];
+        parameters = ((IList<object>)libraryPathparametersVariable)[1];
+        object apiKeyIndex = null;
+        var apiKeyIndexparametersVariable = this.handleOptionAndParams2(parameters, "loadAccount", "apiKeyIndex", "api_key_index");
+        apiKeyIndex = ((IList<object>)apiKeyIndexparametersVariable)[0];
+        parameters = ((IList<object>)apiKeyIndexparametersVariable)[1];
+        object accountIndex = null;
+        var accountIndexparametersVariable = await this.handleAccountIndex(parameters, "loadAccount", "accountIndex", "account_index");
+        accountIndex = ((IList<object>)accountIndexparametersVariable)[0];
+        parameters = ((IList<object>)accountIndexparametersVariable)[1];
+        object privateKeyIsSet = isTrue((!isEqual(this.privateKey, null))) && isTrue((!isEqual(this.privateKey, "")));
+        if (isTrue(isTrue(isTrue(isTrue(privateKeyIsSet) && isTrue((!isEqual(libraryPath, null)))) && isTrue((!isEqual(apiKeyIndex, null)))) && isTrue((!isEqual(accountIndex, null)))))
+        {
+            signer = await this.loadLighterLibrary(libraryPath, getValue(this.options, "chainId"), this.privateKey, apiKeyIndex, accountIndex);
+            ((IDictionary<string,object>)this.options)["signer"] = signer;
+            return true;
+        }
+        return false;
+    }
+
     public async virtual Task<object> handleAccountIndex(object parameters, object methodName1, object optionName1, object optionName2, object defaultValue = null)
     {
         object accountIndex = null;
@@ -1064,6 +1101,7 @@ public partial class lighter : Exchange
     {
         parameters ??= new Dictionary<string, object>();
         object response = await this.publicGetAssetDetails(parameters);
+        await this.preLoadLighterLibrary();
         //
         //     {
         //         "code": 200,
