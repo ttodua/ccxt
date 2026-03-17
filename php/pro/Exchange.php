@@ -66,6 +66,7 @@ Exchange::$exchanges = array(
     'gate',
     'gateio',
     'gemini',
+    'grvt',
     'hashkey',
     'hitbtc',
     'hollaex',

@@ -1490,6 +1490,11 @@ public partial class testMainClass
                 { "wasmExecPath", wasmExecPath },
             } },
         };
+        if (isTrue(isEqual(exchangeName, "grvt")))
+        {
+            ((IDictionary<string,object>)options)["apiKey"] = "";
+            ((IDictionary<string,object>)options)["secret"] = "";
+        }
         Exchange exchange = initExchange(exchangeName, options);
         exchange.currencies = currencies;
         // not working in python if assigned  in the config dict
@@ -1503,25 +1508,25 @@ public partial class testMainClass
         object globalOptions = exchange.safeDict(exchangeData, "options", new Dictionary<string, object>() {});
         // read apiKey/secret from the test file
         object apiKey = exchange.safeString(exchangeData, "apiKey");
-        if (isTrue(apiKey))
+        if (isTrue(exchange.nonEmptyString(apiKey)))
         {
             // c# to string requirement
             exchange.apiKey = ((object)apiKey).ToString();
         }
         object secret = exchange.safeString(exchangeData, "secret");
-        if (isTrue(secret))
+        if (isTrue(exchange.nonEmptyString(secret)))
         {
             // c# to string requirement
             exchange.secret = ((object)secret).ToString();
         }
         object privateKey = exchange.safeString(exchangeData, "privateKey");
-        if (isTrue(privateKey))
+        if (isTrue(exchange.nonEmptyString(privateKey)))
         {
             // c# to string requirement
             exchange.privateKey = ((object)privateKey).ToString();
         }
         object walletAddress = exchange.safeString(exchangeData, "walletAddress");
-        if (isTrue(walletAddress))
+        if (isTrue(exchange.nonEmptyString(walletAddress)))
         {
             // c# to string requirement
             exchange.walletAddress = ((object)walletAddress).ToString();
@@ -1590,25 +1595,25 @@ public partial class testMainClass
         Exchange exchange = this.initOfflineExchange(exchangeName);
         // read apiKey/secret from the test file
         object apiKey = exchange.safeString(exchangeData, "apiKey");
-        if (isTrue(apiKey))
+        if (isTrue(exchange.nonEmptyString(apiKey)))
         {
             // c# to string requirement
             exchange.apiKey = ((object)apiKey).ToString();
         }
         object secret = exchange.safeString(exchangeData, "secret");
-        if (isTrue(secret))
+        if (isTrue(exchange.nonEmptyString(secret)))
         {
             // c# to string requirement
             exchange.secret = ((object)secret).ToString();
         }
         object privateKey = exchange.safeString(exchangeData, "privateKey");
-        if (isTrue(privateKey))
+        if (isTrue(exchange.nonEmptyString(privateKey)))
         {
             // c# to string requirement
             exchange.privateKey = ((object)privateKey).ToString();
         }
         object walletAddress = exchange.safeString(exchangeData, "walletAddress");
-        if (isTrue(walletAddress))
+        if (isTrue(exchange.nonEmptyString(walletAddress)))
         {
             // c# to string requirement
             exchange.walletAddress = ((object)walletAddress).ToString();

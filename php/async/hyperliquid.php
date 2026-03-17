@@ -227,6 +227,7 @@ class hyperliquid extends Exchange {
             'options' => array(
                 'defaultType' => 'swap',
                 'sandboxMode' => false,
+                'builderFee' => true,
                 'defaultSlippage' => 0.05,
                 'marketHelperProps' => array( 'hip3TokensByName', 'cachedCurrenciesById' ),
                 'zeroAddress' => '0x0000000000000000000000000000000000000000',
@@ -589,7 +590,8 @@ class hyperliquid extends Exchange {
             for ($i = 1; $i < count($fetchDexes); $i++) {
                 // builder-deployed perp dexs start at 110000
                 $dex = $fetchDexes[$i];
-                $offset = 110000 . ($i - 1) * 10000;
+                $secondPart = ($i - 1) * 10000;
+                $offset = $this->sum(110000, $secondPart);
                 $perpDexesOffset[$dex['name']] = $offset;
             }
             $fetchDexesList = array();
@@ -891,6 +893,10 @@ class hyperliquid extends Exchange {
                 $quoteTokenInfo = $this->safe_dict($tokens, $quoteTokenPos, array());
                 $baseName = $this->safe_string($baseTokenInfo, 'name');
                 $quoteId = $this->safe_string($quoteTokenInfo, 'name');
+                if ($baseName === null || $quoteId === null) {
+                    continue;
+                    // why sandbox sending this? check it later
+                }
                 // do spot currency mapping
                 $spotCurrencyMapping = $this->safe_dict($this->options, 'spotCurrencyMapping', array());
                 $mappedBaseName = $this->safe_string($spotCurrencyMapping, $baseName, $baseName);
@@ -4744,16 +4750,18 @@ class hyperliquid extends Exchange {
         $id = $this->safe_string($income, 'hash');
         $timestamp = $this->safe_integer($income, 'time');
         $delta = $this->safe_dict($income, 'delta');
-        $baseId = $this->safe_string($delta, 'coin');
-        $marketSymbol = $baseId . '/USDC:USDC';
-        $market = $this->safe_market($marketSymbol);
-        $symbol = $market['symbol'];
+        $coin = $this->safe_string($delta, 'coin');
+        $marketId = null;
+        if ($coin !== null) {
+            $marketId = $this->coin_to_market_id($coin);
+        }
+        $market = $this->safe_market($marketId, $market);
         $amount = $this->safe_string($delta, 'usdc');
-        $code = $this->safe_currency_code('USDC');
+        $code = $this->safe_string($market, 'settle', 'USDC');
         $rate = $this->safe_number($delta, 'fundingRate');
         return array(
             'info' => $income,
-            'symbol' => $symbol,
+            'symbol' => $market['symbol'],
             'code' => $code,
             'timestamp' => $timestamp,
             'datetime' => $this->iso8601($timestamp),

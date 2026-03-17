@@ -4611,9 +4611,6 @@ class gate extends gate$1["default"] {
             }
         }
         else {
-            if (clientOrderId !== undefined) {
-                request['text'] = clientOrderId;
-            }
             if (market['option']) {
                 throw new errors.NotSupported(this.id + ' createOrder() conditional option orders are not supported');
             }
@@ -4669,6 +4666,9 @@ class gate extends gate$1["default"] {
                 if (timeInForce !== undefined) {
                     request['initial']['tif'] = timeInForce;
                 }
+                if (clientOrderId !== undefined) {
+                    request['initial']['text'] = clientOrderId;
+                }
             }
             else {
                 // spot conditional order
@@ -4709,6 +4709,9 @@ class gate extends gate$1["default"] {
                         'rule': rule,
                         'expiration': expiration, // required, how long (in seconds) to wait for the condition to be triggered before cancelling the order
                     };
+                    if (clientOrderId !== undefined) {
+                        request['trigger']['text'] = clientOrderId;
+                    }
                 }
             }
         }
@@ -5143,9 +5146,18 @@ class gate extends gate$1["default"] {
         const initial = this.safeDict(order, 'initial', {});
         const reduceOnlyInitial = this.safeBool(initial, 'is_reduce_only');
         const reduceOnly = this.safeBool(order, 'is_reduce_only', reduceOnlyInitial);
+        let clientOrderId = this.safeString(order, 'text');
+        if (clientOrderId === undefined) {
+            if ('initial' in order) {
+                clientOrderId = this.safeString(order['initial'], 'text');
+            }
+            else if ('trigger' in order) {
+                clientOrderId = this.safeString(order['trigger'], 'text');
+            }
+        }
         return this.safeOrder({
             'id': this.safeString(order, 'id'),
-            'clientOrderId': this.safeString(order, 'text'),
+            'clientOrderId': clientOrderId,
             'timestamp': timestamp,
             'datetime': this.iso8601(timestamp),
             'lastTradeTimestamp': lastTradeTimestamp,

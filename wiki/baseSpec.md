@@ -189,6 +189,7 @@ cancel all open orders in a market
 * [derive](/exchanges/derive.md#cancelallorders)
 * [foxbit](/exchanges/foxbit.md#cancelallorders)
 * [gate](/exchanges/gate.md#cancelallorders)
+* [grvt](/exchanges/grvt.md#cancelallorders)
 * [hashkey](/exchanges/hashkey.md#cancelallorders)
 * [hibachi](/exchanges/hibachi.md#cancelallorders)
 * [hitbtc](/exchanges/hitbtc.md#cancelallorders)
@@ -345,6 +346,7 @@ cancels an open order
 * [foxbit](/exchanges/foxbit.md#cancelorder)
 * [gate](/exchanges/gate.md#cancelorder)
 * [gemini](/exchanges/gemini.md#cancelorder)
+* [grvt](/exchanges/grvt.md#cancelorder)
 * [hashkey](/exchanges/hashkey.md#cancelorder)
 * [hibachi](/exchanges/hibachi.md#cancelorder)
 * [hitbtc](/exchanges/hitbtc.md#cancelorder)
@@ -951,6 +953,7 @@ create a trade order
 * [foxbit](/exchanges/foxbit.md#createorder)
 * [gate](/exchanges/gate.md#createorder)
 * [gemini](/exchanges/gemini.md#createorder)
+* [grvt](/exchanges/grvt.md#createorder)
 * [hashkey](/exchanges/hashkey.md#createorder)
 * [hibachi](/exchanges/hibachi.md#createorder)
 * [hitbtc](/exchanges/hitbtc.md#createorder)
@@ -1706,6 +1709,7 @@ query for balance and get the amount of funds available for trading or funds loc
 * [foxbit](/exchanges/foxbit.md#fetchbalance)
 * [gate](/exchanges/gate.md#fetchbalance)
 * [gemini](/exchanges/gemini.md#fetchbalance)
+* [grvt](/exchanges/grvt.md#fetchbalance)
 * [hashkey](/exchanges/hashkey.md#fetchbalance)
 * [hibachi](/exchanges/hibachi.md#fetchbalance)
 * [hitbtc](/exchanges/hitbtc.md#fetchbalance)
@@ -2289,6 +2293,7 @@ fetches all available currencies on an exchange
 * [exmo](/exchanges/exmo.md#fetchcurrencies)
 * [gate](/exchanges/gate.md#fetchcurrencies)
 * [gemini](/exchanges/gemini.md#fetchcurrencies)
+* [grvt](/exchanges/grvt.md#fetchcurrencies)
 * [hashkey](/exchanges/hashkey.md#fetchcurrencies)
 * [hitbtc](/exchanges/hitbtc.md#fetchcurrencies)
 * [hollaex](/exchanges/hollaex.md#fetchcurrencies)
@@ -2676,6 +2681,7 @@ fetch all deposits made to an account
 * [exmo](/exchanges/exmo.md#fetchdeposits)
 * [foxbit](/exchanges/foxbit.md#fetchdeposits)
 * [gate](/exchanges/gate.md#fetchdeposits)
+* [grvt](/exchanges/grvt.md#fetchdeposits)
 * [hashkey](/exchanges/hashkey.md#fetchdeposits)
 * [hibachi](/exchanges/hibachi.md#fetchdeposits)
 * [hitbtc](/exchanges/hitbtc.md#fetchdeposits)
@@ -2806,6 +2812,7 @@ fetches information on multiple orders made by the user *classic accounts only*
 * [derive](/exchanges/derive.md#fetchfundinghistory)
 * [digifinex](/exchanges/digifinex.md#fetchfundinghistory)
 * [gate](/exchanges/gate.md#fetchfundinghistory)
+* [grvt](/exchanges/grvt.md#fetchfundinghistory)
 * [htx](/exchanges/htx.md#fetchfundinghistory)
 * [hyperliquid](/exchanges/hyperliquid.md#fetchfundinghistory)
 * [kucoinfutures](/exchanges/kucoinfutures.md#fetchfundinghistory)
@@ -2987,6 +2994,7 @@ fetches historical funding rate prices
 * [digifinex](/exchanges/digifinex.md#fetchfundingratehistory)
 * [dydx](/exchanges/dydx.md#fetchfundingratehistory)
 * [gate](/exchanges/gate.md#fetchfundingratehistory)
+* [grvt](/exchanges/grvt.md#fetchfundingratehistory)
 * [hashkey](/exchanges/hashkey.md#fetchfundingratehistory)
 * [hibachi](/exchanges/hibachi.md#fetchfundingratehistory)
 * [hitbtc](/exchanges/hitbtc.md#fetchfundingratehistory)
@@ -3002,6 +3010,7 @@ fetches historical funding rate prices
 * [paradex](/exchanges/paradex.md#fetchfundingratehistory)
 * [phemex](/exchanges/phemex.md#fetchfundingratehistory)
 * [toobit](/exchanges/toobit.md#fetchfundingratehistory)
+* [whitebit](/exchanges/whitebit.md#fetchfundingratehistory)
 * [woo](/exchanges/woo.md#fetchfundingratehistory)
 * [woofipro](/exchanges/woofipro.md#fetchfundingratehistory)
 * [xt](/exchanges/xt.md#fetchfundingratehistory)
@@ -3356,6 +3365,7 @@ fetch the set leverage for all contract markets
 * [bitmex](/exchanges/bitmex.md#fetchleverages)
 * [blofin](/exchanges/blofin.md#fetchleverages)
 * [gate](/exchanges/gate.md#fetchleverages)
+* [grvt](/exchanges/grvt.md#fetchleverages)
 * [krakenfutures](/exchanges/krakenfutures.md#fetchleverages)
 * [zebpay](/exchanges/zebpay.md#fetchleverages)
 
@@ -3488,6 +3498,7 @@ fetches the set margin mode of the user
 * [ascendex](/exchanges/ascendex.md#fetchmarginmodes)
 * [aster](/exchanges/aster.md#fetchmarginmodes)
 * [binance](/exchanges/binance.md#fetchmarginmodes)
+* [grvt](/exchanges/grvt.md#fetchmarginmodes)
 * [hitbtc](/exchanges/hitbtc.md#fetchmarginmodes)
 
 ---
@@ -3639,6 +3650,7 @@ retrieves data on all markets for woo
 * [foxbit](/exchanges/foxbit.md#fetchmarkets)
 * [gate](/exchanges/gate.md#fetchmarkets)
 * [gemini](/exchanges/gemini.md#fetchmarkets)
+* [grvt](/exchanges/grvt.md#fetchmarkets)
 * [hashkey](/exchanges/hashkey.md#fetchmarkets)
 * [hibachi](/exchanges/hibachi.md#fetchmarkets)
 * [hitbtc](/exchanges/hitbtc.md#fetchmarkets)
@@ -3848,6 +3860,7 @@ fetch all trades made by the user
 * [foxbit](/exchanges/foxbit.md#fetchmytrades)
 * [gate](/exchanges/gate.md#fetchmytrades)
 * [gemini](/exchanges/gemini.md#fetchmytrades)
+* [grvt](/exchanges/grvt.md#fetchmytrades)
 * [hashkey](/exchanges/hashkey.md#fetchmytrades)
 * [hibachi](/exchanges/hibachi.md#fetchmytrades)
 * [hitbtc](/exchanges/hitbtc.md#fetchmytrades)
@@ -3980,6 +3993,7 @@ fetches historical candlestick data containing the open, high, low, and close pr
 * [foxbit](/exchanges/foxbit.md#fetchohlcv)
 * [gateio](/exchanges/gateio.md#fetchohlcv)
 * [gemini](/exchanges/gemini.md#fetchohlcv)
+* [grvt](/exchanges/grvt.md#fetchohlcv)
 * [hashkey](/exchanges/hashkey.md#fetchohlcv)
 * [hitbtc](/exchanges/hitbtc.md#fetchohlcv)
 * [hollaex](/exchanges/hollaex.md#fetchohlcv)
@@ -4242,6 +4256,7 @@ fetch all unfilled currently open orders
 * [foxbit](/exchanges/foxbit.md#fetchopenorders)
 * [gate](/exchanges/gate.md#fetchopenorders)
 * [gemini](/exchanges/gemini.md#fetchopenorders)
+* [grvt](/exchanges/grvt.md#fetchopenorders)
 * [hashkey](/exchanges/hashkey.md#fetchopenorders)
 * [hibachi](/exchanges/hibachi.md#fetchopenorders)
 * [hitbtc](/exchanges/hitbtc.md#fetchopenorders)
@@ -4440,6 +4455,7 @@ fetches information on an order made by the user
 * [foxbit](/exchanges/foxbit.md#fetchorder)
 * [gate](/exchanges/gate.md#fetchorder)
 * [gemini](/exchanges/gemini.md#fetchorder)
+* [grvt](/exchanges/grvt.md#fetchorder)
 * [hashkey](/exchanges/hashkey.md#fetchorder)
 * [hibachi](/exchanges/hibachi.md#fetchorder)
 * [hitbtc](/exchanges/hitbtc.md#fetchorder)
@@ -4554,6 +4570,7 @@ fetches information on open orders with bid (buy) and ask (sell) prices, volumes
 * [foxbit](/exchanges/foxbit.md#fetchorderbook)
 * [gate](/exchanges/gate.md#fetchorderbook)
 * [gemini](/exchanges/gemini.md#fetchorderbook)
+* [grvt](/exchanges/grvt.md#fetchorderbook)
 * [hashkey](/exchanges/hashkey.md#fetchorderbook)
 * [hibachi](/exchanges/hibachi.md#fetchorderbook)
 * [hitbtc](/exchanges/hitbtc.md#fetchorderbook)
@@ -4789,6 +4806,7 @@ fetches information on multiple orders made by the user
 * [dydx](/exchanges/dydx.md#fetchorders)
 * [foxbit](/exchanges/foxbit.md#fetchorders)
 * [gemini](/exchanges/gemini.md#fetchorders)
+* [grvt](/exchanges/grvt.md#fetchorders)
 * [hollaex](/exchanges/hollaex.md#fetchorders)
 * [htx](/exchanges/htx.md#fetchorders)
 * [hyperliquid](/exchanges/hyperliquid.md#fetchorders)
@@ -5140,6 +5158,7 @@ fetch all open positions
 * [digifinex](/exchanges/digifinex.md#fetchpositions)
 * [dydx](/exchanges/dydx.md#fetchpositions)
 * [gate](/exchanges/gate.md#fetchpositions)
+* [grvt](/exchanges/grvt.md#fetchpositions)
 * [hashkey](/exchanges/hashkey.md#fetchpositions)
 * [hibachi](/exchanges/hibachi.md#fetchpositions)
 * [hitbtc](/exchanges/hitbtc.md#fetchpositions)
@@ -5465,6 +5484,7 @@ fetches a price ticker, a statistical calculation with the information calculate
 * [foxbit](/exchanges/foxbit.md#fetchticker)
 * [gate](/exchanges/gate.md#fetchticker)
 * [gemini](/exchanges/gemini.md#fetchticker)
+* [grvt](/exchanges/grvt.md#fetchticker)
 * [hashkey](/exchanges/hashkey.md#fetchticker)
 * [hibachi](/exchanges/hibachi.md#fetchticker)
 * [hitbtc](/exchanges/hitbtc.md#fetchticker)
@@ -5776,6 +5796,7 @@ get the list of most recent trades for a particular symbol
 * [foxbit](/exchanges/foxbit.md#fetchtrades)
 * [gate](/exchanges/gate.md#fetchtrades)
 * [gemini](/exchanges/gemini.md#fetchtrades)
+* [grvt](/exchanges/grvt.md#fetchtrades)
 * [hashkey](/exchanges/hashkey.md#fetchtrades)
 * [hibachi](/exchanges/hibachi.md#fetchtrades)
 * [hitbtc](/exchanges/hitbtc.md#fetchtrades)
@@ -6112,6 +6133,7 @@ fetch a history of internal transfers made on an account
 * [deribit](/exchanges/deribit.md#fetchtransfers)
 * [digifinex](/exchanges/digifinex.md#fetchtransfers)
 * [dydx](/exchanges/dydx.md#fetchtransfers)
+* [grvt](/exchanges/grvt.md#fetchtransfers)
 * [kucoin](/exchanges/kucoin.md#fetchtransfers)
 * [latoken](/exchanges/latoken.md#fetchtransfers)
 * [lighter](/exchanges/lighter.md#fetchtransfers)
@@ -6245,6 +6267,7 @@ fetch all withdrawals made from an account
 * [exmo](/exchanges/exmo.md#fetchwithdrawals)
 * [foxbit](/exchanges/foxbit.md#fetchwithdrawals)
 * [gate](/exchanges/gate.md#fetchwithdrawals)
+* [grvrt](/exchanges/grvrt.md#fetchwithdrawals)
 * [hashkey](/exchanges/hashkey.md#fetchwithdrawals)
 * [hibachi](/exchanges/hibachi.md#fetchwithdrawals)
 * [hitbtc](/exchanges/hitbtc.md#fetchwithdrawals)
@@ -6373,6 +6396,24 @@ calculates the presumptive fee that would be charged for an order
 
 ##### Supported exchanges
 * [&lt;anonymous&gt;](/exchanges/&lt;anonymous&gt;.md#market)
+
+---
+
+<a name="preLoadLighterLibrary" id="preloadlighterlibrary"></a>
+
+## preLoadLighterLibrary
+if the required credentials are available in options, it will pre-load the lighter Signer to avoid delaying sensitive calls like createOrder the first time they're executed
+
+**Kind**: instance   
+**Returns**: <code>boolean</code> - true if the signer was loaded, false otherwise
+
+
+| Param |
+| --- |
+| params | 
+
+##### Supported exchanges
+* [lighter](/exchanges/lighter.md#preloadlighterlibrary)
 
 ---
 
@@ -6590,6 +6631,7 @@ set the level of leverage for a market
 * [delta](/exchanges/delta.md#setleverage)
 * [digifinex](/exchanges/digifinex.md#setleverage)
 * [gate](/exchanges/gate.md#setleverage)
+* [grvt](/exchanges/grvt.md#setleverage)
 * [hashkey](/exchanges/hashkey.md#setleverage)
 * [hitbtc](/exchanges/hitbtc.md#setleverage)
 * [htx](/exchanges/htx.md#setleverage)
@@ -6766,6 +6808,7 @@ sign in, must be called prior to using other authenticated methods
 
 ##### Supported exchanges
 * [bullish](/exchanges/bullish.md#signin)
+* [grvt](/exchanges/grvt.md#signin)
 * [ndax](/exchanges/ndax.md#signin)
 * [wavesexchange](/exchanges/wavesexchange.md#signin)
 
@@ -6832,6 +6875,7 @@ transfer currency internally between wallets on the same account
 * [digifinex](/exchanges/digifinex.md#transfer)
 * [dydx](/exchanges/dydx.md#transfer)
 * [gate](/exchanges/gate.md#transfer)
+* [grvt](/exchanges/grvt.md#transfer)
 * [hashkey](/exchanges/hashkey.md#transfer)
 * [hitbtc](/exchanges/hitbtc.md#transfer)
 * [htx](/exchanges/htx.md#transfer)
@@ -7660,6 +7704,7 @@ watches information on multiple trades made by the user
 * [derive](/exchanges/derive.md#watchmytrades)
 * [exmo](/exchanges/exmo.md#watchmytrades)
 * [gate](/exchanges/gate.md#watchmytrades)
+* [grvt](/exchanges/grvt.md#watchmytrades)
 * [hashkey](/exchanges/hashkey.md#watchmytrades)
 * [hollaex](/exchanges/hollaex.md#watchmytrades)
 * [htx](/exchanges/htx.md#watchmytrades)
@@ -7745,6 +7790,7 @@ watches historical candlestick data containing the open, high, low, and close pr
 * [dydx](/exchanges/dydx.md#watchohlcv)
 * [gate](/exchanges/gate.md#watchohlcv)
 * [gemini](/exchanges/gemini.md#watchohlcv)
+* [grvt](/exchanges/grvt.md#watchohlcv)
 * [hashkey](/exchanges/hashkey.md#watchohlcv)
 * [htx](/exchanges/htx.md#watchohlcv)
 * [hyperliquid](/exchanges/hyperliquid.md#watchohlcv)
@@ -7792,6 +7838,7 @@ watches historical candlestick data containing the open, high, low, and close pr
 * [bydfi](/exchanges/bydfi.md#watchohlcvforsymbols)
 * [defx](/exchanges/defx.md#watchohlcvforsymbols)
 * [deribit](/exchanges/deribit.md#watchohlcvforsymbols)
+* [grvt](/exchanges/grvt.md#watchohlcvforsymbols)
 * [okx](/exchanges/okx.md#watchohlcvforsymbols)
 * [oxfun](/exchanges/oxfun.md#watchohlcvforsymbols)
 * [toobit](/exchanges/toobit.md#watchohlcvforsymbols)
@@ -7851,6 +7898,7 @@ watches information on open orders with bid (buy) and ask (sell) prices, volumes
 * [exmo](/exchanges/exmo.md#watchorderbook)
 * [gate](/exchanges/gate.md#watchorderbook)
 * [gemini](/exchanges/gemini.md#watchorderbook)
+* [grvt](/exchanges/grvt.md#watchorderbook)
 * [hashkey](/exchanges/hashkey.md#watchorderbook)
 * [hollaex](/exchanges/hollaex.md#watchorderbook)
 * [htx](/exchanges/htx.md#watchorderbook)
@@ -7909,6 +7957,7 @@ watches information on open orders with bid (buy) and ask (sell) prices, volumes
 * [defx](/exchanges/defx.md#watchorderbookforsymbols)
 * [deribit](/exchanges/deribit.md#watchorderbookforsymbols)
 * [gemini](/exchanges/gemini.md#watchorderbookforsymbols)
+* [grvt](/exchanges/grvt.md#watchorderbookforsymbols)
 * [kucoin](/exchanges/kucoin.md#watchorderbookforsymbols)
 * [kucoinfutures](/exchanges/kucoinfutures.md#watchorderbookforsymbols)
 * [okx](/exchanges/okx.md#watchorderbookforsymbols)
@@ -7965,6 +8014,7 @@ watches information on multiple orders made by the user
 * [derive](/exchanges/derive.md#watchorders)
 * [exmo](/exchanges/exmo.md#watchorders)
 * [gate](/exchanges/gate.md#watchorders)
+* [grvt](/exchanges/grvt.md#watchorders)
 * [hashkey](/exchanges/hashkey.md#watchorders)
 * [hollaex](/exchanges/hollaex.md#watchorders)
 * [htx](/exchanges/htx.md#watchorders)
@@ -8064,6 +8114,7 @@ watch all open positions
 * [deepcoin](/exchanges/deepcoin.md#watchpositions)
 * [defx](/exchanges/defx.md#watchpositions)
 * [gate](/exchanges/gate.md#watchpositions)
+* [grvt](/exchanges/grvt.md#watchpositions)
 * [hashkey](/exchanges/hashkey.md#watchpositions)
 * [htx](/exchanges/htx.md#watchpositions)
 * [modetrade](/exchanges/modetrade.md#watchpositions)
@@ -8122,6 +8173,7 @@ watches a price ticker, a statistical calculation with the information calculate
 * [derive](/exchanges/derive.md#watchticker)
 * [exmo](/exchanges/exmo.md#watchticker)
 * [gate](/exchanges/gate.md#watchticker)
+* [grvt](/exchanges/grvt.md#watchticker)
 * [hahskey](/exchanges/hahskey.md#watchticker)
 * [htx](/exchanges/htx.md#watchticker)
 * [hyperliquid](/exchanges/hyperliquid.md#watchticker)
@@ -8180,6 +8232,7 @@ watches a price ticker, a statistical calculation with the information calculate
 * [deribit](/exchanges/deribit.md#watchtickers)
 * [exmo](/exchanges/exmo.md#watchtickers)
 * [gate](/exchanges/gate.md#watchtickers)
+* [grvt](/exchanges/grvt.md#watchtickers)
 * [hyperliquid](/exchanges/hyperliquid.md#watchtickers)
 * [kucoin](/exchanges/kucoin.md#watchtickers)
 * [kucoinfutures](/exchanges/kucoinfutures.md#watchtickers)
@@ -8251,6 +8304,7 @@ watches information on multiple trades made in a market
 * [exmo](/exchanges/exmo.md#watchtrades)
 * [gate](/exchanges/gate.md#watchtrades)
 * [gemini](/exchanges/gemini.md#watchtrades)
+* [grvt](/exchanges/grvt.md#watchtrades)
 * [hashkey](/exchanges/hashkey.md#watchtrades)
 * [hollaex](/exchanges/hollaex.md#watchtrades)
 * [htx](/exchanges/htx.md#watchtrades)
@@ -8310,6 +8364,7 @@ get the list of most recent trades for a list of symbols
 * [deribit](/exchanges/deribit.md#watchtradesforsymbols)
 * [gate](/exchanges/gate.md#watchtradesforsymbols)
 * [gemini](/exchanges/gemini.md#watchtradesforsymbols)
+* [grvt](/exchanges/grvt.md#watchtradesforsymbols)
 * [kucoin](/exchanges/kucoin.md#watchtradesforsymbols)
 * [kucoinfutures](/exchanges/kucoinfutures.md#watchtradesforsymbols)
 * [okx](/exchanges/okx.md#watchtradesforsymbols)
@@ -8379,6 +8434,7 @@ make a withdrawal
 * [foxbit](/exchanges/foxbit.md#withdraw)
 * [gate](/exchanges/gate.md#withdraw)
 * [gemini](/exchanges/gemini.md#withdraw)
+* [grvt](/exchanges/grvt.md#withdraw)
 * [hashkey](/exchanges/hashkey.md#withdraw)
 * [hibachi](/exchanges/hibachi.md#withdraw)
 * [hitbtc](/exchanges/hitbtc.md#withdraw)

@@ -1019,6 +1019,9 @@ class testMainClass:
                 'wasmExecPath': wasm_exec_path,
             },
         }
+        if exchange_name == 'grvt':
+            options['apiKey'] = ''
+            options['secret'] = ''
         exchange = init_exchange(exchange_name, options)
         exchange.currencies = currencies
         # not working in python if assigned  in the config dict
@@ -1030,16 +1033,16 @@ class testMainClass:
         global_options = exchange.safe_dict(exchange_data, 'options', {})
         # read apiKey/secret from the test file
         api_key = exchange.safe_string(exchange_data, 'apiKey')
-        if api_key:
+        if exchange.non_empty_string(api_key):
             exchange.apiKey = str(api_key)
         secret = exchange.safe_string(exchange_data, 'secret')
-        if secret:
+        if exchange.non_empty_string(secret):
             exchange.secret = str(secret)
         private_key = exchange.safe_string(exchange_data, 'privateKey')
-        if private_key:
+        if exchange.non_empty_string(private_key):
             exchange.privateKey = str(private_key)
         wallet_address = exchange.safe_string(exchange_data, 'walletAddress')
-        if wallet_address:
+        if exchange.non_empty_string(wallet_address):
             exchange.walletAddress = str(wallet_address)
         accounts = exchange.safe_list(exchange_data, 'accounts')
         if accounts:
@@ -1085,16 +1088,16 @@ class testMainClass:
         exchange = self.init_offline_exchange(exchange_name)
         # read apiKey/secret from the test file
         api_key = exchange.safe_string(exchange_data, 'apiKey')
-        if api_key:
+        if exchange.non_empty_string(api_key):
             exchange.apiKey = str(api_key)
         secret = exchange.safe_string(exchange_data, 'secret')
-        if secret:
+        if exchange.non_empty_string(secret):
             exchange.secret = str(secret)
         private_key = exchange.safe_string(exchange_data, 'privateKey')
-        if private_key:
+        if exchange.non_empty_string(private_key):
             exchange.privateKey = str(private_key)
         wallet_address = exchange.safe_string(exchange_data, 'walletAddress')
-        if wallet_address:
+        if exchange.non_empty_string(wallet_address):
             exchange.walletAddress = str(wallet_address)
         methods = exchange.safe_value(exchange_data, 'methods', {})
         options = exchange.safe_value(exchange_data, 'options', {})

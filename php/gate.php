@@ -4587,9 +4587,6 @@ class gate extends Exchange {
                 }
             }
         } else {
-            if ($clientOrderId !== null) {
-                $request['text'] = $clientOrderId;
-            }
             if ($market['option']) {
                 throw new NotSupported($this->id . ' createOrder() conditional option orders are not supported');
             }
@@ -4643,6 +4640,9 @@ class gate extends Exchange {
                 if ($timeInForce !== null) {
                     $request['initial']['tif'] = $timeInForce;
                 }
+                if ($clientOrderId !== null) {
+                    $request['initial']['text'] = $clientOrderId;
+                }
             } else {
                 // spot conditional order
                 $options = $this->safe_value($this->options, 'createOrder', array());
@@ -4681,6 +4681,9 @@ class gate extends Exchange {
                         'rule' => $rule, // >= triggered when $market $price larger than or equal to $price field, <= triggered when $market $price less than or equal to $price field
                         'expiration' => $expiration, // required, how long (in seconds) to wait for the condition to be triggered before cancelling the order
                     );
+                    if ($clientOrderId !== null) {
+                        $request['trigger']['text'] = $clientOrderId;
+                    }
                 }
             }
         }
@@ -5115,9 +5118,17 @@ class gate extends Exchange {
         $initial = $this->safe_dict($order, 'initial', array());
         $reduceOnlyInitial = $this->safe_bool($initial, 'is_reduce_only');
         $reduceOnly = $this->safe_bool($order, 'is_reduce_only', $reduceOnlyInitial);
+        $clientOrderId = $this->safe_string($order, 'text');
+        if ($clientOrderId === null) {
+            if (is_array($order) && array_key_exists('initial', $order)) {
+                $clientOrderId = $this->safe_string($order['initial'], 'text');
+            } elseif (is_array($order) && array_key_exists('trigger', $order)) {
+                $clientOrderId = $this->safe_string($order['trigger'], 'text');
+            }
+        }
         return $this->safe_order(array(
             'id' => $this->safe_string($order, 'id'),
-            'clientOrderId' => $this->safe_string($order, 'text'),
+            'clientOrderId' => $clientOrderId,
             'timestamp' => $timestamp,
             'datetime' => $this->iso8601($timestamp),
             'lastTradeTimestamp' => $lastTradeTimestamp,

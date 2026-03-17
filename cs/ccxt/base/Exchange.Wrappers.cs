@@ -1379,6 +1379,7 @@ public class  Foxbit: foxbit { public Foxbit(object args = null) : base(args) { 
 public class  Gate: gate { public Gate(object args = null) : base(args) { } }
 public class  Gateio: gateio { public Gateio(object args = null) : base(args) { } }
 public class  Gemini: gemini { public Gemini(object args = null) : base(args) { } }
+public class  Grvt: grvt { public Grvt(object args = null) : base(args) { } }
 public class  Hashkey: hashkey { public Hashkey(object args = null) : base(args) { } }
 public class  Hibachi: hibachi { public Hibachi(object args = null) : base(args) { } }
 public class  Hitbtc: hitbtc { public Hitbtc(object args = null) : base(args) { } }

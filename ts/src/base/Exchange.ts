@@ -3412,6 +3412,10 @@ export default class Exchange {
         return res === 0;
     }
 
+    nonEmptyString (value) {
+        return this.valueIsDefined (value) && value !== '';
+    }
+
     safeNumberOmitZero (obj: object, key: IndexType, defaultValue: Num = undefined): Num {
         const value = this.safeString (obj, key);
         const final = this.parseNumber (this.omitZero (value));

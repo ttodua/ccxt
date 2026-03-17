@@ -1334,6 +1334,10 @@ class testMainClass {
                 "wasmExecPath": wasmExecPath
             }
         };
+        if (exchangeName === 'grvt') {
+            options['apiKey'] = "";
+            options['secret'] = "";
+        }
         const exchange = initExchange(exchangeName, options);
         exchange.currencies = currencies;
         // not working in python if assigned  in the config dict
@@ -1345,22 +1349,22 @@ class testMainClass {
         const globalOptions = exchange.safeDict(exchangeData, 'options', {});
         // read apiKey/secret from the test file
         const apiKey = exchange.safeString(exchangeData, 'apiKey');
-        if (apiKey) {
+        if (exchange.nonEmptyString(apiKey)) {
             // c# to string requirement
             exchange.apiKey = apiKey.toString();
         }
         const secret = exchange.safeString(exchangeData, 'secret');
-        if (secret) {
+        if (exchange.nonEmptyString(secret)) {
             // c# to string requirement
             exchange.secret = secret.toString();
         }
         const privateKey = exchange.safeString(exchangeData, 'privateKey');
-        if (privateKey) {
+        if (exchange.nonEmptyString(privateKey)) {
             // c# to string requirement
             exchange.privateKey = privateKey.toString();
         }
         const walletAddress = exchange.safeString(exchangeData, 'walletAddress');
-        if (walletAddress) {
+        if (exchange.nonEmptyString(walletAddress)) {
             // c# to string requirement
             exchange.walletAddress = walletAddress.toString();
         }
@@ -1418,22 +1422,22 @@ class testMainClass {
         const exchange = this.initOfflineExchange(exchangeName);
         // read apiKey/secret from the test file
         const apiKey = exchange.safeString(exchangeData, 'apiKey');
-        if (apiKey) {
+        if (exchange.nonEmptyString(apiKey)) {
             // c# to string requirement
             exchange.apiKey = apiKey.toString();
         }
         const secret = exchange.safeString(exchangeData, 'secret');
-        if (secret) {
+        if (exchange.nonEmptyString(secret)) {
             // c# to string requirement
             exchange.secret = secret.toString();
         }
         const privateKey = exchange.safeString(exchangeData, 'privateKey');
-        if (privateKey) {
+        if (exchange.nonEmptyString(privateKey)) {
             // c# to string requirement
             exchange.privateKey = privateKey.toString();
         }
         const walletAddress = exchange.safeString(exchangeData, 'walletAddress');
-        if (walletAddress) {
+        if (exchange.nonEmptyString(walletAddress)) {
             // c# to string requirement
             exchange.walletAddress = walletAddress.toString();
         }

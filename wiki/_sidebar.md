@@ -71,6 +71,7 @@
 	- [foxbit](exchanges/foxbit.md)
 	- [gate](exchanges/gate.md)
 	- [gemini](exchanges/gemini.md)
+	- [grvt](exchanges/grvt.md)
 	- [hashkey](exchanges/hashkey.md)
 	- [hibachi](exchanges/hibachi.md)
 	- [hitbtc](exchanges/hitbtc.md)

@@ -409,6 +409,7 @@ class Exchange {
         'gate',
         'gateio',
         'gemini',
+        'grvt',
         'hashkey',
         'hibachi',
         'hitbtc',
@@ -3903,6 +3904,10 @@ class Exchange {
         // i.e. isRoundNumber(1.000) returns true, while isInteger(1.000) returns false
         $res = $this->parse_to_numeric((fmod($value, 1)));
         return $res === 0;
+    }
+
+    public function non_empty_string($value) {
+        return $this->value_is_defined($value) && $value !== '';
     }
 
     public function safe_number_omit_zero(array $obj, int|string $key, ?float $defaultValue = null) {

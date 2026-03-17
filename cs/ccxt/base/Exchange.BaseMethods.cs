@@ -1504,6 +1504,11 @@ public partial class Exchange
         return isEqual(res, 0);
     }
 
+    public virtual object nonEmptyString(object value)
+    {
+        return isTrue(this.valueIsDefined(value)) && isTrue(!isEqual(value, ""));
+    }
+
     public virtual object safeNumberOmitZero(object obj, object key, object defaultValue = null)
     {
         object value = this.safeString(obj, key);

@@ -166,6 +166,7 @@ const VIRTUAL_BASE_METHODS: { [key: string]: boolean} = {
     "safeCurrencyCode": false,
     "parseConversion": false,
     "sign": false,
+    "signIn": true,
     // ws methods
     'cancelAllOrdersWs': true,
     'cancelOrdersWs': true,

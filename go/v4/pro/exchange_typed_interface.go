@@ -157,6 +157,9 @@ func CreateExchange(exchangeId string, options map[string]interface{}) ccxt.IExc
     case "gemini":
         itf := NewGemini(options)
         return itf
+    case "grvt":
+        itf := NewGrvt(options)
+        return itf
     case "hashkey":
         itf := NewHashkey(options)
         return itf

@@ -4390,8 +4390,6 @@ class gate(Exchange, ImplicitAPI):
                     # batchOrders requires text in the request
                     request['text'] = 't-' + self.uuid16()
         else:
-            if clientOrderId is not None:
-                request['text'] = clientOrderId
             if market['option']:
                 raise NotSupported(self.id + ' createOrder() conditional option orders are not supported')
             if contract:
@@ -4438,6 +4436,8 @@ class gate(Exchange, ImplicitAPI):
                     request['initial']['reduce_only'] = reduceOnly
                 if timeInForce is not None:
                     request['initial']['tif'] = timeInForce
+                if clientOrderId is not None:
+                    request['initial']['text'] = clientOrderId
             else:
                 # spot conditional order
                 options = self.safe_value(self.options, 'createOrder', {})
@@ -4474,6 +4474,8 @@ class gate(Exchange, ImplicitAPI):
                         'rule': rule,  # >= triggered when market price larger than or equal to price field, <= triggered when market price less than or equal to price field
                         'expiration': expiration,  # required, how long(in seconds) to wait for the condition to be triggered before cancelling the order
                     }
+                    if clientOrderId is not None:
+                        request['trigger']['text'] = clientOrderId
         return self.extend(request, params)
 
     async def create_market_buy_order_with_cost(self, symbol: str, cost: float, params={}):
@@ -4872,9 +4874,15 @@ class gate(Exchange, ImplicitAPI):
         initial = self.safe_dict(order, 'initial', {})
         reduceOnlyInitial = self.safe_bool(initial, 'is_reduce_only')
         reduceOnly = self.safe_bool(order, 'is_reduce_only', reduceOnlyInitial)
+        clientOrderId = self.safe_string(order, 'text')
+        if clientOrderId is None:
+            if 'initial' in order:
+                clientOrderId = self.safe_string(order['initial'], 'text')
+            elif 'trigger' in order:
+                clientOrderId = self.safe_string(order['trigger'], 'text')
         return self.safe_order({
             'id': self.safe_string(order, 'id'),
-            'clientOrderId': self.safe_string(order, 'text'),
+            'clientOrderId': clientOrderId,
             'timestamp': timestamp,
             'datetime': self.iso8601(timestamp),
             'lastTradeTimestamp': lastTradeTimestamp,

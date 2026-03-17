@@ -75,6 +75,7 @@ var foxbit = require('./src/foxbit.js');
 var gate = require('./src/gate.js');
 var gateio = require('./src/gateio.js');
 var gemini = require('./src/gemini.js');
+var grvt = require('./src/grvt.js');
 var hashkey = require('./src/hashkey.js');
 var hibachi = require('./src/hibachi.js');
 var hitbtc = require('./src/hitbtc.js');
@@ -167,6 +168,7 @@ var exmo$1 = require('./src/pro/exmo.js');
 var gate$1 = require('./src/pro/gate.js');
 var gateio$1 = require('./src/pro/gateio.js');
 var gemini$1 = require('./src/pro/gemini.js');
+var grvt$1 = require('./src/pro/grvt.js');
 var hashkey$1 = require('./src/pro/hashkey.js');
 var hitbtc$1 = require('./src/pro/hitbtc.js');
 var hollaex$1 = require('./src/pro/hollaex.js');
@@ -272,6 +274,7 @@ const exchanges = {
     'gate': gate["default"],
     'gateio': gateio["default"],
     'gemini': gemini["default"],
+    'grvt': grvt["default"],
     'hashkey': hashkey["default"],
     'hibachi': hibachi["default"],
     'hitbtc': hitbtc["default"],
@@ -366,6 +369,7 @@ const pro = {
     'gate': gate$1["default"],
     'gateio': gateio$1["default"],
     'gemini': gemini$1["default"],
+    'grvt': grvt$1["default"],
     'hashkey': hashkey$1["default"],
     'hitbtc': hitbtc$1["default"],
     'hollaex': hollaex$1["default"],
@@ -517,6 +521,7 @@ exports.foxbit = foxbit["default"];
 exports.gate = gate["default"];
 exports.gateio = gateio["default"];
 exports.gemini = gemini["default"];
+exports.grvt = grvt["default"];
 exports.hashkey = hashkey["default"];
 exports.hibachi = hibachi["default"];
 exports.hitbtc = hitbtc["default"];
