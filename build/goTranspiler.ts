@@ -165,7 +165,7 @@ const VIRTUAL_BASE_METHODS: { [key: string]: boolean} = {
     "setSandboxMode": false,
     "safeCurrencyCode": false,
     "parseConversion": false,
-    "sign": false,
+    "sign": true,
     // ws methods
     'cancelAllOrdersWs': true,
     'cancelOrdersWs': true,
