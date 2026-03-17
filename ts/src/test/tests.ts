@@ -1305,8 +1305,11 @@ class testMainClass {
     }
 
     initOfflineExchange (exchangeName: string) {
+        dump ('Will init offline exchange::' + exchangeName); // todo debug rm
         const markets = this.loadMarketsFromFile (exchangeName);
+        dump ('Markets loaded');
         const currencies = this.loadCurrenciesFromFile (exchangeName);
+        dump ('currencies loaded');
         let wasmExecPath = undefined;
         let libraryPath = undefined;
         // const wasmExecPath = getRootDir () + '/src/test/static/binaries/wasm_exec.js';
