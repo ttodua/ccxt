@@ -4890,10 +4890,6 @@ public partial class gate : Exchange
             }
         } else
         {
-            if (isTrue(!isEqual(clientOrderId, null)))
-            {
-                ((IDictionary<string,object>)request)["text"] = clientOrderId;
-            }
             if (isTrue(getValue(market, "option")))
             {
                 throw new NotSupported ((string)add(this.id, " createOrder() conditional option orders are not supported")) ;
@@ -4950,6 +4946,10 @@ public partial class gate : Exchange
                 {
                     ((IDictionary<string,object>)getValue(request, "initial"))["tif"] = timeInForce;
                 }
+                if (isTrue(!isEqual(clientOrderId, null)))
+                {
+                    ((IDictionary<string,object>)getValue(request, "initial"))["text"] = clientOrderId;
+                }
             } else
             {
                 // spot conditional order
@@ -4995,6 +4995,10 @@ public partial class gate : Exchange
                         { "rule", rule },
                         { "expiration", expiration },
                     };
+                    if (isTrue(!isEqual(clientOrderId, null)))
+                    {
+                        ((IDictionary<string,object>)getValue(request, "trigger"))["text"] = clientOrderId;
+                    }
                 }
             }
         }
@@ -5473,9 +5477,20 @@ public partial class gate : Exchange
         object initial = this.safeDict(order, "initial", new Dictionary<string, object>() {});
         object reduceOnlyInitial = this.safeBool(initial, "is_reduce_only");
         object reduceOnly = this.safeBool(order, "is_reduce_only", reduceOnlyInitial);
+        object clientOrderId = this.safeString(order, "text");
+        if (isTrue(isEqual(clientOrderId, null)))
+        {
+            if (isTrue(inOp(order, "initial")))
+            {
+                clientOrderId = this.safeString(getValue(order, "initial"), "text");
+            } else if (isTrue(inOp(order, "trigger")))
+            {
+                clientOrderId = this.safeString(getValue(order, "trigger"), "text");
+            }
+        }
         return this.safeOrder(new Dictionary<string, object>() {
             { "id", this.safeString(order, "id") },
-            { "clientOrderId", this.safeString(order, "text") },
+            { "clientOrderId", clientOrderId },
             { "timestamp", timestamp },
             { "datetime", this.iso8601(timestamp) },
             { "lastTradeTimestamp", lastTradeTimestamp },

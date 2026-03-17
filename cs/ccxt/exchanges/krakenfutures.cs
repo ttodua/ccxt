@@ -2217,14 +2217,11 @@ public partial class krakenfutures : Exchange
         // but will be fixed below
         object status = this.parseOrderStatus(statusId);
         object isClosed = this.inArray(status, new List<object>() {"canceled", "rejected", "closed"});
-        object marketId = this.safeString(details, "symbol");
+        object marketId = this.safeString2(details, "symbol", "tradeable");
         market = this.safeMarket(marketId, market);
+        object symbol = this.safeString(market, "symbol");
         object timestamp = this.parse8601(this.safeString2(details, "timestamp", "receivedTime"));
         object lastUpdateTimestamp = this.parse8601(this.safeString(details, "lastUpdateTime"));
-        if (isTrue(isEqual(price, null)))
-        {
-            price = this.safeString(details, "limitPrice");
-        }
         object amount = this.safeString(details, "quantity");
         object filled = this.safeString2(details, "filledSize", "filled", "0.0");
         object remaining = this.safeString(details, "unfilledSize");
@@ -2300,11 +2297,6 @@ public partial class krakenfutures : Exchange
         if (isTrue(isTrue(isEqual(type, "ioc")) || isTrue(isEqual(this.parseOrderType(type), "market"))))
         {
             timeInForce = "ioc";
-        }
-        object symbol = this.safeString(market, "symbol");
-        if (isTrue(inOp(details, "tradeable")))
-        {
-            symbol = this.safeSymbol(this.safeString(details, "tradeable"), market);
         }
         object ts = this.safeInteger(details, "timestamp", timestamp);
         object priceTriggerOptions = this.safeDict(details, "priceTriggerOptions", new Dictionary<string, object>() {});

@@ -1621,22 +1621,22 @@ func (this *testMainClass) TestExchangeRequestStatically(exchangeName interface{
 		var globalOptions interface{} = exchange.SafeDict(exchangeData, "options", map[string]interface{}{})
 		// read apiKey/secret from the test file
 		var apiKey interface{} = exchange.SafeString(exchangeData, "apiKey")
-		if IsTrue(apiKey) {
+		if IsTrue(exchange.NonEmptyString(apiKey)) {
 			// c# to string requirement
 			exchange.SetApiKey(ToString(apiKey))
 		}
 		var secret interface{} = exchange.SafeString(exchangeData, "secret")
-		if IsTrue(secret) {
+		if IsTrue(exchange.NonEmptyString(secret)) {
 			// c# to string requirement
 			exchange.SetSecret(ToString(secret))
 		}
 		var privateKey interface{} = exchange.SafeString(exchangeData, "privateKey")
-		if IsTrue(privateKey) {
+		if IsTrue(exchange.NonEmptyString(privateKey)) {
 			// c# to string requirement
 			exchange.SetPrivateKey(ToString(privateKey))
 		}
 		var walletAddress interface{} = exchange.SafeString(exchangeData, "walletAddress")
-		if IsTrue(walletAddress) {
+		if IsTrue(exchange.NonEmptyString(walletAddress)) {
 			// c# to string requirement
 			exchange.SetWalletAddress(ToString(walletAddress))
 		}
@@ -1708,22 +1708,22 @@ func (this *testMainClass) TestExchangeResponseStatically(exchangeName interface
 		var exchange ccxt.ICoreExchange = this.InitOfflineExchange(exchangeName)
 		// read apiKey/secret from the test file
 		var apiKey interface{} = exchange.SafeString(exchangeData, "apiKey")
-		if IsTrue(apiKey) {
+		if IsTrue(exchange.NonEmptyString(apiKey)) {
 			// c# to string requirement
 			exchange.SetApiKey(ToString(apiKey))
 		}
 		var secret interface{} = exchange.SafeString(exchangeData, "secret")
-		if IsTrue(secret) {
+		if IsTrue(exchange.NonEmptyString(secret)) {
 			// c# to string requirement
 			exchange.SetSecret(ToString(secret))
 		}
 		var privateKey interface{} = exchange.SafeString(exchangeData, "privateKey")
-		if IsTrue(privateKey) {
+		if IsTrue(exchange.NonEmptyString(privateKey)) {
 			// c# to string requirement
 			exchange.SetPrivateKey(ToString(privateKey))
 		}
 		var walletAddress interface{} = exchange.SafeString(exchangeData, "walletAddress")
-		if IsTrue(walletAddress) {
+		if IsTrue(exchange.NonEmptyString(walletAddress)) {
 			// c# to string requirement
 			exchange.SetWalletAddress(ToString(walletAddress))
 		}
