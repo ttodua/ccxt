@@ -1372,8 +1372,8 @@ class testMainClass {
             }
         };
         if (exchangeName === 'grvt') {
-            options['options']['apiKey'] = undefined;
-            options['options']['secret'] = undefined;
+            options['options']['apiKey'] = "";
+            options['options']['secret'] = "";
         }
         const exchange = initExchange (exchangeName, options);
         // transpiler-trick
