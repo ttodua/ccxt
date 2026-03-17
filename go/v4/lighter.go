@@ -405,7 +405,7 @@ func (this *LighterCore) PreLoadLighterLibrary(optionalArgs ...interface{}) <-ch
 		apiKeyIndex = GetValue(apiKeyIndexparamsVariable, 0)
 		params = GetValue(apiKeyIndexparamsVariable, 1)
 		var accountIndex interface{} = nil
-		accountIndexparamsVariable := (<-this.HandleAccountIndex(params, "loadAccount", "accountIndex", "account_index"))
+		accountIndexparamsVariable := this.HandleOptionAndParams2(params, "loadAccount", "accountIndex", "account_index")
 		accountIndex = GetValue(accountIndexparamsVariable, 0)
 		params = GetValue(accountIndexparamsVariable, 1)
 		var privateKeyIsSet interface{} = IsTrue((!IsEqual(this.PrivateKey, nil))) && IsTrue((!IsEqual(this.PrivateKey, "")))

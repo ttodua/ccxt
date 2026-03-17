@@ -396,7 +396,7 @@ class lighter(Exchange, ImplicitAPI):
         apiKeyIndex = None
         apiKeyIndex, params = self.handle_option_and_params_2(params, 'loadAccount', 'apiKeyIndex', 'api_key_index')
         accountIndex = None
-        accountIndex, params = await self.handle_account_index(params, 'loadAccount', 'accountIndex', 'account_index')
+        accountIndex, params = self.handle_option_and_params_2(params, 'loadAccount', 'accountIndex', 'account_index')
         privateKeyIsSet = (self.privateKey is not None) and (self.privateKey != '')
         if privateKeyIsSet and (libraryPath is not None) and (apiKeyIndex is not None) and (accountIndex is not None):
             signer = await self.load_lighter_library(libraryPath, self.options['chainId'], self.privateKey, apiKeyIndex, accountIndex)

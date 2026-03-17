@@ -2872,6 +2872,9 @@ class Exchange {
         const res = this.parseToNumeric((value % 1));
         return res === 0;
     }
+    nonEmptyString(value) {
+        return this.valueIsDefined(value) && value !== '';
+    }
     safeNumberOmitZero(obj, key, defaultValue = undefined) {
         const value = this.safeString(obj, key);
         const final = this.parseNumber(this.omitZero(value));

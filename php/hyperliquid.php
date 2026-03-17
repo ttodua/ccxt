@@ -870,6 +870,10 @@ class hyperliquid extends Exchange {
             $quoteTokenInfo = $this->safe_dict($tokens, $quoteTokenPos, array());
             $baseName = $this->safe_string($baseTokenInfo, 'name');
             $quoteId = $this->safe_string($quoteTokenInfo, 'name');
+            if ($baseName === null || $quoteId === null) {
+                continue;
+                // why sandbox sending this? check it later
+            }
             // do spot currency mapping
             $spotCurrencyMapping = $this->safe_dict($this->options, 'spotCurrencyMapping', array());
             $mappedBaseName = $this->safe_string($spotCurrencyMapping, $baseName, $baseName);

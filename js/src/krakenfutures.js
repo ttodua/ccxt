@@ -2131,13 +2131,11 @@ export default class krakenfutures extends Exchange {
         // but will be fixed below
         let status = this.parseOrderStatus(statusId);
         let isClosed = this.inArray(status, ['canceled', 'rejected', 'closed']);
-        const marketId = this.safeString(details, 'symbol');
+        const marketId = this.safeString2(details, 'symbol', 'tradeable');
         market = this.safeMarket(marketId, market);
+        const symbol = this.safeString(market, 'symbol');
         const timestamp = this.parse8601(this.safeString2(details, 'timestamp', 'receivedTime'));
         const lastUpdateTimestamp = this.parse8601(this.safeString(details, 'lastUpdateTime'));
-        if (price === undefined) {
-            price = this.safeString(details, 'limitPrice');
-        }
         let amount = this.safeString(details, 'quantity');
         let filled = this.safeString2(details, 'filledSize', 'filled', '0.0');
         let remaining = this.safeString(details, 'unfilledSize');
@@ -2200,10 +2198,6 @@ export default class krakenfutures extends Exchange {
         let timeInForce = 'gtc';
         if (type === 'ioc' || this.parseOrderType(type) === 'market') {
             timeInForce = 'ioc';
-        }
-        let symbol = this.safeString(market, 'symbol');
-        if ('tradeable' in details) {
-            symbol = this.safeSymbol(this.safeString(details, 'tradeable'), market);
         }
         const ts = this.safeInteger(details, 'timestamp', timestamp);
         const priceTriggerOptions = this.safeDict(details, 'priceTriggerOptions', {});
