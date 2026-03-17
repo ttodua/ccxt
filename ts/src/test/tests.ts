@@ -1378,6 +1378,9 @@ class testMainClass {
         if (!exchange.safeBool (reqCreds, 'apiKey')) {
             exchange.apiKey = undefined;
         }
+        if (!exchange.safeBool (reqCreds, 'secret')) {
+            exchange.secret = undefined;
+        }
         exchange.currencies = currencies;
         // not working in python if assigned  in the config dict
         return exchange;
