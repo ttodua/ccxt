@@ -1372,19 +1372,10 @@ class testMainClass {
             }
         };
         if (exchangeName === 'grvt') {
-            options['options']['apiKey'] = "";
-            options['options']['secret'] = "";
+            options['apiKey'] = "";
+            options['secret'] = "";
         }
         const exchange = initExchange (exchangeName, options);
-        // transpiler-trick
-        const reqCredName = 'req' + 'uiredCredentials'; // don't type the full word
-        const reqCreds = exchange.getProperty (exchange, reqCredName);
-        if (!exchange.safeBool (reqCreds, 'apiKey')) {
-            exchange.apiKey = undefined;
-        }
-        if (!exchange.safeBool (reqCreds, 'secret')) {
-            exchange.secret = undefined;
-        }
         exchange.currencies = currencies;
         // not working in python if assigned  in the config dict
         return exchange;
