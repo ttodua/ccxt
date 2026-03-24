@@ -46,6 +46,7 @@ from ccxt.test.base.test_remove_repeated_elements_from_array import test_remove_
 from ccxt.test.base.test_urlencode_with_array_repeat import test_urlencode_with_array_repeat  # noqa E402
 from ccxt.test.base.test_parse_precision import test_parse_precision  # noqa E402
 from ccxt.test.base.test_strip import test_strip  # noqa E402
+from ccxt.test.base.test_array_concat import test_array_concat  # noqa E402
 from ccxt.test.base.test_arrays_concat import test_arrays_concat  # noqa E402
 from ccxt.test.base.test_set_markets_from_exchange import test_set_markets_from_exchange  # noqa E402
 from ccxt.test.base.test_sleep import test_sleep  # noqa E402
@@ -87,6 +88,7 @@ async def base_tests_init():
     test_precision_from_string()
     test_strip()
     test_extract_params()
+    test_array_concat()
     test_arrays_concat()
     test_uuid()
     await test_set_markets_from_exchange()

@@ -39,6 +39,7 @@ public partial class BaseTest
             testPrecisionFromString();
             testStrip();
             testExtractParams();
+            testArrayConcat();
             testArraysConcat();
             testUuid();
             await testSetMarketsFromExchange();

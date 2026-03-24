@@ -41,6 +41,7 @@ include_once __DIR__ . '/test_remove_repeated_elements_from_array.php';
 include_once __DIR__ . '/test_urlencode_with_array_repeat.php';
 include_once __DIR__ . '/test_parse_precision.php';
 include_once __DIR__ . '/test_strip.php';
+include_once __DIR__ . '/test_array_concat.php';
 include_once __DIR__ . '/test_arrays_concat.php';
 include_once __DIR__ . '/test_set_markets_from_exchange.php';
 include_once __DIR__ . '/test_sleep.php';
@@ -83,6 +84,7 @@ function base_tests_init() {
         test_precision_from_string();
         test_strip();
         test_extract_params();
+        test_array_concat();
         test_arrays_concat();
         test_uuid();
         Async\await(test_set_markets_from_exchange());

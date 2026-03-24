@@ -6,6 +6,7 @@ package base
 var FunctionsMap = map[string]interface{}{
 	"afterConstructor":                TestAfterConstructor,
 	"aggregate":                       TestAggregate,
+	"arrayConcat":                     TestArrayConcat,
 	"arraysConcat":                    TestArraysConcat,
 	"binaryToBase64":                  TestBinaryToBase64,
 	"capitalize":                      TestCapitalize,
