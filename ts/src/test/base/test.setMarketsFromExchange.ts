@@ -73,7 +73,7 @@ async function testSetMarketsFromExchange () {
     const timeTaken = endTime - startTime;
     assert (timeTaken < 10, 'loadMarkets on shared markets should be fast');
     // @SKIP_END_GO
-    assert (exchange2.safeString (undefined, 'key') === undefined); // temp go transpiler workaround
+    assert (emptyExchange.safeString (undefined, 'key') === undefined); // temp go transpiler workaround
 }
 
 export default testSetMarketsFromExchange;
