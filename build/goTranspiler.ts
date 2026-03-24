@@ -2398,7 +2398,7 @@ func (this *${className}) Init(userConfig map[string]interface{}) {
                 [/Precise\.String/gm, 'ccxt.Precise.String'],
                 [ /testSharedMethods.AssertDeepEqual/gm, 'AssertDeepEqual' ], // deepEqual added
                 [ /func Equals\(.+\n.*\n.*\n.*\}/gm, '' ], // remove equals
-                [ /@SKIP_START_GO[\S\s]+?@SKIP_END_GO/gm, '' ], // remove equals
+                [ /\@SKIP_START_GO[\S\s]+?\@SKIP_END_GO/gm, '' ],
                 // Match ArrayCache variables and cast to appropriate type based on variable name
                 // Order matters: check most specific types first
                 [/(\w*ArrayCacheBySymbolBySide\w*)\.Hashmap/g, '$1.(*ccxt.ArrayCacheBySymbolBySide).Hashmap'],
