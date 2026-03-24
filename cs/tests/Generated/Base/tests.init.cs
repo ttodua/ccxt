@@ -47,6 +47,7 @@ public partial class BaseTest
             testKeysort();
             testImplodeParams();
             testUnique();
+            testUrlencodeNested();
             await testSleep();
             testIo();
             testIsJsonEncodedObject();
