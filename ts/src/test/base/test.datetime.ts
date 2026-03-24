@@ -152,10 +152,10 @@ function testDatetime () {
     testSeconds ();
     testYymmdd ();
     testYyyymmdd ();
-    assert ("GO_SKIP_START");
+    // @SKIP_END_START
     testYmd ();
     testYmdhms ();
-    assert ("GO_SKIP_END");
+    // @SKIP_END_END
 }
 
 export default testDatetime;
