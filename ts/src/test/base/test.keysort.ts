@@ -10,7 +10,7 @@ function testKeysort () {
         'id': 'sampleexchange',
     });
 
-    assert ('GO_SKIP_START');
+    // @SKIP_START_GO
     // Test 1: Basic key sorting
     const unsortedDict1 = {
         'c': 3,
@@ -96,7 +96,7 @@ function testKeysort () {
     };
     const result7 = exchange.keysort (unsortedDict7);
     testSharedMethods.assertDeepEqual (exchange, undefined, 'testKeysort', Object.keys (result7), Object.keys (expectedSorted7));
-    assert ('GO_SKIP_END');
+    // @SKIP_END_GO
     assert (exchange.safeString (undefined, 'placeholder') === undefined); // go trick
 }
 
