@@ -12,6 +12,7 @@ use React\Promise;
 use \ccxt\Precise;
 include_once __DIR__ . '/test_decimal_to_precision.php';
 include_once __DIR__ . '/test_binary_to_base64.php';
+include_once __DIR__ . '/test_base64_to_binary.php';
 include_once __DIR__ . '/test_number_to_string.php';
 include_once __DIR__ . '/test_precise.php';
 include_once __DIR__ . '/test_datetime.php';
@@ -54,9 +55,11 @@ include_once __DIR__ . '/test_timeframes.php';
 include_once __DIR__ . '/test_keysort.php';
 include_once __DIR__ . '/test_implode_params.php';
 include_once __DIR__ . '/test_urlencode_nested.php';
+include_once __DIR__ . '/test_string_to_base16.php';
 include_once __DIR__ . '/test_capitalize.php';
 include_once __DIR__ . '/test_constants.php';
 include_once __DIR__ . '/test_is_json_encoded_object.php';
+include_once __DIR__ . '/test_encode_decode.php';
 
 function base_tests_init() {
     return Async\async(function () {
@@ -67,6 +70,7 @@ function base_tests_init() {
         test_deep_extend();
         test_cryptography();
         test_binary_to_base64();
+        test_base64_to_binary();
         test_datetime();
         test_decimal_to_precision();
         test_capitalize();
@@ -94,6 +98,7 @@ function base_tests_init() {
         test_timeframes();
         test_strip();
         test_rawencode();
+        test_string_to_base16();
         test_extract_params();
         test_array_concat();
         test_arrays_concat();
@@ -107,5 +112,6 @@ function base_tests_init() {
         Async\await(test_sleep());
         test_io();
         test_is_json_encoded_object();
+        test_encode_decode();
     }) ();
 }
