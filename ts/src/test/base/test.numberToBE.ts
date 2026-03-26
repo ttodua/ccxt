@@ -8,19 +8,18 @@ function testNumberToBE () {
         'id': 'sampleexchange',
     });
 
-    assert ('GO_SKIP_START');
-
     // 1234567890 (decimal) = 0x499602D2 (hex)
     // BE: 00 00 00 00 49 96 02 D2
     const num1 = 1234567890;
     const padding1 = 8;
     const result1 = exchange.numberToBE (num1, padding1);
-
-    // Check if result is Uint8Array
     assert (exchange.isBinaryMessage (result1));
     assert (exchange.binaryLength (result1) === padding1);
     const expectedBinary1 = exchange.base16ToBinary ('00000000499602d2');
-    assert.deepStrictEqual (result1, expectedBinary1);
+    const resultBase64 = exchange.binaryToBase64 (result1);
+    const expectedBase64 = exchange.binaryToBase64 (expectedBinary1);
+    assert (resultBase64 === expectedBase64, 'Expected base64: ' + expectedBase64 + ', got: ' + resultBase64);
+
 
 
     // Test 2: Small number, small padding
