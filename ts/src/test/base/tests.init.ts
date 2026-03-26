@@ -36,6 +36,7 @@ import testHandleMethods from './test.handleMethods.js';
 import testRemoveRepeatedElementsFromArray from './test.removeRepeatedElementsFromArray.js';
 import testUrlencodeWithArrayRepeat from './test.urlencodeWithArrayRepeat.js';
 import testParsePrecision from './test.parsePrecision.js';
+import testBinaryToBase58 from './test.binaryToBase58.js';
 import testStrip from './test.strip.js';
 import testArrayConcat from './test.arrayConcat.js';
 import testArraysConcat from './test.arraysConcat.js';
@@ -69,6 +70,7 @@ async function baseTestsInit () {
     testSafeMethods ();
     testSafeTicker ();
     testToArray ();
+    testBinaryToBase58 ();
     testJson ();
     testSortBy ();
     testSum ();
