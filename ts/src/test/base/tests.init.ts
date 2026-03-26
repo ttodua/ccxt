@@ -47,9 +47,11 @@ import testTimeframes from './test.timeframes.js';
 import testKeysort from './test.keysort.js';
 import testImplodeParams from './test.implodeParams.js';
 import testUrlencodeNested from './test.urlencodeNested.js';
+import testStringToBase16 from './test.stringToBase16.js';
 import testCapitalize from './test.capitalize.js';
 import testConstants from './test.constants.js';
 import testIsJsonEncodedObject from './test.isJsonEncodedObject.js';
+import testEncodeDecode from './test.encodeDecode.js';
 
 async function baseTestsInit () {
     await testLanguageSpecific ();
@@ -60,8 +62,7 @@ async function baseTestsInit () {
     testCryptography ();
     testBinaryToBase64 ();
     testBase64ToBinary ();
-    testNumberToBE ();
-    testDatetime ();
+    testNumberToBE ();    testDatetime ();
     testDecimalToPrecision ();
     testCapitalize ();
     testNumberToString ();
@@ -88,6 +89,7 @@ async function baseTestsInit () {
     testTimeframes ();
     testStrip ();
     testRawencode ();
+    testStringToBase16 ();
     testExtractParams ();
     testArrayConcat ();
     testArraysConcat ();
@@ -101,6 +103,7 @@ async function baseTestsInit () {
     await testSleep ();
     testIo ();
     testIsJsonEncodedObject ();
+    testEncodeDecode ();
 }
 
 export default baseTestsInit;

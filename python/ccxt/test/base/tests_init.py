@@ -17,6 +17,7 @@ from ccxt.base.decimal_to_precision import number_to_string  # noqa E402
 from ccxt.base.precise import Precise  # noqa E402
 from ccxt.test.base.test_decimal_to_precision import test_decimal_to_precision  # noqa E402
 from ccxt.test.base.test_binary_to_base64 import test_binary_to_base64  # noqa E402
+from ccxt.test.base.test_base64_to_binary import test_base64_to_binary  # noqa E402
 from ccxt.test.base.test_number_to_string import test_number_to_string  # noqa E402
 from ccxt.test.base.test_precise import test_precise  # noqa E402
 from ccxt.test.base.test_datetime import test_datetime  # noqa E402
@@ -59,6 +60,7 @@ from ccxt.test.base.test_timeframes import test_timeframes  # noqa E402
 from ccxt.test.base.test_keysort import test_keysort  # noqa E402
 from ccxt.test.base.test_implode_params import test_implode_params  # noqa E402
 from ccxt.test.base.test_urlencode_nested import test_urlencode_nested  # noqa E402
+from ccxt.test.base.test_string_to_base16 import test_string_to_base16  # noqa E402
 from ccxt.test.base.test_capitalize import test_capitalize  # noqa E402
 from ccxt.test.base.test_constants import test_constants  # noqa E402
 from ccxt.test.base.test_is_json_encoded_object import test_is_json_encoded_object  # noqa E402
@@ -71,6 +73,7 @@ async def base_tests_init():
     test_deep_extend()
     test_cryptography()
     test_binary_to_base64()
+    test_base64_to_binary()
     test_datetime()
     test_decimal_to_precision()
     test_capitalize()
@@ -98,6 +101,7 @@ async def base_tests_init():
     test_timeframes()
     test_strip()
     test_rawencode()
+    test_string_to_base16()
     test_extract_params()
     test_array_concat()
     test_arrays_concat()
