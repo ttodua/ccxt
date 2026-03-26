@@ -8,6 +8,9 @@ function testNumberToBE () {
         'id': 'sampleexchange',
     });
 
+    assert (exchange.parseNumber (undefined) === undefined, 'GO skip trick');
+
+    assert ('GO_SKIP_START');
     // 1234567890 (decimal) = 0x499602D2 (hex)
     // BE: 00 00 00 00 49 96 02 D2
     const num1 = 1234567890;
@@ -21,28 +24,61 @@ function testNumberToBE () {
     assert (resultBase64 === expectedBase64, 'Expected base64: ' + expectedBase64 + ', got: ' + resultBase64);
 
 
+    // 0 with 1-byte padding => 0x00
+    const result2 = exchange.numberToBE (0, 1);
+    assert (exchange.isBinaryMessage (result2));
+    assert (exchange.binaryLength (result2) === 1);
+    const expectedBinary2 = exchange.base16ToBinary ('00');
+    assert (exchange.binaryToBase64 (result2) === exchange.binaryToBase64 (expectedBinary2), 'zero 1-byte failed');
 
-    // Test 2: Small number, small padding
-    // 255 = 0xFF
-    const num2 = 255;
-    const padding2 = 1;
-    const expectedBinary2 = exchange.base16ToBinary('ff');
-    const result2 = exchange.numberToBE (num2, padding2);
-    assert.deepStrictEqual (result2, expectedBinary2);
+    // 1 with 1-byte padding => 0x01
+    const result3 = exchange.numberToBE (1, 1);
+    assert (exchange.isBinaryMessage (result3));
+    assert (exchange.binaryLength (result3) === 1);
+    const expectedBinary3 = exchange.base16ToBinary ('01');
+    assert (exchange.binaryToBase64 (result3) === exchange.binaryToBase64 (expectedBinary3), 'one 1-byte failed');
 
-    // Test 3: Zero
-    const num3 = 0;
-    const padding3 = 4;
-    const expectedBinary3 = exchange.base16ToBinary('00000000');
-    const result3 = exchange.numberToBE (num3, padding3);
-    assert.deepStrictEqual (result3, expectedBinary3);
+    // 255 with 1-byte padding => 0xFF (max single byte)
+    const result4 = exchange.numberToBE (255, 1);
+    assert (exchange.isBinaryMessage (result4));
+    assert (exchange.binaryLength (result4) === 1);
+    const expectedBinary4 = exchange.base16ToBinary ('ff');
+    assert (exchange.binaryToBase64 (result4) === exchange.binaryToBase64 (expectedBinary4), '255 1-byte failed');
 
-    // 1 in 8 bytes
-    const num4 = 1;
-    const padding4 = 8;
-    const expectedBinary4 = exchange.base16ToBinary('0000000000000001');
-    const result4 = exchange.numberToBE (num4, padding4);
-    assert.deepStrictEqual (result4, expectedBinary4);
+    // 256 with 2-byte padding => 0x01 0x00
+    const result5 = exchange.numberToBE (256, 2);
+    assert (exchange.isBinaryMessage (result5));
+    assert (exchange.binaryLength (result5) === 2);
+    const expectedBinary5 = exchange.base16ToBinary ('0100');
+    assert (exchange.binaryToBase64 (result5) === exchange.binaryToBase64 (expectedBinary5), '256 2-byte failed');
+
+    // 1 with 4-byte padding => 0x00 0x00 0x00 0x01
+    const result6 = exchange.numberToBE (1, 4);
+    assert (exchange.isBinaryMessage (result6));
+    assert (exchange.binaryLength (result6) === 4);
+    const expectedBinary6 = exchange.base16ToBinary ('00000001');
+    assert (exchange.binaryToBase64 (result6) === exchange.binaryToBase64 (expectedBinary6), '1 with 4-byte padding failed');
+
+    // 0 with 8-byte padding => all zeros
+    const result7 = exchange.numberToBE (0, 8);
+    assert (exchange.isBinaryMessage (result7));
+    assert (exchange.binaryLength (result7) === 8);
+    const expectedBinary7 = exchange.base16ToBinary ('0000000000000000');
+    assert (exchange.binaryToBase64 (result7) === exchange.binaryToBase64 (expectedBinary7), 'zero 8-byte failed');
+
+    // 4294967295 (0xFFFFFFFF) with 4-byte padding
+    const result8 = exchange.numberToBE (4294967295, 4);
+    assert (exchange.isBinaryMessage (result8));
+    assert (exchange.binaryLength (result8) === 4);
+    const expectedBinary8 = exchange.base16ToBinary ('ffffffff');
+    assert (exchange.binaryToBase64 (result8) === exchange.binaryToBase64 (expectedBinary8), '0xFFFFFFFF 4-byte failed');
+
+    // 16909060 (0x01020304) with 4-byte padding
+    const result9 = exchange.numberToBE (16909060, 4);
+    assert (exchange.isBinaryMessage (result9));
+    assert (exchange.binaryLength (result9) === 4);
+    const expectedBinary9 = exchange.base16ToBinary ('01020304');
+    assert (exchange.binaryToBase64 (result9) === exchange.binaryToBase64 (expectedBinary9), '0x01020304 4-byte failed');
 
     assert ('GO_SKIP_END');
 }
