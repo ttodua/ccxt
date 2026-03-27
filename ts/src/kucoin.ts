@@ -1066,9 +1066,12 @@ export default class kucoin extends Exchange {
                     'contract': 'contract',
                 },
                 'networks': {
+                    'BTC': 'btc',
                     'BRC20': 'btc',
                     'BTCNATIVESEGWIT': 'bech32',
+                    'ETH': 'eth',
                     'ERC20': 'eth',
+                    'TRX': 'trx',
                     'TRC20': 'trx',
                     'HRC20': 'heco',
                     'MATIC': 'matic',
@@ -1084,6 +1087,7 @@ export default class kucoin extends Exchange {
                     'TLOS': 'tlos', // tlosevm is different
                     'CFX': 'cfx',
                     'ACA': 'aca',
+                    'OP': 'optimism',
                     'OPTIMISM': 'optimism',
                     'ONT': 'ont',
                     'GLMR': 'glmr',
@@ -1273,6 +1277,13 @@ export default class kucoin extends Exchange {
                     // 'AURORACHAIN': 'aoa',
                     // 'KLEVER': 'klv',
                     // undetermined: xns(insolar), rhoc, luk (luniverse), kts (klimatas), bchn (bitcoin cash node), god (shallow entry), lit (litmus),
+                },
+                'networksById': {
+                    'btc': 'BTC',
+                    'trx': 'TRC20',
+                    'eth': 'ERC20',
+                    'optimism': 'OP',
+                    'op': 'OP',
                 },
                 'marginModes': {
                     'cross': 'MARGIN_TRADE',
