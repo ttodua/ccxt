@@ -1130,7 +1130,10 @@ export default class bybit extends Exchange {
                     'FUND': 'fund',
                 },
                 'networks': {
+                    'BTC': 'BTC',
+                    'ETH': 'ETH',
                     'ERC20': 'ETH',
+                    'TRX': 'TRX',
                     'TRC20': 'TRX',
                     'BEP20': 'BSC',
                     'SOL': 'SOL',
@@ -1209,8 +1212,6 @@ export default class bybit extends Exchange {
                 'networksById': {
                     'ETH': 'ERC20',
                     'TRX': 'TRC20',
-                    'BSC': 'BEP20',
-                    'OMNI': 'OMNI',
                     'SPL': 'SOL',
                 },
                 'defaultNetwork': 'ERC20',
