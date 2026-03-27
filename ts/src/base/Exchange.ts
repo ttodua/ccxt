@@ -5588,7 +5588,7 @@ export default class Exchange {
         return this.getListFromObjectValues (filteredMarkets, 'symbol');
     }
 
-    filterByArray (objects, key: IndexType, values = undefined, indexed = true) {
+    filterByArray (objects, key: IndexType, values = undefined, indexed = true, invertMatches = false) {
         objects = this.toArray (objects);
         // return all of them if no values were passed
         if (values === undefined || !values) {
@@ -5601,7 +5601,10 @@ export default class Exchange {
         }
         const results = [];
         for (let i = 0; i < objects.length; i++) {
-            if (this.inArray (objects[i][key], values)) {
+            const isInArray = this.inArray (objects[i][key], values);
+            if (!invertMatches && isInArray) {
+                results.push (objects[i]);
+            } else if (invertMatches && !isInArray) {
                 results.push (objects[i]);
             }
         }
