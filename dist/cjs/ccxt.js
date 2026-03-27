@@ -8,7 +8,7 @@ var Exchange = require('./src/base/Exchange.js');
 var Precise = require('./src/base/Precise.js');
 var functions = require('./src/base/functions.js');
 var errors = require('./src/base/errors.js');
-var alp = require('./src/alp.js');
+var aftermath = require('./src/aftermath.js');
 var alpaca = require('./src/alpaca.js');
 var apex = require('./src/apex.js');
 var arkham = require('./src/arkham.js');
@@ -62,7 +62,6 @@ var coinspot = require('./src/coinspot.js');
 var cryptocom = require('./src/cryptocom.js');
 var cryptomus = require('./src/cryptomus.js');
 var deepcoin = require('./src/deepcoin.js');
-var defx = require('./src/defx.js');
 var delta = require('./src/delta.js');
 var deribit = require('./src/deribit.js');
 var derive = require('./src/derive.js');
@@ -74,6 +73,7 @@ var foxbit = require('./src/foxbit.js');
 var gate = require('./src/gate.js');
 var gateio = require('./src/gateio.js');
 var gemini = require('./src/gemini.js');
+var grvt = require('./src/grvt.js');
 var hashkey = require('./src/hashkey.js');
 var hibachi = require('./src/hibachi.js');
 var hitbtc = require('./src/hitbtc.js');
@@ -89,6 +89,7 @@ var kucoin = require('./src/kucoin.js');
 var kucoinfutures = require('./src/kucoinfutures.js');
 var latoken = require('./src/latoken.js');
 var lbank = require('./src/lbank.js');
+var lighter = require('./src/lighter.js');
 var luno = require('./src/luno.js');
 var mercado = require('./src/mercado.js');
 var mexc = require('./src/mexc.js');
@@ -105,8 +106,6 @@ var paradex = require('./src/paradex.js');
 var paymium = require('./src/paymium.js');
 var phemex = require('./src/phemex.js');
 var poloniex = require('./src/poloniex.js');
-var probit = require('./src/probit.js');
-var timex = require('./src/timex.js');
 var tokocrypto = require('./src/tokocrypto.js');
 var toobit = require('./src/toobit.js');
 var upbit = require('./src/upbit.js');
@@ -119,6 +118,7 @@ var yobit = require('./src/yobit.js');
 var zaif = require('./src/zaif.js');
 var zebpay = require('./src/zebpay.js');
 var zonda = require('./src/zonda.js');
+var aftermath$1 = require('./src/pro/aftermath.js');
 var alpaca$1 = require('./src/pro/alpaca.js');
 var apex$1 = require('./src/pro/apex.js');
 var arkham$1 = require('./src/pro/arkham.js');
@@ -157,7 +157,6 @@ var coinex$1 = require('./src/pro/coinex.js');
 var coinone$1 = require('./src/pro/coinone.js');
 var cryptocom$1 = require('./src/pro/cryptocom.js');
 var deepcoin$1 = require('./src/pro/deepcoin.js');
-var defx$1 = require('./src/pro/defx.js');
 var deribit$1 = require('./src/pro/deribit.js');
 var derive$1 = require('./src/pro/derive.js');
 var dydx$1 = require('./src/pro/dydx.js');
@@ -165,6 +164,7 @@ var exmo$1 = require('./src/pro/exmo.js');
 var gate$1 = require('./src/pro/gate.js');
 var gateio$1 = require('./src/pro/gateio.js');
 var gemini$1 = require('./src/pro/gemini.js');
+var grvt$1 = require('./src/pro/grvt.js');
 var hashkey$1 = require('./src/pro/hashkey.js');
 var hitbtc$1 = require('./src/pro/hitbtc.js');
 var hollaex$1 = require('./src/pro/hollaex.js');
@@ -177,6 +177,7 @@ var krakenfutures$1 = require('./src/pro/krakenfutures.js');
 var kucoin$1 = require('./src/pro/kucoin.js');
 var kucoinfutures$1 = require('./src/pro/kucoinfutures.js');
 var lbank$1 = require('./src/pro/lbank.js');
+var lighter$1 = require('./src/pro/lighter.js');
 var luno$1 = require('./src/pro/luno.js');
 var mexc$1 = require('./src/pro/mexc.js');
 var modetrade$1 = require('./src/pro/modetrade.js');
@@ -190,7 +191,6 @@ var p2b$1 = require('./src/pro/p2b.js');
 var paradex$1 = require('./src/pro/paradex.js');
 var phemex$1 = require('./src/pro/phemex.js');
 var poloniex$1 = require('./src/pro/poloniex.js');
-var probit$1 = require('./src/pro/probit.js');
 var toobit$1 = require('./src/pro/toobit.js');
 var upbit$1 = require('./src/pro/upbit.js');
 var whitebit$1 = require('./src/pro/whitebit.js');
@@ -200,10 +200,10 @@ var xt$1 = require('./src/pro/xt.js');
 
 //-----------------------------------------------------------------------------
 // this is updated by vss.js when building
-const version = '4.5.34';
+const version = '4.5.45';
 Exchange["default"].ccxtVersion = version;
 const exchanges = {
-    'alp': alp["default"],
+    'aftermath': aftermath["default"],
     'alpaca': alpaca["default"],
     'apex': apex["default"],
     'arkham': arkham["default"],
@@ -257,7 +257,6 @@ const exchanges = {
     'cryptocom': cryptocom["default"],
     'cryptomus': cryptomus["default"],
     'deepcoin': deepcoin["default"],
-    'defx': defx["default"],
     'delta': delta["default"],
     'deribit': deribit["default"],
     'derive': derive["default"],
@@ -269,6 +268,7 @@ const exchanges = {
     'gate': gate["default"],
     'gateio': gateio["default"],
     'gemini': gemini["default"],
+    'grvt': grvt["default"],
     'hashkey': hashkey["default"],
     'hibachi': hibachi["default"],
     'hitbtc': hitbtc["default"],
@@ -284,6 +284,7 @@ const exchanges = {
     'kucoinfutures': kucoinfutures["default"],
     'latoken': latoken["default"],
     'lbank': lbank["default"],
+    'lighter': lighter["default"],
     'luno': luno["default"],
     'mercado': mercado["default"],
     'mexc': mexc["default"],
@@ -300,8 +301,6 @@ const exchanges = {
     'paymium': paymium["default"],
     'phemex': phemex["default"],
     'poloniex': poloniex["default"],
-    'probit': probit["default"],
-    'timex': timex["default"],
     'tokocrypto': tokocrypto["default"],
     'toobit': toobit["default"],
     'upbit': upbit["default"],
@@ -316,6 +315,7 @@ const exchanges = {
     'zonda': zonda["default"],
 };
 const pro = {
+    'aftermath': aftermath$1["default"],
     'alpaca': alpaca$1["default"],
     'apex': apex$1["default"],
     'arkham': arkham$1["default"],
@@ -354,7 +354,6 @@ const pro = {
     'coinone': coinone$1["default"],
     'cryptocom': cryptocom$1["default"],
     'deepcoin': deepcoin$1["default"],
-    'defx': defx$1["default"],
     'deribit': deribit$1["default"],
     'derive': derive$1["default"],
     'dydx': dydx$1["default"],
@@ -362,6 +361,7 @@ const pro = {
     'gate': gate$1["default"],
     'gateio': gateio$1["default"],
     'gemini': gemini$1["default"],
+    'grvt': grvt$1["default"],
     'hashkey': hashkey$1["default"],
     'hitbtc': hitbtc$1["default"],
     'hollaex': hollaex$1["default"],
@@ -374,6 +374,7 @@ const pro = {
     'kucoin': kucoin$1["default"],
     'kucoinfutures': kucoinfutures$1["default"],
     'lbank': lbank$1["default"],
+    'lighter': lighter$1["default"],
     'luno': luno$1["default"],
     'mexc': mexc$1["default"],
     'modetrade': modetrade$1["default"],
@@ -387,7 +388,6 @@ const pro = {
     'paradex': paradex$1["default"],
     'phemex': phemex$1["default"],
     'poloniex': poloniex$1["default"],
-    'probit': probit$1["default"],
     'toobit': toobit$1["default"],
     'upbit': upbit$1["default"],
     'whitebit': whitebit$1["default"],
@@ -446,7 +446,7 @@ exports.RequestTimeout = errors.RequestTimeout;
 exports.RestrictedLocation = errors.RestrictedLocation;
 exports.UnsubscribeError = errors.UnsubscribeError;
 exports.errors = errors;
-exports.alp = alp["default"];
+exports.aftermath = aftermath["default"];
 exports.alpaca = alpaca["default"];
 exports.apex = apex["default"];
 exports.arkham = arkham["default"];
@@ -500,7 +500,6 @@ exports.coinspot = coinspot["default"];
 exports.cryptocom = cryptocom["default"];
 exports.cryptomus = cryptomus["default"];
 exports.deepcoin = deepcoin["default"];
-exports.defx = defx["default"];
 exports.delta = delta["default"];
 exports.deribit = deribit["default"];
 exports.derive = derive["default"];
@@ -512,6 +511,7 @@ exports.foxbit = foxbit["default"];
 exports.gate = gate["default"];
 exports.gateio = gateio["default"];
 exports.gemini = gemini["default"];
+exports.grvt = grvt["default"];
 exports.hashkey = hashkey["default"];
 exports.hibachi = hibachi["default"];
 exports.hitbtc = hitbtc["default"];
@@ -527,6 +527,7 @@ exports.kucoin = kucoin["default"];
 exports.kucoinfutures = kucoinfutures["default"];
 exports.latoken = latoken["default"];
 exports.lbank = lbank["default"];
+exports.lighter = lighter["default"];
 exports.luno = luno["default"];
 exports.mercado = mercado["default"];
 exports.mexc = mexc["default"];
@@ -543,8 +544,6 @@ exports.paradex = paradex["default"];
 exports.paymium = paymium["default"];
 exports.phemex = phemex["default"];
 exports.poloniex = poloniex["default"];
-exports.probit = probit["default"];
-exports.timex = timex["default"];
 exports.tokocrypto = tokocrypto["default"];
 exports.toobit = toobit["default"];
 exports.upbit = upbit["default"];

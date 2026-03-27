@@ -9,28 +9,56 @@ public partial class BaseTest
 {
         async public Task baseTestsInit()
         {
-            testLanguageSpecific();
+            await testLanguageSpecific();
+            testConstants();
             testAfterConstructor();
             testExtend();
             testDeepExtend();
             testCryptography();
+            testBinaryToBase64();
+            testBase64ToBinary();
             testDatetime();
             testDecimalToPrecision();
+            testCapitalize();
             testNumberToString();
             testPrecise();
             testSafeMethods();
             testSafeTicker();
+            testToArray();
             testJson();
             testSortBy();
             testSum();
+            testUrlencodeBase64();
+            testStringToBase64();
+            testUrlencode();
             testOmit();
             testGroupBy();
+            testIndexBy();
+            testInArray();
             testFilterBy();
             testHandleMethods();
             testRemoveRepeatedElementsFromArray();
+            testIsEmpty();
+            testUrlencodeWithArrayRepeat();
             testParsePrecision();
+            testPrecisionFromString();
+            testTimeframes();
+            testStrip();
+            testRawencode();
+            testStringToBase16();
+            testExtractParams();
+            testArrayConcat();
             testArraysConcat();
+            testUuid();
+            await testSetMarketsFromExchange();
             testEthMethods();
+            testKeysort();
+            testImplodeParams();
+            testUnique();
+            testUrlencodeNested();
             await testSleep();
+            testIo();
+            testIsJsonEncodedObject();
+            testEncodeDecode();
         }
 }
