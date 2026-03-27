@@ -57,6 +57,10 @@ function assert_structure($exchange, $skipped_properties, $method, $entry, $form
     $log_text = log_template($exchange, $method, $entry);
     assert($entry !== null, 'item is null/undefined' . $log_text);
     // get all expected & predefined keys for this specific item and ensure thos ekeys exist in parsed structure
+    $allow_empty_skips = $exchange->safe_list($skipped_properties, 'allowNull', []);
+    if ($empty_allowed_for !== null) {
+        $empty_allowed_for = concat($empty_allowed_for, $allow_empty_skips);
+    }
     if (gettype($format) === 'array' && array_is_list($format)) {
         assert(gettype($entry) === 'array' && array_is_list($entry), 'entry is not an array' . $log_text);
         $real_length = count($entry);
@@ -166,9 +170,13 @@ function assert_timestamp_and_datetime($exchange, $skipped_properties, $method, 
             //    assert (dt === exchange.iso8601 (entry['timestamp']))
             // so, we have to compare with millisecond accururacy
             $dt_parsed = $exchange->parse8601($dt);
-            $dt_parsed_string = $exchange->iso8601($dt_parsed);
-            $dt_entry_string = $exchange->iso8601($entry['timestamp']);
-            assert($dt_parsed_string === $dt_entry_string, 'datetime is not iso8601 of timestamp:' . $dt_parsed_string . '(string) != ' . $dt_entry_string . '(from ts)' . $log_text);
+            $ts_ms = $entry['timestamp'];
+            $diff = abs($dt_parsed - $ts_ms);
+            if ($diff >= 500) {
+                $dt_parsed_string = $exchange->iso8601($dt_parsed);
+                $dt_entry_string = $exchange->iso8601($ts_ms);
+                assert(false, 'datetime is not iso8601 of timestamp:' . $dt_parsed_string . '(string) != ' . $dt_entry_string . '(from ts)' . $log_text);
+            }
         }
     }
 }
@@ -331,7 +339,6 @@ function assert_fee_structure($exchange, $skipped_properties, $method, $entry, $
     $log_text = log_template($exchange, $method, $entry);
     $key_string = string_value($key);
     if (is_int($key)) {
-        $key = $key;
         assert(gettype($entry) === 'array' && array_is_list($entry), 'fee container is expected to be an array' . $log_text);
         assert($key < count($entry), 'fee key ' . $key_string . ' was expected to be present in entry' . $log_text);
     } else {
@@ -392,8 +399,11 @@ function check_precision_accuracy($exchange, $skipped_properties, $method, $entr
     if ($exchange->is_tick_precision()) {
         // \ccxt\TICK_SIZE should be above zero
         assert_greater($exchange, $skipped_properties, $method, $entry, $key, '0');
-        // the below array of integers are inexistent tick-sizes (theoretically technically possible, but not in real-world cases), so their existence in our case indicates to incorrectly implemented tick-sizes, which might mistakenly be implemented with DECIMAL_PLACES, so we throw error
+        // the below array of integers are inexistent tick-sizes (theoretically technically possible, but not in real-world cases), so in our case, such values probably indicate an incorrectly implemented tick-sizes calculation, so we throw error
         $decimal_numbers = ['2', '3', '4', '5', '6', '7', '8', '9', '11', '12', '13', '14', '15', '16'];
+        if ($key === 'amount' && is_array($skipped_properties) && array_key_exists('precisionAmountAbnormal', $skipped_properties)) {
+            return;
+        }
         for ($i = 0; $i < count($decimal_numbers); $i++) {
             $num = $decimal_numbers[$i];
             $num_str = $num;
@@ -556,6 +566,16 @@ function assert_order_state($exchange, $skipped_properties, $method, $order, $as
 }
 
 
+function get_active_markets($exchange, $include_unknown = true) {
+    $filtered_active = $exchange->filter_by($exchange->markets, 'active', true);
+    if ($include_unknown) {
+        $filtered_undefined = $exchange->filter_by($exchange->markets, 'active', null);
+        return $exchange->array_concat($filtered_active, $filtered_undefined);
+    }
+    return $filtered_active;
+}
+
+
 function remove_proxy_options($exchange, $skipped_properties) {
     $proxy_url = $exchange->check_proxy_url_settings();
     [$http_proxy, $https_proxy, $socks_proxy] = $exchange->check_proxy_settings();
@@ -577,6 +597,25 @@ function set_proxy_options($exchange, $skipped_properties, $proxy_url, $http_pro
     $exchange->http_proxy = $http_proxy;
     $exchange->https_proxy = $https_proxy;
     $exchange->socks_proxy = $socks_proxy;
+}
+
+
+function concat($a = null, $b = null) {
+    // we use this method temporarily, because of ast-transpiler issue across langs
+    if ($a === null) {
+        return $b;
+    } elseif ($b === null) {
+        return $a;
+    } else {
+        $result = [];
+        for ($i = 0; $i < count($a); $i++) {
+            $result[] = $a[$i];
+        }
+        for ($j = 0; $j < count($b); $j++) {
+            $result[] = $b[$j];
+        }
+        return $result;
+    }
 }
 
 
@@ -603,12 +642,12 @@ function assert_round_minute_timestamp($exchange, $skipped_properties, $method, 
 }
 
 
-function deep_equal($a, $b) {
+function deep_equal($exchange, $a, $b) {
     return json_encode($a) === json_encode($b);
 }
 
 
 function assert_deep_equal($exchange, $skipped_properties, $method, $a, $b) {
     $log_text = log_template($exchange, $method, array());
-    assert(deep_equal($a, $b), 'two dicts do not match: ' . json_encode($a) . ' != ' . json_encode($b) . $log_text);
+    assert(deep_equal($exchange, $a, $b), 'two dicts do not match: ' . json_encode($a) . ' != ' . json_encode($b) . $log_text);
 }

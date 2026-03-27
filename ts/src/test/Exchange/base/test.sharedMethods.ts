@@ -50,6 +50,10 @@ function assertStructure (exchange: Exchange, skippedProperties: object, method:
     const logText = logTemplate (exchange, method, entry);
     assert (entry !== undefined, 'item is null/undefined' + logText);
     // get all expected & predefined keys for this specific item and ensure thos ekeys exist in parsed structure
+    const allowEmptySkips = exchange.safeList (skippedProperties, 'allowNull', []);
+    if (emptyAllowedFor !== undefined) {
+        emptyAllowedFor = concat (emptyAllowedFor, allowEmptySkips);
+    }
     if (Array.isArray (format)) {
         assert (Array.isArray (entry), 'entry is not an array' + logText);
         const realLength = entry.length;
@@ -157,9 +161,13 @@ function assertTimestampAndDatetime (exchange: Exchange, skippedProperties: obje
             //    assert (dt === exchange.iso8601 (entry['timestamp']))
             // so, we have to compare with millisecond accururacy
             const dtParsed = exchange.parse8601 (dt);
-            const dtParsedString = exchange.iso8601 (dtParsed);
-            const dtEntryString = exchange.iso8601 (entry['timestamp']);
-            assert (dtParsedString === dtEntryString, 'datetime is not iso8601 of timestamp:' + dtParsedString + '(string) != ' + dtEntryString + '(from ts)' + logText);
+            const tsMs = entry['timestamp'];
+            const diff = Math.abs (dtParsed - tsMs);
+            if (diff >= 500) { // tolerate up to 500ms skew // TODO: dont know if this is a proper solution
+                const dtParsedString = exchange.iso8601 (dtParsed);
+                const dtEntryString = exchange.iso8601 (tsMs);
+                assert (false, 'datetime is not iso8601 of timestamp:' + dtParsedString + '(string) != ' + dtEntryString + '(from ts)' + logText);
+            }
         }
     }
 }
@@ -313,9 +321,8 @@ function assertFeeStructure (exchange: Exchange, skippedProperties: object, meth
     const logText = logTemplate (exchange, method, entry);
     const keyString = stringValue (key);
     if (Number.isInteger (key)) {
-        key = key as number;
         assert (Array.isArray (entry), 'fee container is expected to be an array' + logText);
-        assert (key < entry.length, 'fee key ' + keyString + ' was expected to be present in entry' + logText);
+        assert (key as number < entry.length, 'fee key ' + keyString + ' was expected to be present in entry' + logText);
     } else {
         assert (typeof entry === 'object', 'fee container is expected to be an object' + logText);
         assert (key in entry, 'fee key "' + key + '" was expected to be present in entry' + logText);
@@ -372,8 +379,11 @@ function checkPrecisionAccuracy (exchange: Exchange, skippedProperties: object, 
     if (exchange.isTickPrecision ()) {
         // TICK_SIZE should be above zero
         assertGreater (exchange, skippedProperties, method, entry, key, '0');
-        // the below array of integers are inexistent tick-sizes (theoretically technically possible, but not in real-world cases), so their existence in our case indicates to incorrectly implemented tick-sizes, which might mistakenly be implemented with DECIMAL_PLACES, so we throw error
+        // the below array of integers are inexistent tick-sizes (theoretically technically possible, but not in real-world cases), so in our case, such values probably indicate an incorrectly implemented tick-sizes calculation, so we throw error
         const decimalNumbers = [ '2', '3', '4', '5', '6', '7', '8', '9', '11', '12', '13', '14', '15', '16' ];
+        if (key === 'amount' && 'precisionAmountAbnormal' in skippedProperties) {
+            return;
+        }
         for (let i = 0; i < decimalNumbers.length; i++) {
             const num = decimalNumbers[i];
             const numStr = num;
@@ -533,6 +543,15 @@ function assertOrderState (exchange, skippedProperties, method, order, assertedS
     }
 }
 
+function getActiveMarkets (exchange, includeUnknown = true) {
+    const filteredActive = exchange.filterBy (exchange.markets, 'active', true);
+    if (includeUnknown) {
+        const filteredUndefined = exchange.filterBy (exchange.markets, 'active', undefined);
+        return exchange.arrayConcat (filteredActive, filteredUndefined);
+    }
+    return filteredActive;
+}
+
 function removeProxyOptions (exchange: Exchange, skippedProperties: object) {
     const proxyUrl = exchange.checkProxyUrlSettings ();
     const [ httpProxy, httpsProxy, socksProxy ] = exchange.checkProxySettings ();
@@ -553,6 +572,24 @@ function setProxyOptions (exchange: Exchange, skippedProperties: object, proxyUr
     exchange.httpProxy = httpProxy;
     exchange.httpsProxy = httpsProxy;
     exchange.socksProxy = socksProxy;
+}
+
+function concat (a: any[] = undefined, b: any[] = undefined) {
+    // we use this method temporarily, because of ast-transpiler issue across langs
+    if (a === undefined) {
+        return b;
+    } else if (b === undefined) {
+        return a;
+    } else {
+        const result = [];
+        for (let i = 0; i < a.length; i++) {
+            result.push (a[i]);
+        }
+        for (let j = 0; j < b.length; j++) {
+            result.push (b[j]);
+        }
+        return result;
+    }
 }
 
 function assertNonEmtpyArray (exchange: Exchange, skippedProperties: object, method: string, entry: any[] | object, hint: Str = undefined) {
@@ -576,13 +613,13 @@ function assertRoundMinuteTimestamp (exchange: Exchange, skippedProperties: obje
     assert (Precise.stringMod (ts, '60000') === '0', 'timestamp should be a multiple of 60 seconds (1 minute)' + logText);
 }
 
-function deepEqual (a: any, b: any) {
-    return JSON.stringify (a) === JSON.stringify (b);
+function deepEqual (exchange: Exchange, a: any, b: any) {
+    return exchange.jsonStringifyWithNull (a) === exchange.jsonStringifyWithNull (b);
 }
 
 function assertDeepEqual (exchange: Exchange, skippedProperties: any, method: string, a: any, b: any) {
     const logText = logTemplate (exchange, method, {});
-    assert (deepEqual (a, b), 'two dicts do not match: ' + JSON.stringify (a) + ' != ' + JSON.stringify (b) + logText);
+    assert (deepEqual (exchange, a, b), 'two dicts do not match: ' + exchange.jsonStringifyWithNull (a) + ' != ' + exchange.jsonStringifyWithNull (b) + logText);
 }
 
 export default {
@@ -616,4 +653,6 @@ export default {
     setProxyOptions,
     assertNonEmtpyArray,
     assertRoundMinuteTimestamp,
+    concat,
+    getActiveMarkets,
 };

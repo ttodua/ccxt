@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/url"
+	"sort"
 	"strings"
 )
 
@@ -154,7 +155,8 @@ func (e *Exchange) BinaryToBase58(buff2 interface{}) string {
 	return BinaryToHex(buff)
 }
 
-func (e *Exchange) BinaryToBase64(buff []byte) string {
+func (e *Exchange) BinaryToBase64(buff2 interface{}) string {
+	buff := buff2.([]byte)
 	return base64.StdEncoding.EncodeToString(buff)
 }
 
@@ -174,9 +176,24 @@ func (e *Exchange) Decode(data interface{}) string {
 	return data.(string) // stub
 }
 
+// func (e *Exchange) IntToBase16(number interface{}) string {
+// 	n := number.(int64)
+// 	return fmt.Sprintf("%x", n)
+// }
+
 func (e *Exchange) IntToBase16(number interface{}) string {
-	n := number.(int64)
-	return fmt.Sprintf("%x", n)
+	switch v := number.(type) {
+	case int:
+		return fmt.Sprintf("%x", int64(v))
+	case int64:
+		return fmt.Sprintf("%x", v)
+	case uint:
+		return fmt.Sprintf("%x", uint64(v))
+	case uint64:
+		return fmt.Sprintf("%x", v)
+	default:
+		return "" // return empty string for unsupported types
+	}
 }
 
 // This function requires implementation of a message packer
@@ -184,12 +201,18 @@ func (e *Exchange) packb(data interface{}) interface{} {
 	return nil
 }
 
-func (e *Exchange) Rawencode(parameters2 interface{}) string {
-	parameters := parameters2.(map[string]interface{})
+func (e *Exchange) Rawencode(params ...interface{}) string {
+	parameters := params[0].(map[string]interface{})
+	shouldSort := GetArg(params, 1, false).(bool)
 	keys := make([]string, 0, len(parameters))
 	for k := range parameters {
 		keys = append(keys, k)
 	}
+
+	if shouldSort {
+		sort.Strings(keys)
+	}
+
 	var outList []string
 	for _, key := range keys {
 		value := parameters[key]
@@ -224,35 +247,121 @@ func (e *Exchange) UrlencodeWithArrayRepeat(parameters2 interface{}) string {
 }
 
 func (e *Exchange) UrlencodeNested(parameters2 interface{}) string {
-	parameters := parameters2.(map[string]interface{})
-	queryString := url.Values{}
-	for key, value := range parameters {
-		if subDict, ok := value.(map[string]interface{}); ok {
-			for subKey, subValue := range subDict {
-				finalValue := fmt.Sprintf("%v", subValue)
-				// finalValue = strings.ReplaceAll(finalValue, " ", "%20")
-				if boolVal, ok := subValue.(bool); ok {
-					finalValue = strings.ToLower(fmt.Sprintf("%v", boolVal))
-				}
-				queryString.Add(fmt.Sprintf("%s[%s]", key, subKey), finalValue)
+	var outList []string
+
+	// Define recursive function
+	var recurse func(interface{}, string)
+	recurse = func(params interface{}, prefix string) {
+		switch v := params.(type) {
+		case map[string]interface{}:
+			keys := make([]string, 0, len(v))
+			for k := range v {
+				keys = append(keys, k)
 			}
-		} else {
-			valueStr := ToString(value)
-			// valueStr = strings.ReplaceAll(valueStr, " ", "%20")
-			queryString.Add(key, valueStr)
+			sort.Strings(keys)
+			for _, k := range keys {
+				var newPrefix string
+				if prefix == "" {
+					newPrefix = k
+				} else {
+					newPrefix = fmt.Sprintf("%s[%s]", prefix, k)
+				}
+				recurse(v[k], newPrefix)
+			}
+		case map[string]string: // support map[string]string as well
+			keys := make([]string, 0, len(v))
+			for k := range v {
+				keys = append(keys, k)
+			}
+			sort.Strings(keys)
+			for _, k := range keys {
+				var newPrefix string
+				if prefix == "" {
+					newPrefix = k
+				} else {
+					newPrefix = fmt.Sprintf("%s[%s]", prefix, k)
+				}
+				recurse(v[k], newPrefix)
+			}
+		case []interface{}:
+			for i, val := range v {
+				var newPrefix string
+				if prefix == "" {
+					newPrefix = fmt.Sprintf("%d", i)
+				} else {
+					newPrefix = fmt.Sprintf("%s[%d]", prefix, i)
+				}
+				recurse(val, newPrefix)
+			}
+		default:
+			valStr := ToString(v)
+
+			if boolVal, ok := v.(bool); ok {
+				valStr = fmt.Sprintf("%v", boolVal)
+				valStr = strings.ToLower(valStr)
+			}
+
+			encodedKey := url.QueryEscape(prefix)
+			encodedKey = strings.ReplaceAll(encodedKey, "%5B", "[")
+			encodedKey = strings.ReplaceAll(encodedKey, "%5D", "]")
+			encodedKey = strings.ReplaceAll(encodedKey, "+", "%20")
+
+			encodedVal := url.QueryEscape(valStr)
+			encodedVal = strings.ReplaceAll(encodedVal, "+", "%20")
+
+			outList = append(outList, fmt.Sprintf("%s=%s", encodedKey, encodedVal))
 		}
 	}
-	res := queryString.Encode()
-	res = strings.ReplaceAll(res, "+", "%20")
-	return res
+
+	recurse(parameters2, "")
+	return strings.Join(outList, "&")
 }
 
-func (e *Exchange) Urlencode(parameters2 interface{}) string {
-	parameters := parameters2.(map[string]interface{})
+// without sorting
+// func (e *Exchange) Urlencode(params ...interface{}) string {
+// 	parameters := params[0].(map[string]interface{})
+// 	sort := GetArg(params, 1, false).(bool)
+// 	var queryString []string
+// 	for key, value := range parameters {
+// 		encodedKey := url.QueryEscape(key)
+// 		finalValue := ""
+// 		if IsNumber(value) {
+// 			finalValue = NumberToString(value)
+// 		} else {
+// 			finalValue = ToString(value)
+// 		}
+// 		if boolVal, ok := value.(bool); ok {
+// 			finalValue = strings.ToLower(fmt.Sprintf("%v", boolVal))
+// 		}
+// 		if strings.ToLower(key) == "timestamp" {
+// 			finalValue = strings.ToUpper(url.QueryEscape(finalValue))
+// 		} else {
+// 			finalValue = url.QueryEscape(finalValue)
+// 		}
+// 		queryString = append(queryString, fmt.Sprintf("%s=%s", encodedKey, finalValue))
+// 	}
+// 	return strings.Join(queryString, "&")
+// }
+
+func (e *Exchange) Urlencode(params ...interface{}) string {
+	parameters := params[0].(map[string]interface{})
+	shouldSort := GetArg(params, 1, false).(bool)
+
+	var keys []string
+	for key := range parameters {
+		keys = append(keys, key)
+	}
+
+	if shouldSort {
+		sort.Strings(keys)
+	}
+
 	var queryString []string
-	for key, value := range parameters {
+	for _, key := range keys {
+		value := parameters[key]
 		encodedKey := url.QueryEscape(key)
 		finalValue := ""
+
 		if IsNumber(value) {
 			finalValue = NumberToString(value)
 		} else {
@@ -268,6 +377,7 @@ func (e *Exchange) Urlencode(parameters2 interface{}) string {
 		}
 		queryString = append(queryString, fmt.Sprintf("%s=%s", encodedKey, finalValue))
 	}
+
 	return strings.Join(queryString, "&")
 }
 

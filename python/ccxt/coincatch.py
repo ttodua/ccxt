@@ -90,6 +90,7 @@ class coincatch(Exchange, ImplicitAPI):
                 'fetchDepositAddress': True,
                 'fetchDeposits': True,
                 'fetchDepositsWithdrawals': False,
+                'fetchDepositWithdrawFees': True,
                 'fetchFundingHistory': False,
                 'fetchFundingRate': True,
                 'fetchFundingRateHistory': True,
@@ -327,8 +328,8 @@ class coincatch(Exchange, ImplicitAPI):
                     'ERC20': 'ERC20',
                     'TRC20': 'TRC20',
                     'BEP20': 'BEP20',
-                    'ARB': 'ArbitrumOne',
-                    'OPTIMISM': 'Optimism',
+                    'ARBONE': 'ArbitrumOne',
+                    'OP': 'Optimism',
                     'LTC': 'LTC',
                     'BCH': 'BCH',
                     'ETC': 'ETC',
@@ -361,7 +362,7 @@ class coincatch(Exchange, ImplicitAPI):
                     'CFX': 'CFX',
                     'STRAT': 'StratisEVM',
                     'TIA': 'Celestia',
-                    'ChilizChain': 'ChilizChain',
+                    'CHZ': 'ChilizChain',
                     'APT': 'Aptos',
                     'ONT': 'Ontology',
                     'ICP': 'ICP',
@@ -374,57 +375,8 @@ class coincatch(Exchange, ImplicitAPI):
                     'CRO': 'CronosChain',
                 },
                 'networksById': {
-                    'BITCOIN': 'BTC',
-                    'ERC20': 'ERC20',
                     'TRC20': 'TRC20',
                     'TRX(TRC20)': 'TRC20',
-                    'BEP20': 'BEP20',
-                    'ArbitrumOne': 'ARB',  # todo check
-                    'Optimism': 'OPTIMISM',
-                    'LTC': 'LTC',
-                    'BCH': 'BCH',
-                    'ETC': 'ETC',
-                    'SOL': 'SOL',
-                    'NEO3': 'NEO3',
-                    'stacks': 'STX',
-                    'Elrond': 'EGLD',
-                    'NEARProtocol': 'NEAR',
-                    'AcalaToken': 'ACA',
-                    'Klaytn': 'KLAY',
-                    'Fantom': 'FTM',
-                    'Terra': 'TERRA',
-                    'WAVES': 'WAVES',
-                    'TAO': 'TAO',
-                    'SUI': 'SUI',
-                    'SEI': 'SEI',
-                    'THORChain': 'RUNE',  # todo check
-                    'ZIL': 'ZIL',
-                    'Solar': 'SXP',  # todo check
-                    'FET': 'FET',
-                    'C-Chain': 'AVAX',  # todo check
-                    'XRP': 'XRP',
-                    'EOS': 'EOS',
-                    'DOGECOIN': 'DOGE',
-                    'CAP20': 'CAP20',  # todo check
-                    'Polygon': 'MATIC',
-                    'CSPR': 'CSPR',
-                    'Moonbeam': 'GLMR',
-                    'MINA': 'MINA',
-                    'CFXeSpace': 'CFX',  # todo check
-                    'CFX': 'CFX',
-                    'StratisEVM': 'STRAT',  # todo check
-                    'Celestia': 'TIA',
-                    'ChilizChain': 'ChilizChain',  # todo check
-                    'Aptos': 'APT',
-                    'Ontology': 'ONT',
-                    'ICP': 'ICP',
-                    'Cardano': 'ADA',
-                    'FIL': 'FIL',
-                    'CELO': 'CELO',
-                    'DOT': 'DOT',
-                    'StellarLumens': 'XLM',  # todo check
-                    'ATOM': 'ATOM',
-                    'CronosChain': 'CRO',  # todo check
                 },
             },
             'features': {
@@ -655,73 +607,123 @@ class coincatch(Exchange, ImplicitAPI):
             currencyId = self.safe_string(currecy, 'coinName')
             currenciesIds.append(currencyId)
             code = self.safe_currency_code(currencyId)
-            allowDeposit = False
-            allowWithdraw = False
-            minDeposit: Str = None
-            minWithdraw: Str = None
             networks = self.safe_list(currecy, 'chains')
-            networksById = self.safe_dict(self.options, 'networksById')
             parsedNetworks: dict = {}
             for j in range(0, len(networks)):
                 network = networks[j]
                 networkId = self.safe_string(network, 'chain')
-                networkName = self.safe_string(networksById, networkId, networkId)
-                networkDepositString = self.safe_string(network, 'rechargeable')
-                networkDeposit = networkDepositString == 'true'
-                networkWithdrawString = self.safe_string(network, 'withdrawable')
-                networkWithdraw = networkWithdrawString == 'true'
-                networkMinDeposit = self.safe_string(network, 'minDepositAmount')
-                networkMinWithdraw = self.safe_string(network, 'minWithdrawAmount')
-                parsedNetworks[networkId] = {
+                networkCode = self.network_id_to_code(networkId)
+                parsedNetworks[networkCode] = {
                     'id': networkId,
-                    'network': networkName,
+                    'network': networkCode,
                     'limits': {
                         'deposit': {
-                            'min': self.parse_number(networkMinDeposit),
+                            'min': self.safe_number(network, 'minDepositAmount'),
                             'max': None,
                         },
                         'withdraw': {
-                            'min': self.parse_number(networkMinWithdraw),
+                            'min': self.safe_number(network, 'minWithdrawAmount'),
                             'max': None,
                         },
                     },
-                    'active': networkDeposit and networkWithdraw,
-                    'deposit': networkDeposit,
-                    'withdraw': networkWithdraw,
+                    'active': None,
+                    'deposit': self.safe_string(network, 'rechargeable') == 'true',
+                    'withdraw': self.safe_string(network, 'withdrawable') == 'true',
                     'fee': self.safe_number(network, 'withdrawFee'),
                     'precision': None,
                     'info': network,
                 }
-                allowDeposit = allowDeposit if allowDeposit else networkDeposit
-                allowWithdraw = allowWithdraw if allowWithdraw else networkWithdraw
-                minDeposit = Precise.string_min(networkMinDeposit, minDeposit) if minDeposit else networkMinDeposit
-                minWithdraw = Precise.string_min(networkMinWithdraw, minWithdraw) if minWithdraw else networkMinWithdraw
-            result[code] = {
+            result[code] = self.safe_currency_structure({
                 'id': currencyId,
                 'numericId': self.safe_integer(currecy, 'coinId'),
                 'code': code,
                 'precision': None,
                 'type': None,
                 'name': None,
-                'active': allowWithdraw and allowDeposit,
-                'deposit': allowDeposit,
-                'withdraw': allowWithdraw,
+                'active': None,
+                'deposit': None,
+                'withdraw': None,
                 'fee': None,
                 'limits': {
                     'deposit': {
-                        'min': self.parse_number(minDeposit),
+                        'min': None,
                         'max': None,
                     },
                     'withdraw': {
-                        'min': self.parse_number(minWithdraw),
+                        'min': None,
                         'max': None,
                     },
                 },
                 'networks': parsedNetworks,
                 'info': currecy,
-            }
+            })
         if self.safe_list(self.options, 'currencyIdsListForParseMarket') is None:
             self.options['currencyIdsListForParseMarket'] = currenciesIds
+        return result
+
+    def fetch_deposit_withdraw_fees(self, codes: Strings = None, params={}):
+        """
+        fetch deposit and withdraw fees
+
+        https://coincatch.github.io/github.io/en/spot/#get-coin-list
+
+        :param str[] [codes]: list of unified currency codes
+        :param dict [params]: extra parameters specific to the exchange API endpoint
+        :returns dict: a list of `fee structures <https://docs.ccxt.com/?id=fee-structure>`
+        """
+        self.load_markets()
+        response = self.publicGetApiSpotV1PublicCurrencies(params)
+        data = self.safe_list(response, 'data', [])
+        return self.parse_deposit_withdraw_fees(data, codes, 'coinName')
+
+    def parse_deposit_withdraw_fee(self, fee, currency: Currency = None):
+        #
+        # {
+        #     "coinId":"1",
+        #     "coinName":"BTC",
+        #     "transfer":"true",
+        #     "chains":[
+        #         {
+        #             "chain":null,
+        #             "needTag":"false",
+        #             "withdrawable":"true",
+        #             "rechargeAble":"true",
+        #             "withdrawFee":"0.005",
+        #             "depositConfirm":"1",
+        #             "withdrawConfirm":"1",
+        #             "minDepositAmount":"0.001",
+        #             "minWithdrawAmount":"0.001",
+        #             "browserUrl":"https://blockchair.com/bitcoin/testnet/transaction/"
+        #         }
+        #     ]
+        # }
+        #
+        chains = self.safe_list(fee, 'chains', [])
+        chainsLength = len(chains)
+        result: dict = {
+            'info': fee,
+            'withdraw': {
+                'fee': None,
+                'percentage': None,
+            },
+            'deposit': {
+                'fee': None,
+                'percentage': None,
+            },
+            'networks': {},
+        }
+        for i in range(0, chainsLength):
+            chain = chains[i]
+            networkId = self.safe_string(chain, 'chain')
+            currencyCode = self.safe_string(currency, 'code')
+            networkCode = self.network_id_to_code(networkId, currencyCode)
+            result['networks'][networkCode] = {
+                'deposit': {'fee': None, 'percentage': None},
+                'withdraw': {'fee': self.safe_number(chain, 'withdrawFee'), 'percentage': False},
+            }
+            if chainsLength == 1:
+                result['withdraw']['fee'] = self.safe_number(chain, 'withdrawFee')
+                result['withdraw']['percentage'] = False
         return result
 
     def fetch_markets(self, params={}) -> List[Market]:
@@ -1039,7 +1041,7 @@ class coincatch(Exchange, ImplicitAPI):
 
         :param str symbol: unified symbol of the market to fetch the ticker for
         :param dict [params]: extra parameters specific to the exchange API endpoint
-        :returns dict: a `ticker structure <https://docs.ccxt.com/#/?id=ticker-structure>`
+        :returns dict: a `ticker structure <https://docs.ccxt.com/?id=ticker-structure>`
         """
         self.load_markets()
         market = self.market(symbol)
@@ -1121,13 +1123,13 @@ class coincatch(Exchange, ImplicitAPI):
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :param str [params.type]: 'spot' or 'swap'(default 'spot')
         :param str [params.productType]: 'umcbl' or 'dmcbl'(default 'umcbl') - USDT perpetual contract or Universal margin perpetual contract
-        :returns dict: a dictionary of `ticker structures <https://docs.ccxt.com/#/?id=ticker-structure>`
+        :returns dict: a dictionary of `ticker structures <https://docs.ccxt.com/?id=ticker-structure>`
         """
         methodName = 'fetchTickers'
         self.load_markets()
         symbols = self.market_symbols(symbols, None, True, True)
         market = self.get_market_from_symbols(symbols)
-        marketType = 'spot'
+        marketType = None
         marketType, params = self.handle_market_type_and_params(methodName, market, params, marketType)
         response = None
         if marketType == 'spot':
@@ -1292,7 +1294,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param int [limit]: the maximum amount of order book entries to return(maximum and default value is 100)
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :param str [params.precision]: 'scale0'(default), 'scale1', 'scale2' or 'scale3' - price accuracy, according to the selected accuracy step size to return the cumulative depth
-        :returns dict: A dictionary of `order book structures <https://docs.ccxt.com/#/?id=order-book-structure>` indexed by market symbols
+        :returns dict: A dictionary of `order book structures <https://docs.ccxt.com/?id=order-book-structure>` indexed by market symbols
         """
         self.load_markets()
         methodName = 'fetchOrderBook'
@@ -1332,7 +1334,7 @@ class coincatch(Exchange, ImplicitAPI):
         timestamp = self.safe_integer(data, 'ts')
         return self.parse_order_book(data, symbol, timestamp, 'bids', 'asks')
 
-    def fetch_ohlcv(self, symbol: str, timeframe='1m', since: Int = None, limit: Int = None, params={}) -> List[list]:
+    def fetch_ohlcv(self, symbol: str, timeframe: str = '1m', since: Int = None, limit: Int = None, params={}) -> List[list]:
         """
 
         https://coincatch.github.io/github.io/en/spot/#get-candle-data
@@ -1449,7 +1451,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param int [limit]: the maximum amount of trades to fetch
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :param int [params.until]: timestamp in ms of the latest entry to fetch
-        :returns Trade[]: a list of `trade structures <https://docs.ccxt.com/#/?id=public-trades>`
+        :returns Trade[]: a list of `trade structures <https://docs.ccxt.com/?id=public-trades>`
         """
         methodName = 'fetchTrades'
         self.load_markets()
@@ -1609,7 +1611,7 @@ class coincatch(Exchange, ImplicitAPI):
 
         :param str symbol: unified market symbol
         :param dict [params]: extra parameters specific to the exchange API endpoint
-        :returns dict: a `funding rate structure <https://docs.ccxt.com/#/?id=funding-rate-structure>`
+        :returns dict: a `funding rate structure <https://docs.ccxt.com/?id=funding-rate-structure>`
         """
         self.load_markets()
         market = self.market(symbol)
@@ -1676,7 +1678,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :param int [params.pageNo]: the page number to fetch
         :param bool [params.nextPage]: whether to query the next page(default False)
-        :returns dict[]: a list of `funding rate structures <https://docs.ccxt.com/#/?id=funding-rate-history-structure>`
+        :returns dict[]: a list of `funding rate structures <https://docs.ccxt.com/?id=funding-rate-history-structure>`
         """
         if symbol is None:
             raise ArgumentsRequired(self.id + ' fetchFundingRateHistory() requires a symbol argument')
@@ -1730,7 +1732,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :param str [params.type]: 'spot' or 'swap' - the type of the market to fetch balance for(default 'spot')
         :param str [params.productType]: *swap only* 'umcbl' or 'dmcbl'(default 'umcbl')
-        :returns dict: a `balance structure <https://docs.ccxt.com/#/?id=balance-structure>`
+        :returns dict: a `balance structure <https://docs.ccxt.com/?id=balance-structure>`
         """
         self.load_markets()
         methodName = 'fetchBalance'
@@ -1855,7 +1857,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param str toAccount: 'spot' or 'swap' or 'mix_usdt' or 'mix_usd' - account to transfer to
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :param str [params.clientOrderId]: a unique id for the transfer
-        :returns dict: a `transfer structure <https://docs.ccxt.com/#/?id=transfer-structure>`
+        :returns dict: a `transfer structure <https://docs.ccxt.com/?id=transfer-structure>`
         """
         self.load_markets()
         currency = self.currency(code)
@@ -1920,7 +1922,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param str code: unified currency code
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :param str [params.network]: network for fetch deposit address
-        :returns dict: an `address structure <https://docs.ccxt.com/#/?id=address-structure>`
+        :returns dict: an `address structure <https://docs.ccxt.com/?id=address-structure>`
         """
         self.load_markets()
         currency = self.currency(code)
@@ -1989,7 +1991,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param int [params.until]: the latest time in ms to fetch transfers for(default time now)
         :param int [params.pageNo]: pageNo default 1
         :param int [params.pageSize]: pageSize(default 20, max 100)
-        :returns dict[]: a list of `transfer structures <https://docs.ccxt.com/#/?id=transfer-structure>`
+        :returns dict[]: a list of `transfer structures <https://docs.ccxt.com/?id=transfer-structure>`
         """
         methodName = 'fetchDeposits'
         self.load_markets()
@@ -2049,7 +2051,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param str [params.clientOid]: clientOid
         :param str [params.orderId]: The response orderId
         :param str [params.idLessThan]: Requests the content on the page before self ID(older data), the value input should be the orderId of the corresponding interface.
-        :returns dict[]: a list of `transaction structures <https://docs.ccxt.com/#/?id=transaction-structure>`
+        :returns dict[]: a list of `transaction structures <https://docs.ccxt.com/?id=transaction-structure>`
         """
         methodName = 'fetchWithdrawals'
         self.load_markets()
@@ -2072,7 +2074,7 @@ class coincatch(Exchange, ImplicitAPI):
         data = self.safe_list(response, 'data', [])
         return self.parse_transactions(data, currency, since, limit)
 
-    def withdraw(self, code: str, amount: float, address: str, tag=None, params={}) -> Transaction:
+    def withdraw(self, code: str, amount: float, address: str, tag: Str = None, params={}) -> Transaction:
         """
         make a withdrawal
 
@@ -2086,7 +2088,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param str params['network']: network for withdraw(mandatory)
         :param str [params.remark]: remark
         :param str [params.clientOid]: custom id
-        :returns dict: a `transaction structure <https://docs.ccxt.com/#/?id=transaction-structure>`
+        :returns dict: a `transaction structure <https://docs.ccxt.com/?id=transaction-structure>`
         """
         tag, params = self.handle_withdraw_tag_and_params(tag, params)
         self.load_markets()
@@ -2203,7 +2205,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param str symbol: unified symbol of the market to create an order in
         :param float cost: how much you want to trade in units of the quote currency
         :param dict [params]: extra parameters specific to the exchange API endpoint
-        :returns dict: an `order structure <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns dict: an `order structure <https://docs.ccxt.com/?id=order-structure>`
         """
         self.load_markets()
         methodName = 'createMarketBuyOrderWithCost'
@@ -2229,12 +2231,13 @@ class coincatch(Exchange, ImplicitAPI):
         :param float amount: how much of you want to trade in units of the base currency
         :param float [price]: the price that the order is to be fulfilled, in units of the quote currency, ignored in market orders
         :param dict [params]: extra parameters specific to the exchange API endpoint
+        :param bool [params.hedged]: *swap markets only* must be set to True if position mode is hedged(default False)
         :param float [params.cost]: *spot market buy only* the quote quantity that can be used alternative for the amount
         :param float [params.triggerPrice]: the price that the order is to be triggered
         :param bool [params.postOnly]: if True, the order will only be posted to the order book and not executed immediately
         :param str [params.timeInForce]: 'GTC', 'IOC', 'FOK' or 'PO'
         :param str [params.clientOrderId]: a unique id for the order - is mandatory for swap
-        :returns dict: an `order structure <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns dict: an `order structure <https://docs.ccxt.com/?id=order-structure>`
         """
         self.load_markets()
         params['methodName'] = self.safe_string(params, 'methodName', 'createOrder')
@@ -2264,7 +2267,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param bool [params.postOnly]: if True, the order will only be posted to the order book and not executed immediately
         :param str [params.timeInForce]: 'GTC', 'IOC', 'FOK' or 'PO'
         :param str [params.clientOrderId]: a unique id for the order(max length 40)
-        :returns dict: an `order structure <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns dict: an `order structure <https://docs.ccxt.com/?id=order-structure>`
         """
         self.load_markets()
         params['methodName'] = self.safe_string(params, 'methodName', 'createSpotOrder')
@@ -2407,6 +2410,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param float amount: how much of you want to trade in units of the base currency
         :param float [price]: the price that the order is to be fulfilled, in units of the quote currency, ignored in market orders
         :param dict [params]: extra parameters specific to the exchange API endpoint
+        :param bool [params.hedged]: must be set to True if position mode is hedged(default False)
         :param bool [params.postOnly]: *non-trigger orders only* if True, the order will only be posted to the order book and not executed immediately
         :param bool [params.reduceOnly]: True or False whether the order is reduce only
         :param str [params.timeInForce]: *non-trigger orders only* 'GTC', 'FOK', 'IOC' or 'PO'
@@ -2418,7 +2422,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param float [params.takeProfit.triggerPrice]: take profit trigger price
         :param dict [params.stopLoss]: *stopLoss object in params* containing the triggerPrice at which the attached stop loss order will be triggered(perpetual swap markets only)
         :param float [params.stopLoss.triggerPrice]: stop loss trigger price
-        :returns dict: an `order structure <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns dict: an `order structure <https://docs.ccxt.com/?id=order-structure>`
         """
         params['methodName'] = self.safe_string(params, 'methodName', 'createSwapOrder')
         self.load_markets()
@@ -2458,7 +2462,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param float amount: how much of you want to trade in units of the base currency
         :param float [price]: the price that the order is to be fulfilled, in units of the quote currency, ignored in market orders
         :param dict [params]: extra parameters specific to the exchange API endpoint
-        :param bool [params.hedged]: default False
+        :param bool [params.hedged]: must be set to True if position mode is hedged(default False)
         :param bool [params.postOnly]: *non-trigger orders only* if True, the order will only be posted to the order book and not executed immediately
         :param bool [params.reduceOnly]: True or False whether the order is reduce only
         :param str [params.timeInForce]: *non-trigger orders only* 'GTC', 'FOK', 'IOC' or 'PO'
@@ -2494,24 +2498,31 @@ class coincatch(Exchange, ImplicitAPI):
                 request['price'] = self.price_to_precision(symbol, price)
         if (endpointType != 'tpsl'):
             request['orderType'] = type
-            hedged: Bool = False
-            hedged, params = self.handle_option_and_params(params, methodName, 'hedged', hedged)
-            # hedged and non-hedged orders have different side values and reduceOnly handling
-            reduceOnly: Bool = False
-            reduceOnly, params = self.handle_param_bool(params, 'reduceOnly', reduceOnly)
-            if hedged:
-                if reduceOnly:
-                    if side == 'buy':
-                        side = 'close_short'
-                    elif side == 'sell':
-                        side = 'close_long'
+            sideIsExchangeSpecific = False
+            hedged = False
+            if (side == 'buy_single') or (side == 'sell_single') or (side == 'open_long') or (side == 'open_short') or (side == 'close_long') or (side == 'close_short'):
+                sideIsExchangeSpecific = True
+                if (side != 'buy_single') and (side != 'sell_single'):
+                    hedged = True
+            if not sideIsExchangeSpecific:
+                hedged, params = self.handle_option_and_params(params, methodName, 'hedged', hedged)
+                # hedged and non-hedged orders have different side values and reduceOnly handling
+                reduceOnly = self.safe_bool(params, 'reduceOnly')
+                if hedged:
+                    if (reduceOnly is not None) and reduceOnly:
+                        if side == 'buy':
+                            side = 'close_short'
+                        elif side == 'sell':
+                            side = 'close_long'
+                    else:
+                        if side == 'buy':
+                            side = 'open_long'
+                        elif side == 'sell':
+                            side = 'open_short'
                 else:
-                    if side == 'buy':
-                        side = 'open_long'
-                    elif side == 'sell':
-                        side = 'open_short'
-            else:
-                side = side.lower() + '_single'
+                    side = side.lower() + '_single'
+            if hedged:
+                params = self.omit(params, 'reduceOnly')
             request['side'] = side
         return self.extend(request, params)
 
@@ -2521,21 +2532,21 @@ class coincatch(Exchange, ImplicitAPI):
         stopLossPrice = self.safe_string(params, 'stopLossPrice')
         takeProfitPrice = self.safe_string(params, 'takeProfitPrice')
         requestTriggerPrice: Str = None
-        takeProfitParams = self.safe_dict(params, 'takeProfit')
-        stopLossParams = self.safe_dict(params, 'stopLoss')
+        takeProfit = self.safe_dict(params, 'takeProfit')
+        stopLoss = self.safe_dict(params, 'stopLoss')
         triggerPrice = self.safe_string_2(params, 'triggerPrice', 'stopPrice')
         isTrigger = (triggerPrice is not None)
         trailingPercent = self.safe_string(params, 'trailingPercent')
         trailingTriggerPrice = self.safe_string(params, 'trailingTriggerPrice')
         hasTPPrice = (takeProfitPrice is not None)
         hasSLPrice = (stopLossPrice is not None)
-        hasTPParams = (takeProfitParams is not None)
-        if hasTPParams and not hasTPPrice:
-            takeProfitPrice = self.safe_string(takeProfitParams, 'triggerPrice')
+        hasTakeProfit = (takeProfit is not None)
+        if hasTakeProfit and not hasTPPrice:
+            takeProfitPrice = self.safe_string(takeProfit, 'triggerPrice')
             hasTPPrice = (takeProfitPrice is not None)
-        hasSLParams = (stopLossParams is not None)
-        if hasSLParams and not hasSLPrice:
-            stopLossPrice = self.safe_string(stopLossParams, 'triggerPrice')
+        hasStopLoss = (stopLoss is not None)
+        if hasStopLoss and not hasSLPrice:
+            stopLossPrice = self.safe_string(stopLoss, 'triggerPrice')
             hasSLPrice = (stopLossPrice is not None)
         hasBothTPAndSL = hasTPPrice and hasSLPrice
         isTrailingPercentOrder = (trailingPercent is not None)
@@ -2593,7 +2604,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param float [takeProfit]: the take profit price, in units of the quote currency
         :param float [stopLoss]: the stop loss price, in units of the quote currency
         :param dict [params]: extra parameters specific to the exchange API endpoint
-        :returns dict: an `order structure <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns dict: an `order structure <https://docs.ccxt.com/?id=order-structure>`
         """
         methodName = 'createOrderWithTakeProfitAndStopLoss'
         self.load_markets()
@@ -2620,7 +2631,7 @@ class coincatch(Exchange, ImplicitAPI):
 
         :param Array orders: list of orders to create, each object should contain the parameters required by createOrder, namely symbol, type, side, amount, price and params(max 50 entries)
         :param dict [params]: extra parameters specific to the api endpoint
-        :returns dict: an `order structure <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns dict: an `order structure <https://docs.ccxt.com/?id=order-structure>`
         """
         self.load_markets()
         # same symbol for all orders
@@ -2750,7 +2761,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param float amount: how much of currency you want to trade in units of base currency
         :param float [price]: the price at which the order is to be fulfilled, in units of the quote currency, ignored in market orders
         :param dict [params]: extra parameters specific to the exchange API endpoint
-        :returns dict: an `order structure <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns dict: an `order structure <https://docs.ccxt.com/?id=order-structure>`
         """
         methodName = 'editOrder'
         # only trigger, stop-looss or take-profit orders can be edited
@@ -2780,7 +2791,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param str [params.clientOrderId]: a unique id for the order that can be used alternative for the id
         :param str params['triggerPrice']: *mandatory* the price that the order is to be triggered at
         :param float [params.cost]: *market buy only* the quote quantity that can be used alternative for the amount
-        :returns dict: an `order structure <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns dict: an `order structure <https://docs.ccxt.com/?id=order-structure>`
         """
         self.load_markets()
         methodName = 'editSpotOrder'
@@ -2841,7 +2852,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :param str [params.type]: 'spot' or 'swap' - the type of the market to fetch entry for(default 'spot')
         :param str [params.clientOrderId]: a unique id for the order that can be used alternative for the id
-        :returns dict: An `order structure <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns dict: An `order structure <https://docs.ccxt.com/?id=order-structure>`
         """
         methodName = 'fetchOrder'
         # for non-trigger orders only
@@ -2972,7 +2983,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param str [params.productType]: *swap only* 'umcbl' or 'dmcbl' - the product type of the market to fetch entries for(default 'umcbl')
         :param str [params.marginCoin]: *swap only* the margin coin of the market to fetch entries for
         :param str [params.isPlan]: *swap trigger only* 'plan' or 'profit_loss'('plan'(default) for trigger(plan) orders, 'profit_loss' for stop-loss and take-profit orders)
-        :returns Order[]: a list of `order structures <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns Order[]: a list of `order structures <https://docs.ccxt.com/?id=order-structure>`
         """
         methodName = 'fetchOpenOrders'
         self.load_markets()
@@ -3003,7 +3014,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :param boolean [params.trigger]: True if fetching trigger orders(default False)
         :param str [params.lastEndId]: *for trigger orders only* the last order id to fetch entries after
-        :returns Order[]: a list of `order structures <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns Order[]: a list of `order structures <https://docs.ccxt.com/?id=order-structure>`
         """
         self.load_markets()
         methodName = 'fetchOpenSpotOrders'
@@ -3103,7 +3114,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param str [params.isPlan]: 'plan' or 'profit_loss'('plan'(default) for trigger(plan) orders, 'profit_loss' for stop-loss and take-profit orders)
         :param str [params.productType]: 'umcbl' or 'dmcbl' - the product type of the market to fetch entries for(default 'umcbl')
         :param str [params.marginCoin]: the margin coin of the market to fetch entries for
-        :returns Order[]: a list of `order structures <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns Order[]: a list of `order structures <https://docs.ccxt.com/?id=order-structure>`
         """
         self.load_markets()
         methodName = 'fetchOpenSwapOrders'
@@ -3230,7 +3241,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param str [params.isPlan]: *swap only* 'plan' or 'profit_loss'('plan'(default) for trigger(plan) orders, 'profit_loss' for stop-loss and take-profit orders)
         :param str [params.type]: 'spot' or 'swap' - the type of the market to fetch entries for(default 'spot')
         :param str [params.productType]: *swap only* 'umcbl' or 'dmcbl' - the product type of the market to fetch entries for(default 'umcbl')
-        :returns Order[]: a list of `order structures <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns Order[]: a list of `order structures <https://docs.ccxt.com/?id=order-structure>`
         """
         methodName = 'fetchCanceledAndClosedOrders'
         self.load_markets()
@@ -3262,7 +3273,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param int [params.until]: *for trigger orders only* the latest time in ms to fetch orders for
         :param boolean [params.trigger]: True if fetching trigger orders(default False)
         :param str [params.lastEndId]: *for trigger orders only* the last order id to fetch entries after
-        :returns Order[]: a list of `order structures <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns Order[]: a list of `order structures <https://docs.ccxt.com/?id=order-structure>`
         """
         methodName = 'fetchCanceledAndClosedSpotOrders'
         methodName, params = self.handle_param_string(params, 'methodName', methodName)
@@ -3401,7 +3412,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param boolean [params.trigger]: True if fetching trigger orders(default False)
         :param str [params.isPlan]: *swap only* 'plan' or 'profit_loss'('plan'(default) for trigger(plan) orders, 'profit_loss' for stop-loss and take-profit orders)
         :param str [params.productType]: *swap only* 'umcbl' or 'dmcbl' - the product type of the market to fetch entries for(default 'umcbl')
-        :returns Order[]: a list of `order structures <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns Order[]: a list of `order structures <https://docs.ccxt.com/?id=order-structure>`
         """
         methodName = 'fetchCanceledAndClosedSwapOrders'
         methodName, params = self.handle_param_string(params, 'methodName', methodName)
@@ -3548,7 +3559,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param bool [params.trigger]: True for canceling a trigger order(default False)
         :param bool [params.stop]: *swap only* an alternative for trigger param
         :param str [params.planType]: *swap trigger only* the type of the plan order to cancel: 'profit_plan' - profit order, 'loss_plan' - loss order, 'normal_plan' - plan order, 'pos_profit' - position profit, 'pos_loss' - position loss, 'moving_plan' - Trailing TP/SL, 'track_plan' - Trailing Stop
-        :returns dict: An `order structure <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns dict: An `order structure <https://docs.ccxt.com/?id=order-structure>`
         """
         methodName = 'cancelOrder'
         if symbol is None:
@@ -3717,7 +3728,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param str symbol: *is mandatory* unified market symbol
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :param str[] [params.clientOrderIds]: client order ids
-        :returns dict: an list of `order structures <https://docs.ccxt.com/#/?id=order-structure>`
+        :returns dict: an list of `order structures <https://docs.ccxt.com/?id=order-structure>`
         """
         methodName = 'cancelOrders'
         # only non-trigger and not tp/sl orders can be canceled via cancelOrders
@@ -4219,7 +4230,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param int [since]: the earliest time in ms to fetch trades for
         :param int [limit]: the maximum number of trades to retrieve
         :param dict [params]: extra parameters specific to the exchange API endpoint
-        :returns dict[]: a list of `trade structures <https://docs.ccxt.com/#/?id=trade-structure>`
+        :returns dict[]: a list of `trade structures <https://docs.ccxt.com/?id=trade-structure>`
         """
         methodName = 'fetchOrderTrades'
         if symbol is None:
@@ -4238,7 +4249,7 @@ class coincatch(Exchange, ImplicitAPI):
 
         :param str symbol: unified symbol of the market to fetch the margin mode for
         :param dict [params]: extra parameters specific to the exchange API endpoint
-        :returns dict: a `margin mode structure <https://docs.ccxt.com/#/?id=margin-mode-structure>`
+        :returns dict: a `margin mode structure <https://docs.ccxt.com/?id=margin-mode-structure>`
         """
         self.load_markets()
         market = self.market(symbol)
@@ -4420,7 +4431,7 @@ class coincatch(Exchange, ImplicitAPI):
 
         :param str symbol: unified market symbol
         :param dict [params]: extra parameters specific to the exchange API endpoint
-        :returns dict: a `leverage structure <https://docs.ccxt.com/#/?id=leverage-structure>`
+        :returns dict: a `leverage structure <https://docs.ccxt.com/?id=leverage-structure>`
         """
         self.load_markets()
         market = self.market(symbol)
@@ -4434,7 +4445,7 @@ class coincatch(Exchange, ImplicitAPI):
         data = self.safe_dict(response, 'data', {})
         return self.parse_leverage(data, market)
 
-    def set_leverage(self, leverage: Int, symbol: Str = None, params={}):
+    def set_leverage(self, leverage: int, symbol: Str = None, params={}):
         """
         set the level of leverage for a market
 
@@ -4590,7 +4601,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param float amount: the amount of margin to remove
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :param str [params.side]: *for isolated margin mode with hedged position mode only* 'long' or 'short'
-        :returns dict: a `margin structure <https://docs.ccxt.com/#/?id=reduce-margin-structure>`
+        :returns dict: a `margin structure <https://docs.ccxt.com/?id=margin-structure>`
         """
         params['methodName'] = 'reduceMargin'
         return self.modify_margin_helper(symbol, -amount, 'reduce', params)
@@ -4605,12 +4616,12 @@ class coincatch(Exchange, ImplicitAPI):
         :param float amount: amount of margin to add
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :param str [params.side]: *for isolated margin mode with hedged position mode only* 'long' or 'short'
-        :returns dict: a `margin structure <https://docs.ccxt.com/#/?id=add-margin-structure>`
+        :returns dict: a `margin structure <https://docs.ccxt.com/?id=margin-structure>`
         """
         params['methodName'] = 'addMargin'
         return self.modify_margin_helper(symbol, amount, 'add', params)
 
-    def fetch_position(self, symbol: str, params={}):
+    def fetch_position(self, symbol: str, params={}) -> Position:
         """
         fetch data on a single open contract trade position
 
@@ -4619,7 +4630,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param str symbol: unified market symbol of the market the position is held in, default is None
         :param dict [params]: extra parameters specific to the exchange API endpoint
  @param {str}  [params.side] 'long' or 'short' *for non-hedged position mode only* (default 'long')
-        :returns dict: a `position structure <https://docs.ccxt.com/#/?id=position-structure>`
+        :returns dict: a `position structure <https://docs.ccxt.com/?id=position-structure>`
         """
         methodName = 'fetchPosition'
         side = 'long'
@@ -4631,7 +4642,7 @@ class coincatch(Exchange, ImplicitAPI):
                 position = positions[i]
                 if position['side'] == side:
                     return position
-        return positions[0]
+        return self.safe_dict(positions, 0, {})
 
     def fetch_positions_for_symbol(self, symbol: str, params={}) -> List[Position]:
         """
@@ -4642,7 +4653,7 @@ class coincatch(Exchange, ImplicitAPI):
         fetch all open positions for specific symbol
         :param str symbol: unified market symbol
         :param dict [params]: extra parameters specific to the exchange API endpoint
-        :returns dict[]: a list of `position structure <https://docs.ccxt.com/#/?id=position-structure>`
+        :returns dict[]: a list of `position structure <https://docs.ccxt.com/?id=position-structure>`
         """
         self.load_markets()
         market = self.market(symbol)
@@ -4695,7 +4706,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param dict [params]: extra parameters specific to the exchange API endpoint
         :param str [params.productType]: 'umcbl' or 'dmcbl'(default 'umcbl' if symbols are not provided)
         :param str [params.marginCoin]: the settle currency of the positions, needs to match the productType
-        :returns dict[]: a list of `position structure <https://docs.ccxt.com/#/?id=position-structure>`
+        :returns dict[]: a list of `position structure <https://docs.ccxt.com/?id=position-structure>`
         """
         methodName = 'fetchPositions'
         self.load_markets()
@@ -4869,7 +4880,7 @@ class coincatch(Exchange, ImplicitAPI):
         :param str [params.business]: *swap only*
         :param str [params.lastEndId]: *swap only*
         :param bool [params.next]: *swap only*
-        :returns dict: a `ledger structure <https://docs.ccxt.com/#/?id=ledger>`
+        :returns dict: a `ledger structure <https://docs.ccxt.com/?id=ledger-entry-structure>`
         """
         methodName = 'fetchLedger'
         self.load_markets()

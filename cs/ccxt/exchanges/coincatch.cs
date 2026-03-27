@@ -66,6 +66,7 @@ public partial class coincatch : Exchange
                 { "fetchDepositAddress", true },
                 { "fetchDeposits", true },
                 { "fetchDepositsWithdrawals", false },
+                { "fetchDepositWithdrawFees", true },
                 { "fetchFundingHistory", false },
                 { "fetchFundingRate", true },
                 { "fetchFundingRateHistory", true },
@@ -309,8 +310,8 @@ public partial class coincatch : Exchange
                     { "ERC20", "ERC20" },
                     { "TRC20", "TRC20" },
                     { "BEP20", "BEP20" },
-                    { "ARB", "ArbitrumOne" },
-                    { "OPTIMISM", "Optimism" },
+                    { "ARBONE", "ArbitrumOne" },
+                    { "OP", "Optimism" },
                     { "LTC", "LTC" },
                     { "BCH", "BCH" },
                     { "ETC", "ETC" },
@@ -343,7 +344,7 @@ public partial class coincatch : Exchange
                     { "CFX", "CFX" },
                     { "STRAT", "StratisEVM" },
                     { "TIA", "Celestia" },
-                    { "ChilizChain", "ChilizChain" },
+                    { "CHZ", "ChilizChain" },
                     { "APT", "Aptos" },
                     { "ONT", "Ontology" },
                     { "ICP", "ICP" },
@@ -356,57 +357,8 @@ public partial class coincatch : Exchange
                     { "CRO", "CronosChain" },
                 } },
                 { "networksById", new Dictionary<string, object>() {
-                    { "BITCOIN", "BTC" },
-                    { "ERC20", "ERC20" },
                     { "TRC20", "TRC20" },
                     { "TRX(TRC20)", "TRC20" },
-                    { "BEP20", "BEP20" },
-                    { "ArbitrumOne", "ARB" },
-                    { "Optimism", "OPTIMISM" },
-                    { "LTC", "LTC" },
-                    { "BCH", "BCH" },
-                    { "ETC", "ETC" },
-                    { "SOL", "SOL" },
-                    { "NEO3", "NEO3" },
-                    { "stacks", "STX" },
-                    { "Elrond", "EGLD" },
-                    { "NEARProtocol", "NEAR" },
-                    { "AcalaToken", "ACA" },
-                    { "Klaytn", "KLAY" },
-                    { "Fantom", "FTM" },
-                    { "Terra", "TERRA" },
-                    { "WAVES", "WAVES" },
-                    { "TAO", "TAO" },
-                    { "SUI", "SUI" },
-                    { "SEI", "SEI" },
-                    { "THORChain", "RUNE" },
-                    { "ZIL", "ZIL" },
-                    { "Solar", "SXP" },
-                    { "FET", "FET" },
-                    { "C-Chain", "AVAX" },
-                    { "XRP", "XRP" },
-                    { "EOS", "EOS" },
-                    { "DOGECOIN", "DOGE" },
-                    { "CAP20", "CAP20" },
-                    { "Polygon", "MATIC" },
-                    { "CSPR", "CSPR" },
-                    { "Moonbeam", "GLMR" },
-                    { "MINA", "MINA" },
-                    { "CFXeSpace", "CFX" },
-                    { "CFX", "CFX" },
-                    { "StratisEVM", "STRAT" },
-                    { "Celestia", "TIA" },
-                    { "ChilizChain", "ChilizChain" },
-                    { "Aptos", "APT" },
-                    { "Ontology", "ONT" },
-                    { "ICP", "ICP" },
-                    { "Cardano", "ADA" },
-                    { "FIL", "FIL" },
-                    { "CELO", "CELO" },
-                    { "DOT", "DOT" },
-                    { "StellarLumens", "XLM" },
-                    { "ATOM", "ATOM" },
-                    { "CronosChain", "CRO" },
                 } },
             } },
             { "features", new Dictionary<string, object>() {
@@ -648,77 +600,142 @@ public partial class coincatch : Exchange
             object currencyId = this.safeString(currecy, "coinName");
             ((IList<object>)currenciesIds).Add(currencyId);
             object code = this.safeCurrencyCode(currencyId);
-            object allowDeposit = false;
-            object allowWithdraw = false;
-            object minDeposit = null;
-            object minWithdraw = null;
             object networks = this.safeList(currecy, "chains");
-            object networksById = this.safeDict(this.options, "networksById");
             object parsedNetworks = new Dictionary<string, object>() {};
             for (object j = 0; isLessThan(j, getArrayLength(networks)); postFixIncrement(ref j))
             {
                 object network = getValue(networks, j);
                 object networkId = this.safeString(network, "chain");
-                object networkName = this.safeString(networksById, networkId, networkId);
-                object networkDepositString = this.safeString(network, "rechargeable");
-                object networkDeposit = isEqual(networkDepositString, "true");
-                object networkWithdrawString = this.safeString(network, "withdrawable");
-                object networkWithdraw = isEqual(networkWithdrawString, "true");
-                object networkMinDeposit = this.safeString(network, "minDepositAmount");
-                object networkMinWithdraw = this.safeString(network, "minWithdrawAmount");
-                ((IDictionary<string,object>)parsedNetworks)[(string)networkId] = new Dictionary<string, object>() {
+                object networkCode = this.networkIdToCode(networkId);
+                ((IDictionary<string,object>)parsedNetworks)[(string)networkCode] = new Dictionary<string, object>() {
                     { "id", networkId },
-                    { "network", networkName },
+                    { "network", networkCode },
                     { "limits", new Dictionary<string, object>() {
                         { "deposit", new Dictionary<string, object>() {
-                            { "min", this.parseNumber(networkMinDeposit) },
+                            { "min", this.safeNumber(network, "minDepositAmount") },
                             { "max", null },
                         } },
                         { "withdraw", new Dictionary<string, object>() {
-                            { "min", this.parseNumber(networkMinWithdraw) },
+                            { "min", this.safeNumber(network, "minWithdrawAmount") },
                             { "max", null },
                         } },
                     } },
-                    { "active", isTrue(networkDeposit) && isTrue(networkWithdraw) },
-                    { "deposit", networkDeposit },
-                    { "withdraw", networkWithdraw },
+                    { "active", null },
+                    { "deposit", isEqual(this.safeString(network, "rechargeable"), "true") },
+                    { "withdraw", isEqual(this.safeString(network, "withdrawable"), "true") },
                     { "fee", this.safeNumber(network, "withdrawFee") },
                     { "precision", null },
                     { "info", network },
                 };
-                allowDeposit = ((bool) isTrue(allowDeposit)) ? allowDeposit : networkDeposit;
-                allowWithdraw = ((bool) isTrue(allowWithdraw)) ? allowWithdraw : networkWithdraw;
-                minDeposit = ((bool) isTrue(minDeposit)) ? Precise.stringMin(networkMinDeposit, minDeposit) : networkMinDeposit;
-                minWithdraw = ((bool) isTrue(minWithdraw)) ? Precise.stringMin(networkMinWithdraw, minWithdraw) : networkMinWithdraw;
             }
-            ((IDictionary<string,object>)result)[(string)code] = new Dictionary<string, object>() {
+            ((IDictionary<string,object>)result)[(string)code] = this.safeCurrencyStructure(new Dictionary<string, object>() {
                 { "id", currencyId },
                 { "numericId", this.safeInteger(currecy, "coinId") },
                 { "code", code },
                 { "precision", null },
                 { "type", null },
                 { "name", null },
-                { "active", isTrue(allowWithdraw) && isTrue(allowDeposit) },
-                { "deposit", allowDeposit },
-                { "withdraw", allowWithdraw },
+                { "active", null },
+                { "deposit", null },
+                { "withdraw", null },
                 { "fee", null },
                 { "limits", new Dictionary<string, object>() {
                     { "deposit", new Dictionary<string, object>() {
-                        { "min", this.parseNumber(minDeposit) },
+                        { "min", null },
                         { "max", null },
                     } },
                     { "withdraw", new Dictionary<string, object>() {
-                        { "min", this.parseNumber(minWithdraw) },
+                        { "min", null },
                         { "max", null },
                     } },
                 } },
                 { "networks", parsedNetworks },
                 { "info", currecy },
-            };
+            });
         }
         if (isTrue(isEqual(this.safeList(this.options, "currencyIdsListForParseMarket"), null)))
         {
             ((IDictionary<string,object>)this.options)["currencyIdsListForParseMarket"] = currenciesIds;
+        }
+        return result;
+    }
+
+    /**
+     * @method
+     * @name coincatch#fetchDepositWithdrawFees
+     * @description fetch deposit and withdraw fees
+     * @see https://coincatch.github.io/github.io/en/spot/#get-coin-list
+     * @param {string[]} [codes] list of unified currency codes
+     * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @returns {object} a list of [fee structures]{@link https://docs.ccxt.com/?id=fee-structure}
+     */
+    public async override Task<object> fetchDepositWithdrawFees(object codes = null, object parameters = null)
+    {
+        parameters ??= new Dictionary<string, object>();
+        await this.loadMarkets();
+        object response = await this.publicGetApiSpotV1PublicCurrencies(parameters);
+        object data = this.safeList(response, "data", new List<object>() {});
+        return this.parseDepositWithdrawFees(data, codes, "coinName");
+    }
+
+    public override object parseDepositWithdrawFee(object fee, object currency = null)
+    {
+        //
+        // {
+        //     "coinId":"1",
+        //     "coinName":"BTC",
+        //     "transfer":"true",
+        //     "chains":[
+        //         {
+        //             "chain":null,
+        //             "needTag":"false",
+        //             "withdrawable":"true",
+        //             "rechargeAble":"true",
+        //             "withdrawFee":"0.005",
+        //             "depositConfirm":"1",
+        //             "withdrawConfirm":"1",
+        //             "minDepositAmount":"0.001",
+        //             "minWithdrawAmount":"0.001",
+        //             "browserUrl":"https://blockchair.com/bitcoin/testnet/transaction/"
+        //         }
+        //     ]
+        // }
+        //
+        object chains = this.safeList(fee, "chains", new List<object>() {});
+        object chainsLength = getArrayLength(chains);
+        object result = new Dictionary<string, object>() {
+            { "info", fee },
+            { "withdraw", new Dictionary<string, object>() {
+                { "fee", null },
+                { "percentage", null },
+            } },
+            { "deposit", new Dictionary<string, object>() {
+                { "fee", null },
+                { "percentage", null },
+            } },
+            { "networks", new Dictionary<string, object>() {} },
+        };
+        for (object i = 0; isLessThan(i, chainsLength); postFixIncrement(ref i))
+        {
+            object chain = getValue(chains, i);
+            object networkId = this.safeString(chain, "chain");
+            object currencyCode = this.safeString(currency, "code");
+            object networkCode = this.networkIdToCode(networkId, currencyCode);
+            ((IDictionary<string,object>)getValue(result, "networks"))[(string)networkCode] = new Dictionary<string, object>() {
+                { "deposit", new Dictionary<string, object>() {
+                    { "fee", null },
+                    { "percentage", null },
+                } },
+                { "withdraw", new Dictionary<string, object>() {
+                    { "fee", this.safeNumber(chain, "withdrawFee") },
+                    { "percentage", false },
+                } },
+            };
+            if (isTrue(isEqual(chainsLength, 1)))
+            {
+                ((IDictionary<string,object>)getValue(result, "withdraw"))["fee"] = this.safeNumber(chain, "withdrawFee");
+                ((IDictionary<string,object>)getValue(result, "withdraw"))["percentage"] = false;
+            }
         }
         return result;
     }
@@ -1065,7 +1082,7 @@ public partial class coincatch : Exchange
      * @see https://coincatch.github.io/github.io/en/mix/#get-single-symbol-ticker
      * @param {string} symbol unified symbol of the market to fetch the ticker for
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object} a [ticker structure]{@link https://docs.ccxt.com/#/?id=ticker-structure}
+     * @returns {object} a [ticker structure]{@link https://docs.ccxt.com/?id=ticker-structure}
      */
     public async override Task<object> fetchTicker(object symbol, object parameters = null)
     {
@@ -1100,7 +1117,7 @@ public partial class coincatch : Exchange
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.type] 'spot' or 'swap' (default 'spot')
      * @param {string} [params.productType] 'umcbl' or 'dmcbl' (default 'umcbl') - USDT perpetual contract or Universal margin perpetual contract
-     * @returns {object} a dictionary of [ticker structures]{@link https://docs.ccxt.com/#/?id=ticker-structure}
+     * @returns {object} a dictionary of [ticker structures]{@link https://docs.ccxt.com/?id=ticker-structure}
      */
     public async override Task<object> fetchTickers(object symbols = null, object parameters = null)
     {
@@ -1109,7 +1126,7 @@ public partial class coincatch : Exchange
         await this.loadMarkets();
         symbols = this.marketSymbols(symbols, null, true, true);
         object market = this.getMarketFromSymbols(symbols);
-        object marketType = "spot";
+        object marketType = null;
         var marketTypeparametersVariable = this.handleMarketTypeAndParams(methodName, market, parameters, marketType);
         marketType = ((IList<object>)marketTypeparametersVariable)[0];
         parameters = ((IList<object>)marketTypeparametersVariable)[1];
@@ -1226,7 +1243,7 @@ public partial class coincatch : Exchange
      * @param {int} [limit] the maximum amount of order book entries to return (maximum and default value is 100)
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.precision] 'scale0' (default), 'scale1', 'scale2' or 'scale3' - price accuracy, according to the selected accuracy as the step size to return the cumulative depth
-     * @returns {object} A dictionary of [order book structures]{@link https://docs.ccxt.com/#/?id=order-book-structure} indexed by market symbols
+     * @returns {object} A dictionary of [order book structures]{@link https://docs.ccxt.com/?id=order-book-structure} indexed by market symbols
      */
     public async override Task<object> fetchOrderBook(object symbol, object limit = null, object parameters = null)
     {
@@ -1402,7 +1419,7 @@ public partial class coincatch : Exchange
      * @param {int} [limit] the maximum amount of trades to fetch
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {int} [params.until] timestamp in ms of the latest entry to fetch
-     * @returns {Trade[]} a list of [trade structures]{@link https://docs.ccxt.com/#/?id=public-trades}
+     * @returns {Trade[]} a list of [trade structures]{@link https://docs.ccxt.com/?id=public-trades}
      */
     public async override Task<object> fetchTrades(object symbol, object since = null, object limit = null, object parameters = null)
     {
@@ -1550,7 +1567,7 @@ public partial class coincatch : Exchange
      * @see https://coincatch.github.io/github.io/en/mix/#get-current-funding-rate
      * @param {string} symbol unified market symbol
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object} a [funding rate structure]{@link https://docs.ccxt.com/#/?id=funding-rate-structure}
+     * @returns {object} a [funding rate structure]{@link https://docs.ccxt.com/?id=funding-rate-structure}
      */
     public async override Task<object> fetchFundingRate(object symbol, object parameters = null)
     {
@@ -1628,7 +1645,7 @@ public partial class coincatch : Exchange
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {int} [params.pageNo] the page number to fetch
      * @param {bool} [params.nextPage] whether to query the next page (default false)
-     * @returns {object[]} a list of [funding rate structures]{@link https://docs.ccxt.com/#/?id=funding-rate-history-structure}
+     * @returns {object[]} a list of [funding rate structures]{@link https://docs.ccxt.com/?id=funding-rate-history-structure}
      */
     public async override Task<object> fetchFundingRateHistory(object symbol = null, object since = null, object limit = null, object parameters = null)
     {
@@ -1693,7 +1710,7 @@ public partial class coincatch : Exchange
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.type] 'spot' or 'swap' - the type of the market to fetch balance for (default 'spot')
      * @param {string} [params.productType] *swap only* 'umcbl' or 'dmcbl' (default 'umcbl')
-     * @returns {object} a [balance structure]{@link https://docs.ccxt.com/#/?id=balance-structure}
+     * @returns {object} a [balance structure]{@link https://docs.ccxt.com/?id=balance-structure}
      */
     public async override Task<object> fetchBalance(object parameters = null)
     {
@@ -1833,7 +1850,7 @@ public partial class coincatch : Exchange
      * @param {string} toAccount 'spot' or 'swap' or 'mix_usdt' or 'mix_usd' - account to transfer to
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.clientOrderId] a unique id for the transfer
-     * @returns {object} a [transfer structure]{@link https://docs.ccxt.com/#/?id=transfer-structure}
+     * @returns {object} a [transfer structure]{@link https://docs.ccxt.com/?id=transfer-structure}
      */
     public async override Task<object> transfer(object code, object amount, object fromAccount, object toAccount, object parameters = null)
     {
@@ -1919,7 +1936,7 @@ public partial class coincatch : Exchange
      * @param {string} code unified currency code
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.network] network for fetch deposit address
-     * @returns {object} an [address structure]{@link https://docs.ccxt.com/#/?id=address-structure}
+     * @returns {object} an [address structure]{@link https://docs.ccxt.com/?id=address-structure}
      */
     public async override Task<object> fetchDepositAddress(object code, object parameters = null)
     {
@@ -1999,7 +2016,7 @@ public partial class coincatch : Exchange
      * @param {int} [params.until] the latest time in ms to fetch transfers for (default time now)
      * @param {int} [params.pageNo] pageNo default 1
      * @param {int} [params.pageSize] pageSize (default 20, max 100)
-     * @returns {object[]} a list of [transfer structures]{@link https://docs.ccxt.com/#/?id=transfer-structure}
+     * @returns {object[]} a list of [transfer structures]{@link https://docs.ccxt.com/?id=transfer-structure}
      */
     public async override Task<object> fetchDeposits(object code = null, object since = null, object limit = null, object parameters = null)
     {
@@ -2070,7 +2087,7 @@ public partial class coincatch : Exchange
      * @param {string} [params.clientOid] clientOid
      * @param {string} [params.orderId] The response orderId
      * @param {string} [params.idLessThan] Requests the content on the page before this ID (older data), the value input should be the orderId of the corresponding interface.
-     * @returns {object[]} a list of [transaction structures]{@link https://docs.ccxt.com/#/?id=transaction-structure}
+     * @returns {object[]} a list of [transaction structures]{@link https://docs.ccxt.com/?id=transaction-structure}
      */
     public async override Task<object> fetchWithdrawals(object code = null, object since = null, object limit = null, object parameters = null)
     {
@@ -2120,7 +2137,7 @@ public partial class coincatch : Exchange
      * @param {string} params.network network for withdraw (mandatory)
      * @param {string} [params.remark] remark
      * @param {string} [params.clientOid] custom id
-     * @returns {object} a [transaction structure]{@link https://docs.ccxt.com/#/?id=transaction-structure}
+     * @returns {object} a [transaction structure]{@link https://docs.ccxt.com/?id=transaction-structure}
      */
     public async override Task<object> withdraw(object code, object amount, object address, object tag = null, object parameters = null)
     {
@@ -2254,7 +2271,7 @@ public partial class coincatch : Exchange
      * @param {string} symbol unified symbol of the market to create an order in
      * @param {float} cost how much you want to trade in units of the quote currency
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object} an [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {object} an [order structure]{@link https://docs.ccxt.com/?id=order-structure}
      */
     public async override Task<object> createMarketBuyOrderWithCost(object symbol, object cost, object parameters = null)
     {
@@ -2285,12 +2302,13 @@ public partial class coincatch : Exchange
      * @param {float} amount how much of you want to trade in units of the base currency
      * @param {float} [price] the price that the order is to be fulfilled, in units of the quote currency, ignored in market orders
      * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @param {bool} [params.hedged] *swap markets only* must be set to true if position mode is hedged (default false)
      * @param {float} [params.cost] *spot market buy only* the quote quantity that can be used as an alternative for the amount
      * @param {float} [params.triggerPrice] the price that the order is to be triggered
      * @param {bool} [params.postOnly] if true, the order will only be posted to the order book and not executed immediately
      * @param {string} [params.timeInForce] 'GTC', 'IOC', 'FOK' or 'PO'
      * @param {string} [params.clientOrderId] a unique id for the order - is mandatory for swap
-     * @returns {object} an [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {object} an [order structure]{@link https://docs.ccxt.com/?id=order-structure}
      */
     public async override Task<object> createOrder(object symbol, object type, object side, object amount, object price = null, object parameters = null)
     {
@@ -2327,7 +2345,7 @@ public partial class coincatch : Exchange
      * @param {bool} [params.postOnly] if true, the order will only be posted to the order book and not executed immediately
      * @param {string} [params.timeInForce] 'GTC', 'IOC', 'FOK' or 'PO'
      * @param {string} [params.clientOrderId] a unique id for the order (max length 40)
-     * @returns {object} an [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {object} an [order structure]{@link https://docs.ccxt.com/?id=order-structure}
      */
     public async virtual Task<object> createSpotOrder(object symbol, object type, object side, object amount, object price = null, object parameters = null)
     {
@@ -2533,6 +2551,7 @@ public partial class coincatch : Exchange
      * @param {float} amount how much of you want to trade in units of the base currency
      * @param {float} [price] the price that the order is to be fulfilled, in units of the quote currency, ignored in market orders
      * @param {object} [params] extra parameters specific to the exchange API endpoint
+     * @param {bool} [params.hedged] must be set to true if position mode is hedged (default false)
      * @param {bool} [params.postOnly] *non-trigger orders only* if true, the order will only be posted to the order book and not executed immediately
      * @param {bool} [params.reduceOnly] true or false whether the order is reduce only
      * @param {string} [params.timeInForce] *non-trigger orders only* 'GTC', 'FOK', 'IOC' or 'PO'
@@ -2544,7 +2563,7 @@ public partial class coincatch : Exchange
      * @param {float} [params.takeProfit.triggerPrice] take profit trigger price
      * @param {object} [params.stopLoss] *stopLoss object in params* containing the triggerPrice at which the attached stop loss order will be triggered (perpetual swap markets only)
      * @param {float} [params.stopLoss.triggerPrice] stop loss trigger price
-     * @returns {object} an [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {object} an [order structure]{@link https://docs.ccxt.com/?id=order-structure}
      */
     public async virtual Task<object> createSwapOrder(object symbol, object type, object side, object amount, object price = null, object parameters = null)
     {
@@ -2595,7 +2614,7 @@ public partial class coincatch : Exchange
         * @param {float} amount how much of you want to trade in units of the base currency
         * @param {float} [price] the price that the order is to be fulfilled, in units of the quote currency, ignored in market orders
         * @param {object} [params] extra parameters specific to the exchange API endpoint
-        * @param {bool} [params.hedged] default false
+        * @param {bool} [params.hedged] must be set to true if position mode is hedged (default false)
         * @param {bool} [params.postOnly] *non-trigger orders only* if true, the order will only be posted to the order book and not executed immediately
         * @param {bool} [params.reduceOnly] true or false whether the order is reduce only
         * @param {string} [params.timeInForce] *non-trigger orders only* 'GTC', 'FOK', 'IOC' or 'PO'
@@ -2643,39 +2662,52 @@ public partial class coincatch : Exchange
         if (isTrue((!isEqual(endpointType, "tpsl"))))
         {
             ((IDictionary<string,object>)request)["orderType"] = type;
+            object sideIsExchangeSpecific = false;
             object hedged = false;
-            var hedgedparametersVariable = this.handleOptionAndParams(parameters, methodName, "hedged", hedged);
-            hedged = ((IList<object>)hedgedparametersVariable)[0];
-            parameters = ((IList<object>)hedgedparametersVariable)[1];
-            // hedged and non-hedged orders have different side values and reduceOnly handling
-            object reduceOnly = false;
-            var reduceOnlyparametersVariable = this.handleParamBool(parameters, "reduceOnly", reduceOnly);
-            reduceOnly = ((IList<object>)reduceOnlyparametersVariable)[0];
-            parameters = ((IList<object>)reduceOnlyparametersVariable)[1];
-            if (isTrue(hedged))
+            if (isTrue(isTrue(isTrue(isTrue(isTrue(isTrue((isEqual(side, "buy_single"))) || isTrue((isEqual(side, "sell_single")))) || isTrue((isEqual(side, "open_long")))) || isTrue((isEqual(side, "open_short")))) || isTrue((isEqual(side, "close_long")))) || isTrue((isEqual(side, "close_short")))))
             {
-                if (isTrue(reduceOnly))
+                sideIsExchangeSpecific = true;
+                if (isTrue(isTrue((!isEqual(side, "buy_single"))) && isTrue((!isEqual(side, "sell_single")))))
                 {
-                    if (isTrue(isEqual(side, "buy")))
+                    hedged = true;
+                }
+            }
+            if (!isTrue(sideIsExchangeSpecific))
+            {
+                var hedgedparametersVariable = this.handleOptionAndParams(parameters, methodName, "hedged", hedged);
+                hedged = ((IList<object>)hedgedparametersVariable)[0];
+                parameters = ((IList<object>)hedgedparametersVariable)[1];
+                // hedged and non-hedged orders have different side values and reduceOnly handling
+                object reduceOnly = this.safeBool(parameters, "reduceOnly");
+                if (isTrue(hedged))
+                {
+                    if (isTrue(isTrue((!isEqual(reduceOnly, null))) && isTrue(reduceOnly)))
                     {
-                        side = "close_short";
-                    } else if (isTrue(isEqual(side, "sell")))
+                        if (isTrue(isEqual(side, "buy")))
+                        {
+                            side = "close_short";
+                        } else if (isTrue(isEqual(side, "sell")))
+                        {
+                            side = "close_long";
+                        }
+                    } else
                     {
-                        side = "close_long";
+                        if (isTrue(isEqual(side, "buy")))
+                        {
+                            side = "open_long";
+                        } else if (isTrue(isEqual(side, "sell")))
+                        {
+                            side = "open_short";
+                        }
                     }
                 } else
                 {
-                    if (isTrue(isEqual(side, "buy")))
-                    {
-                        side = "open_long";
-                    } else if (isTrue(isEqual(side, "sell")))
-                    {
-                        side = "open_short";
-                    }
+                    side = add(((string)side).ToLower(), "_single");
                 }
-            } else
+            }
+            if (isTrue(hedged))
             {
-                side = add(((string)side).ToLower(), "_single");
+                parameters = this.omit(parameters, "reduceOnly");
             }
             ((IDictionary<string,object>)request)["side"] = side;
         }
@@ -2691,24 +2723,24 @@ public partial class coincatch : Exchange
         object stopLossPrice = this.safeString(parameters, "stopLossPrice");
         object takeProfitPrice = this.safeString(parameters, "takeProfitPrice");
         object requestTriggerPrice = null;
-        object takeProfitParams = this.safeDict(parameters, "takeProfit");
-        object stopLossParams = this.safeDict(parameters, "stopLoss");
+        object takeProfit = this.safeDict(parameters, "takeProfit");
+        object stopLoss = this.safeDict(parameters, "stopLoss");
         object triggerPrice = this.safeString2(parameters, "triggerPrice", "stopPrice");
         object isTrigger = (!isEqual(triggerPrice, null));
         object trailingPercent = this.safeString(parameters, "trailingPercent");
         object trailingTriggerPrice = this.safeString(parameters, "trailingTriggerPrice");
         object hasTPPrice = (!isEqual(takeProfitPrice, null));
         object hasSLPrice = (!isEqual(stopLossPrice, null));
-        object hasTPParams = (!isEqual(takeProfitParams, null));
-        if (isTrue(isTrue(hasTPParams) && !isTrue(hasTPPrice)))
+        object hasTakeProfit = (!isEqual(takeProfit, null));
+        if (isTrue(isTrue(hasTakeProfit) && !isTrue(hasTPPrice)))
         {
-            takeProfitPrice = this.safeString(takeProfitParams, "triggerPrice");
+            takeProfitPrice = this.safeString(takeProfit, "triggerPrice");
             hasTPPrice = (!isEqual(takeProfitPrice, null));
         }
-        object hasSLParams = (!isEqual(stopLossParams, null));
-        if (isTrue(isTrue(hasSLParams) && !isTrue(hasSLPrice)))
+        object hasStopLoss = (!isEqual(stopLoss, null));
+        if (isTrue(isTrue(hasStopLoss) && !isTrue(hasSLPrice)))
         {
-            stopLossPrice = this.safeString(stopLossParams, "triggerPrice");
+            stopLossPrice = this.safeString(stopLoss, "triggerPrice");
             hasSLPrice = (!isEqual(stopLossPrice, null));
         }
         object hasBothTPAndSL = isTrue(hasTPPrice) && isTrue(hasSLPrice);
@@ -2795,7 +2827,7 @@ public partial class coincatch : Exchange
      * @param {float} [takeProfit] the take profit price, in units of the quote currency
      * @param {float} [stopLoss] the stop loss price, in units of the quote currency
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object} an [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {object} an [order structure]{@link https://docs.ccxt.com/?id=order-structure}
      */
     public async override Task<object> createOrderWithTakeProfitAndStopLoss(object symbol, object type, object side, object amount, object price = null, object takeProfit = null, object stopLoss = null, object parameters = null)
     {
@@ -2829,7 +2861,7 @@ public partial class coincatch : Exchange
      * @see https://coincatch.github.io/github.io/en/spot/#batch-order
      * @param {Array} orders list of orders to create, each object should contain the parameters required by createOrder, namely symbol, type, side, amount, price and params (max 50 entries)
      * @param {object} [params] extra parameters specific to the api endpoint
-     * @returns {object} an [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {object} an [order structure]{@link https://docs.ccxt.com/?id=order-structure}
      */
     public async override Task<object> createOrders(object orders, object parameters = null)
     {
@@ -2981,7 +3013,7 @@ public partial class coincatch : Exchange
      * @param {float} amount how much of currency you want to trade in units of base currency
      * @param {float} [price] the price at which the order is to be fulfilled, in units of the quote currency, ignored in market orders
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object} an [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {object} an [order structure]{@link https://docs.ccxt.com/?id=order-structure}
      */
     public async override Task<object> editOrder(object id, object symbol, object type, object side, object amount = null, object price = null, object parameters = null)
     {
@@ -3016,7 +3048,7 @@ public partial class coincatch : Exchange
      * @param {string} [params.clientOrderId] a unique id for the order that can be used as an alternative for the id
      * @param {string} params.triggerPrice *mandatory* the price that the order is to be triggered at
      * @param {float} [params.cost] *market buy only* the quote quantity that can be used as an alternative for the amount
-     * @returns {object} an [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {object} an [order structure]{@link https://docs.ccxt.com/?id=order-structure}
      */
     public async virtual Task<object> editSpotOrder(object id, object symbol, object type, object side, object amount, object price = null, object parameters = null)
     {
@@ -3101,7 +3133,7 @@ public partial class coincatch : Exchange
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.type] 'spot' or 'swap' - the type of the market to fetch entry for (default 'spot')
      * @param {string} [params.clientOrderId] a unique id for the order that can be used as an alternative for the id
-     * @returns {object} An [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {object} An [order structure]{@link https://docs.ccxt.com/?id=order-structure}
      */
     public async override Task<object> fetchOrder(object id, object symbol = null, object parameters = null)
     {
@@ -3251,7 +3283,7 @@ public partial class coincatch : Exchange
      * @param {string} [params.productType] *swap only* 'umcbl' or 'dmcbl' - the product type of the market to fetch entries for (default 'umcbl')
      * @param {string} [params.marginCoin] *swap only* the margin coin of the market to fetch entries for
      * @param {string} [params.isPlan] *swap trigger only* 'plan' or 'profit_loss' ('plan' (default) for trigger (plan) orders, 'profit_loss' for stop-loss and take-profit orders)
-     * @returns {Order[]} a list of [order structures]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {Order[]} a list of [order structures]{@link https://docs.ccxt.com/?id=order-structure}
      */
     public async override Task<object> fetchOpenOrders(object symbol = null, object since = null, object limit = null, object parameters = null)
     {
@@ -3293,7 +3325,7 @@ public partial class coincatch : Exchange
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {boolean} [params.trigger] true if fetching trigger orders (default false)
      * @param {string} [params.lastEndId] *for trigger orders only* the last order id to fetch entries after
-     * @returns {Order[]} a list of [order structures]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {Order[]} a list of [order structures]{@link https://docs.ccxt.com/?id=order-structure}
      */
     public async virtual Task<object> fetchOpenSpotOrders(object symbol = null, object since = null, object limit = null, object parameters = null)
     {
@@ -3409,7 +3441,7 @@ public partial class coincatch : Exchange
      * @param {string} [params.isPlan] 'plan' or 'profit_loss' ('plan' (default) for trigger (plan) orders, 'profit_loss' for stop-loss and take-profit orders)
      * @param {string} [params.productType] 'umcbl' or 'dmcbl' - the product type of the market to fetch entries for (default 'umcbl')
      * @param {string} [params.marginCoin] the margin coin of the market to fetch entries for
-     * @returns {Order[]} a list of [order structures]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {Order[]} a list of [order structures]{@link https://docs.ccxt.com/?id=order-structure}
      */
     public async virtual Task<object> fetchOpenSwapOrders(object symbol = null, object since = null, object limit = null, object parameters = null)
     {
@@ -3560,7 +3592,7 @@ public partial class coincatch : Exchange
      * @param {string} [params.isPlan] *swap only* 'plan' or 'profit_loss' ('plan' (default) for trigger (plan) orders, 'profit_loss' for stop-loss and take-profit orders)
      * @param {string} [params.type] 'spot' or 'swap' - the type of the market to fetch entries for (default 'spot')
      * @param {string} [params.productType] *swap only* 'umcbl' or 'dmcbl' - the product type of the market to fetch entries for (default 'umcbl')
-     * @returns {Order[]} a list of [order structures]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {Order[]} a list of [order structures]{@link https://docs.ccxt.com/?id=order-structure}
      */
     public async override Task<object> fetchCanceledAndClosedOrders(object symbol = null, object since = null, object limit = null, object parameters = null)
     {
@@ -3603,7 +3635,7 @@ public partial class coincatch : Exchange
      * @param {int} [params.until] *for trigger orders only* the latest time in ms to fetch orders for
      * @param {boolean} [params.trigger] true if fetching trigger orders (default false)
      * @param {string} [params.lastEndId] *for trigger orders only* the last order id to fetch entries after
-     * @returns {Order[]} a list of [order structures]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {Order[]} a list of [order structures]{@link https://docs.ccxt.com/?id=order-structure}
      */
     public async virtual Task<object> fetchCanceledAndClosedSpotOrders(object symbol = null, object since = null, object limit = null, object parameters = null)
     {
@@ -3766,7 +3798,7 @@ public partial class coincatch : Exchange
      * @param {boolean} [params.trigger] true if fetching trigger orders (default false)
      * @param {string} [params.isPlan] *swap only* 'plan' or 'profit_loss' ('plan' (default) for trigger (plan) orders, 'profit_loss' for stop-loss and take-profit orders)
      * @param {string} [params.productType] *swap only* 'umcbl' or 'dmcbl' - the product type of the market to fetch entries for (default 'umcbl')
-     * @returns {Order[]} a list of [order structures]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {Order[]} a list of [order structures]{@link https://docs.ccxt.com/?id=order-structure}
      */
     public async virtual Task<object> fetchCanceledAndClosedSwapOrders(object symbol = null, object since = null, object limit = null, object parameters = null)
     {
@@ -3944,7 +3976,7 @@ public partial class coincatch : Exchange
      * @param {bool} [params.trigger] true for canceling a trigger order (default false)
      * @param {bool} [params.stop] *swap only* an alternative for trigger param
      * @param {string} [params.planType] *swap trigger only* the type of the plan order to cancel: 'profit_plan' - profit order, 'loss_plan' - loss order, 'normal_plan' - plan order, 'pos_profit' - position profit, 'pos_loss' - position loss, 'moving_plan' - Trailing TP/SL, 'track_plan' - Trailing Stop
-     * @returns {object} An [order structure]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {object} An [order structure]{@link https://docs.ccxt.com/?id=order-structure}
      */
     public async override Task<object> cancelOrder(object id, object symbol = null, object parameters = null)
     {
@@ -4184,9 +4216,9 @@ public partial class coincatch : Exchange
      * @param {string} symbol *is mandatory* unified market symbol
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string[]} [params.clientOrderIds] client order ids
-     * @returns {object} an list of [order structures]{@link https://docs.ccxt.com/#/?id=order-structure}
+     * @returns {object} an list of [order structures]{@link https://docs.ccxt.com/?id=order-structure}
      */
-    public async virtual Task<object> cancelOrders(object ids, object symbol = null, object parameters = null)
+    public async override Task<object> cancelOrders(object ids, object symbol = null, object parameters = null)
     {
         parameters ??= new Dictionary<string, object>();
         object methodName = "cancelOrders";
@@ -4762,7 +4794,7 @@ public partial class coincatch : Exchange
      * @param {int} [since] the earliest time in ms to fetch trades for
      * @param {int} [limit] the maximum number of trades to retrieve
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object[]} a list of [trade structures]{@link https://docs.ccxt.com/#/?id=trade-structure}
+     * @returns {object[]} a list of [trade structures]{@link https://docs.ccxt.com/?id=trade-structure}
      */
     public async override Task<object> fetchOrderTrades(object id, object symbol = null, object since = null, object limit = null, object parameters = null)
     {
@@ -4786,7 +4818,7 @@ public partial class coincatch : Exchange
      * @see https://coincatch.github.io/github.io/en/mix/#get-single-account
      * @param {string} symbol unified symbol of the market to fetch the margin mode for
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object} a [margin mode structure]{@link https://docs.ccxt.com/#/?id=margin-mode-structure}
+     * @returns {object} a [margin mode structure]{@link https://docs.ccxt.com/?id=margin-mode-structure}
      */
     public async override Task<object> fetchMarginMode(object symbol, object parameters = null)
     {
@@ -5001,7 +5033,7 @@ public partial class coincatch : Exchange
      * @see https://coincatch.github.io/github.io/en/mix/#get-single-account
      * @param {string} symbol unified market symbol
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object} a [leverage structure]{@link https://docs.ccxt.com/#/?id=leverage-structure}
+     * @returns {object} a [leverage structure]{@link https://docs.ccxt.com/?id=leverage-structure}
      */
     public async override Task<object> fetchLeverage(object symbol, object parameters = null)
     {
@@ -5206,7 +5238,7 @@ public partial class coincatch : Exchange
      * @param {float} amount the amount of margin to remove
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.side] *for isolated margin mode with hedged position mode only* 'long' or 'short'
-     * @returns {object} a [margin structure]{@link https://docs.ccxt.com/#/?id=reduce-margin-structure}
+     * @returns {object} a [margin structure]{@link https://docs.ccxt.com/?id=margin-structure}
      */
     public async override Task<object> reduceMargin(object symbol, object amount, object parameters = null)
     {
@@ -5224,7 +5256,7 @@ public partial class coincatch : Exchange
      * @param {float} amount amount of margin to add
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.side] *for isolated margin mode with hedged position mode only* 'long' or 'short'
-     * @returns {object} a [margin structure]{@link https://docs.ccxt.com/#/?id=add-margin-structure}
+     * @returns {object} a [margin structure]{@link https://docs.ccxt.com/?id=margin-structure}
      */
     public async override Task<object> addMargin(object symbol, object amount, object parameters = null)
     {
@@ -5241,7 +5273,7 @@ public partial class coincatch : Exchange
      * @param {string} symbol unified market symbol of the market the position is held in, default is undefined
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string}  [params.side] 'long' or 'short' *for non-hedged position mode only* (default 'long')
-     * @returns {object} a [position structure]{@link https://docs.ccxt.com/#/?id=position-structure}
+     * @returns {object} a [position structure]{@link https://docs.ccxt.com/?id=position-structure}
      */
     public async override Task<object> fetchPosition(object symbol, object parameters = null)
     {
@@ -5264,7 +5296,7 @@ public partial class coincatch : Exchange
                 }
             }
         }
-        return getValue(positions, 0);
+        return this.safeDict(positions, 0, new Dictionary<string, object>() {});
     }
 
     /**
@@ -5275,7 +5307,7 @@ public partial class coincatch : Exchange
      * @description fetch all open positions for specific symbol
      * @param {string} symbol unified market symbol
      * @param {object} [params] extra parameters specific to the exchange API endpoint
-     * @returns {object[]} a list of [position structure]{@link https://docs.ccxt.com/#/?id=position-structure}
+     * @returns {object[]} a list of [position structure]{@link https://docs.ccxt.com/?id=position-structure}
      */
     public async override Task<object> fetchPositionsForSymbol(object symbol, object parameters = null)
     {
@@ -5331,7 +5363,7 @@ public partial class coincatch : Exchange
      * @param {object} [params] extra parameters specific to the exchange API endpoint
      * @param {string} [params.productType] 'umcbl' or 'dmcbl' (default 'umcbl' if symbols are not provided)
      * @param {string} [params.marginCoin] the settle currency of the positions, needs to match the productType
-     * @returns {object[]} a list of [position structure]{@link https://docs.ccxt.com/#/?id=position-structure}
+     * @returns {object[]} a list of [position structure]{@link https://docs.ccxt.com/?id=position-structure}
      */
     public async override Task<object> fetchPositions(object symbols = null, object parameters = null)
     {
@@ -5541,7 +5573,7 @@ public partial class coincatch : Exchange
      * @param {string} [params.business] *swap only*
      * @param {string} [params.lastEndId] *swap only*
      * @param {bool} [params.next] *swap only*
-     * @returns {object} a [ledger structure]{@link https://docs.ccxt.com/#/?id=ledger}
+     * @returns {object} a [ledger structure]{@link https://docs.ccxt.com/?id=ledger-entry-structure}
      */
     public async override Task<object> fetchLedger(object code = null, object since = null, object limit = null, object parameters = null)
     {
