@@ -53,6 +53,7 @@ class paradex extends Exchange {
                 'createTriggerOrder' => true,
                 'editOrder' => false,
                 'fetchAccounts' => false,
+                'fetchAllGreeks' => true,
                 'fetchBalance' => true,
                 'fetchBorrowInterest' => false,
                 'fetchBorrowRateHistories' => false,
@@ -67,10 +68,11 @@ class paradex extends Exchange {
                 'fetchDeposits' => true,
                 'fetchDepositWithdrawFee' => false,
                 'fetchDepositWithdrawFees' => false,
-                'fetchFundingHistory' => false,
+                'fetchFundingHistory' => true,
                 'fetchFundingRate' => false,
-                'fetchFundingRateHistory' => false,
+                'fetchFundingRateHistory' => true,
                 'fetchFundingRates' => false,
+                'fetchGreeks' => true,
                 'fetchIndexOHLCV' => false,
                 'fetchIsolatedBorrowRate' => false,
                 'fetchIsolatedBorrowRates' => false,
@@ -298,7 +300,7 @@ class paradex extends Exchange {
             'commonCurrencies' => array(
             ),
             'options' => array(
-                'paradexAccount' => null, // add array("privateKey" => A, "publicKey" => B, "address" => C)
+                'paradexAccount' => null, // add array("privateKey" => "copy Paradex Private Key from UI", "publicKey" => "used when onboard (optional)", "address" => "copy Paradex Address from UI")
                 'broker' => 'CCXT',
             ),
             'features' => array(
@@ -381,7 +383,7 @@ class paradex extends Exchange {
             /**
              * fetches the current integer timestamp in milliseconds from the exchange server
              *
-             * @see https://docs.api.testnet.paradex.trade/#get-system-time-unix-milliseconds
+             * @see https://docs.paradex.trade/api/prod/system/get-time-unix-milliseconds
              *
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
              * @return {int} the current integer timestamp in milliseconds from the exchange server
@@ -401,10 +403,10 @@ class paradex extends Exchange {
             /**
              * the latest known information on the availability of the exchange API
              *
-             * @see https://docs.api.testnet.paradex.trade/#get-system-state
+             * @see https://docs.paradex.trade/api/prod/system/get-state
              *
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
-             * @return {array} a ~@link https://docs.ccxt.com/#/?id=exchange-$status-structure $status structure~
+             * @return {array} a ~@link https://docs.ccxt.com/?id=exchange-$status-structure $status structure~
              */
             $response = Async\await($this->publicGetSystemState ($params));
             //
@@ -428,7 +430,7 @@ class paradex extends Exchange {
             /**
              * retrieves $data on all markets for bitget
              *
-             * @see https://docs.api.testnet.paradex.trade/#list-available-markets
+             * @see https://docs.paradex.trade/api/prod/markets/get-markets
              *
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
              * @return {array[]} an array of objects representing market $data
@@ -502,6 +504,57 @@ class paradex extends Exchange {
         //         "max_tob_spread" => "0.2"
         //     }
         //
+        // {
+        //     "symbol":"BTC-USD-96000-C",
+        //     "base_currency":"BTC",
+        //     "quote_currency":"USD",
+        //     "settlement_currency":"USDC",
+        //     "order_size_increment":"0.001",
+        //     "price_tick_size":"0.01",
+        //     "min_notional":"100",
+        //     "open_at":"1736764200000",
+        //     "expiry_at":"0",
+        //     "asset_kind":"PERP_OPTION",
+        //     "market_kind":"cross",
+        //     "position_limit":"10",
+        //     "price_bands_width":"0.05",
+        //     "iv_bands_width":"0.05",
+        //     "max_open_orders":"100",
+        //     "max_funding_rate":"0.02",
+        //     "option_cross_margin_params":{
+        //        "imf":array(
+        //           "long_itm":"0.2",
+        //           "short_itm":"0.15",
+        //           "short_otm":"0.1",
+        //           "short_put_cap":"0.5",
+        //           "premium_multiplier":"1"
+        //        ),
+        //        "mmf":array(
+        //           "long_itm":"0.1",
+        //           "short_itm":"0.075",
+        //           "short_otm":"0.05",
+        //           "short_put_cap":"0.5",
+        //           "premium_multiplier":"0.5"
+        //        }
+        //     ),
+        //     "price_feed_id":"GVXRSBjFk6e6J3NbVPXohDJetcTjaeeuykUpbQF8UoMU",
+        //     "oracle_ewma_factor":"0.20000046249626113",
+        //     "max_order_size":"2",
+        //     "max_funding_rate_change":"0.02",
+        //     "max_tob_spread":"0.2",
+        //     "interest_rate":"0.0001",
+        //     "clamp_rate":"0.02",
+        //     "option_type":"CALL",
+        //     "strike_price":"96000",
+        //     "funding_period_hours":"24",
+        //     "tags":array(
+        //     )
+        //  }
+        //
+        $assetKind = $this->safe_string($market, 'asset_kind');
+        $isOption = ($assetKind === 'PERP_OPTION');
+        $type = ($isOption) ? 'option' : 'swap';
+        $isSwap = ($type === 'swap');
         $marketId = $this->safe_string($market, 'symbol');
         $quoteId = $this->safe_string($market, 'quote_currency');
         $baseId = $this->safe_string($market, 'base_currency');
@@ -511,8 +564,17 @@ class paradex extends Exchange {
         $settle = $this->safe_currency_code($settleId);
         $symbol = $base . '/' . $quote . ':' . $settle;
         $expiry = $this->safe_integer($market, 'expiry_at');
+        $optionType = $this->safe_string($market, 'option_type');
+        $strikePrice = $this->safe_string($market, 'strike_price');
         $takerFee = $this->parse_number('0.0003');
         $makerFee = $this->parse_number('-0.00005');
+        if ($isOption) {
+            $optionTypeSuffix = ($optionType === 'CALL') ? 'C' : 'P';
+            $symbol = $symbol . '-' . $strikePrice . '-' . $optionTypeSuffix;
+            $makerFee = $this->parse_number('0.0003');
+        } else {
+            $expiry = null;
+        }
         return $this->safe_market_structure(array(
             'id' => $marketId,
             'symbol' => $symbol,
@@ -522,23 +584,23 @@ class paradex extends Exchange {
             'baseId' => $baseId,
             'quoteId' => $quoteId,
             'settleId' => $settleId,
-            'type' => 'swap',
+            'type' => $type,
             'spot' => false,
             'margin' => null,
-            'swap' => true,
+            'swap' => $isSwap,
             'future' => false,
-            'option' => false,
+            'option' => $isOption,
             'active' => $this->safe_bool($market, 'enableTrading'),
             'contract' => true,
             'linear' => true,
-            'inverse' => null,
+            'inverse' => false,
             'taker' => $takerFee,
             'maker' => $makerFee,
             'contractSize' => $this->parse_number('1'),
-            'expiry' => ($expiry === 0) ? null : $expiry,
+            'expiry' => $expiry,
             'expiryDatetime' => ($expiry === 0) ? null : $this->iso8601($expiry),
-            'strike' => null,
-            'optionType' => null,
+            'strike' => $this->parse_number($strikePrice),
+            'optionType' => $this->safe_string_lower($market, 'option_type'),
             'precision' => array(
                 'amount' => $this->safe_number($market, 'order_size_increment'),
                 'price' => $this->safe_number($market, 'price_tick_size'),
@@ -566,12 +628,12 @@ class paradex extends Exchange {
         ));
     }
 
-    public function fetch_ohlcv(string $symbol, $timeframe = '1m', ?int $since = null, ?int $limit = null, $params = array ()): PromiseInterface {
+    public function fetch_ohlcv(string $symbol, string $timeframe = '1m', ?int $since = null, ?int $limit = null, $params = array ()): PromiseInterface {
         return Async\async(function () use ($symbol, $timeframe, $since, $limit, $params) {
             /**
-             * fetches historical candlestick $data containing the open, high, low, and close price, and the volume of a $market
+             * fetches historical candlestick $data containing the open, high, low, and close $price, and the volume of a $market
              *
-             * @see https://docs.api.testnet.paradex.trade/#ohlcv-for-a-$symbol
+             * @see https://docs.paradex.trade/api/prod/markets/klines
              *
              * @param {string} $symbol unified $symbol of the $market to fetch OHLCV $data for
              * @param {string} $timeframe the length of time each candle represents
@@ -579,6 +641,7 @@ class paradex extends Exchange {
              * @param {int} [$limit] the maximum amount of candles to fetch
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
              * @param {int} [$params->until] timestamp in ms of the latest candle to fetch
+             * @param {string} [$params->price] "last", "mark", "index", default is "last"
              * @return {int[][]} A list of candles ordered, open, high, low, close, volume
              */
             Async\await($this->load_markets());
@@ -590,7 +653,11 @@ class paradex extends Exchange {
             $now = $this->milliseconds();
             $duration = $this->parse_timeframe($timeframe);
             $until = $this->safe_integer_2($params, 'until', 'till', $now);
-            $params = $this->omit($params, array( 'until', 'till' ));
+            $price = $this->safe_string($params, 'price');
+            if ($price !== null) {
+                $request['price_kind'] = $price;
+            }
+            $params = $this->omit($params, array( 'until', 'till', 'price' ));
             if ($since !== null) {
                 $request['start_at'] = $since;
                 if ($limit !== null) {
@@ -652,24 +719,17 @@ class paradex extends Exchange {
             /**
              * fetches price tickers for multiple markets, statistical information calculated over the past 24 hours for each market
              *
-             * @see https://docs.api.testnet.paradex.trade/#list-available-markets-summary
+             * @see https://docs.paradex.trade/api/prod/markets/get-markets-summary
              *
              * @param {string[]|null} $symbols unified $symbols of the markets to fetch the ticker for, all market tickers are returned if not assigned
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
-             * @return {array} a dictionary of ~@link https://docs.ccxt.com/#/?id=ticker-structure ticker structures~
+             * @return {array} a dictionary of ~@link https://docs.ccxt.com/?id=ticker-structure ticker structures~
              */
             Async\await($this->load_markets());
             $symbols = $this->market_symbols($symbols);
-            $request = array();
-            if ($symbols !== null) {
-                if (gettype($symbols) === 'array' && array_keys($symbols) === array_keys(array_keys($symbols))) {
-                    $request['market'] = $this->market_id($symbols[0]);
-                } else {
-                    $request['market'] = $this->market_id($symbols);
-                }
-            } else {
-                $request['market'] = 'ALL';
-            }
+            $request = array(
+                'market' => 'ALL',
+            );
             $response = Async\await($this->publicGetMarketsSummary ($this->extend($request, $params)));
             //
             //     {
@@ -702,11 +762,11 @@ class paradex extends Exchange {
             /**
              * fetches a price $ticker, a statistical calculation with the information calculated over the past 24 hours for a specific $market
              *
-             * @see https://docs.api.testnet.paradex.trade/#list-available-markets-summary
+             * @see https://docs.paradex.trade/api/prod/markets/get-markets-summary
              *
              * @param {string} $symbol unified $symbol of the $market to fetch the $ticker for
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
-             * @return {array} a ~@link https://docs.ccxt.com/#/?id=$ticker-structure $ticker structure~
+             * @return {array} a ~@link https://docs.ccxt.com/?id=$ticker-structure $ticker structure~
              */
             Async\await($this->load_markets());
             $market = $this->market($symbol);
@@ -752,7 +812,7 @@ class paradex extends Exchange {
         //         "ask" => "69578.2",
         //         "volume_24h" => "5815541.397939004",
         //         "total_volume" => "584031465.525259686",
-        //         "created_at" => 1718170156580,
+        //         "created_at" => 1718170156581,
         //         "underlying_price" => "67367.37268422",
         //         "open_interest" => "162.272",
         //         "funding_rate" => "0.01629574927887",
@@ -798,12 +858,12 @@ class paradex extends Exchange {
             /**
              * fetches information on open orders with bid (buy) and ask (sell) prices, volumes and other data
              *
-             * @see https://docs.api.testnet.paradex.trade/#get-$market-$orderbook
+             * @see https://docs.paradex.trade/api/prod/markets/get-$orderbook
              *
              * @param {string} $symbol unified $symbol of the $market to fetch the order book for
              * @param {int} [$limit] the maximum amount of order book entries to return
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
-             * @return {array} A dictionary of ~@link https://docs.ccxt.com/#/?id=order-book-structure order book structures~ indexed by $market symbols
+             * @return {array} A dictionary of ~@link https://docs.ccxt.com/?id=order-book-structure order book structures~ indexed by $market symbols
              */
             Async\await($this->load_markets());
             $market = $this->market($symbol);
@@ -843,7 +903,7 @@ class paradex extends Exchange {
             /**
              * get the list of most recent $trades for a particular $symbol
              *
-             * @see https://docs.api.testnet.paradex.trade/#trade-tape
+             * @see https://docs.paradex.trade/api/prod/trades/trades
              *
              * @param {string} $symbol unified $symbol of the $market to fetch $trades for
              * @param {int} [$since] timestamp in ms of the earliest trade to fetch
@@ -851,7 +911,7 @@ class paradex extends Exchange {
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
              * @param {int} [$params->until] the latest time in ms to fetch $trades for
              * @param {boolean} [$params->paginate] default false, when true will automatically $paginate by calling this endpoint multiple times
-             * @return {Trade[]} a list of ~@link https://docs.ccxt.com/#/?id=public-$trades trade structures~
+             * @return {Trade[]} a list of ~@link https://docs.ccxt.com/?id=public-$trades trade structures~
              */
             Async\await($this->load_markets());
             $paginate = false;
@@ -966,11 +1026,11 @@ class paradex extends Exchange {
             /**
              * retrieves the open $interest of a contract trading pair
              *
-             * @see https://docs.api.testnet.paradex.trade/#list-available-markets-summary
+             * @see https://docs.paradex.trade/api/prod/markets/get-markets-summary
              *
              * @param {string} $symbol unified CCXT $market $symbol
              * @param {array} [$params] exchange specific parameters
-             * @return {array} an open $interest structurearray(@link https://docs.ccxt.com/#/?id=open-$interest-structure)
+             * @return {array} an open $interest structurearray(@link https://docs.ccxt.com/?id=open-$interest-structure)
              */
             Async\await($this->load_markets());
             $market = $this->market($symbol);
@@ -1254,7 +1314,15 @@ class paradex extends Exchange {
         $price = $this->safe_string($order, 'price');
         $amount = $this->safe_string($order, 'size');
         $orderType = $this->safe_string($order, 'type');
+        $cancelReason = $this->safe_string($order, 'cancel_reason');
         $status = $this->safe_string($order, 'status');
+        if ($cancelReason !== null) {
+            if ($cancelReason === 'NOT_ENOUGH_MARGIN' || $cancelReason === 'ORDER_EXCEEDS_POSITION_LIMIT') {
+                $status = 'rejected';
+            } else {
+                $status = 'canceled';
+            }
+        }
         $side = $this->safe_string_lower($order, 'side');
         $average = $this->omit_zero($this->safe_string($order, 'avg_fill_price'));
         $remaining = $this->omit_zero($this->safe_string($order, 'remaining_size'));
@@ -1274,7 +1342,7 @@ class paradex extends Exchange {
             'status' => $this->parse_order_status($status),
             'symbol' => $symbol,
             'type' => $this->parse_order_type($orderType),
-            'timeInForce' => $this->parse_time_in_force($this->safe_string($order, 'instrunction')),
+            'timeInForce' => $this->parse_time_in_force($this->safe_string($order, 'instruction')),
             'postOnly' => null,
             'reduceOnly' => $reduceOnly,
             'side' => $side,
@@ -1328,11 +1396,6 @@ class paradex extends Exchange {
         return $this->safe_string_lower($types, $type, $type);
     }
 
-    public function convert_short_string(string $str) {
-        // TODO => add stringToBase16 in exchange
-        return '0x' . bin2hex(base64_decode(base64_encode($str)));
-    }
-
     public function scale_number(string $num) {
         return Precise::string_mul($num, '100000000');
     }
@@ -1342,7 +1405,7 @@ class paradex extends Exchange {
             /**
              * create a trade $order
              *
-             * @see https://docs.api.prod.paradex.trade/#create-$order
+             * @see https://docs.paradex.trade/api/prod/orders/new
              *
              * @param {string} $symbol unified $symbol of the $market to create an $order in
              * @param {string} $type 'market' or 'limit'
@@ -1358,7 +1421,7 @@ class paradex extends Exchange {
              * @param {bool} [$params->postOnly] true or false
              * @param {bool} [$params->reduceOnly] Ensures that the executed $order does not flip the opened position.
              * @param {string} [$params->clientOrderId] a unique id for the $order
-             * @return {array} an ~@link https://docs.ccxt.com/#/?id=$order-structure $order structure~
+             * @return {array} an ~@link https://docs.ccxt.com/?id=$order-structure $order structure~
              */
             Async\await($this->authenticate_rest());
             Async\await($this->load_markets());
@@ -1444,9 +1507,9 @@ class paradex extends Exchange {
             $now = $this->nonce();
             $orderReq = array(
                 'timestamp' => $now * 1000,
-                'market' => $this->convert_short_string($request['market']),
+                'market' => $this->string_to_base16($request['market']),
                 'side' => ($orderSide === 'BUY') ? '1' : '2',
-                'orderType' => $this->convert_short_string($request['type']),
+                'orderType' => $this->string_to_base16($request['type']),
                 'size' => $this->scale_number($request['size']),
                 'price' => ($isMarket) ? '0' : $this->scale_number($request['price']),
             );
@@ -1504,14 +1567,14 @@ class paradex extends Exchange {
             /**
              * cancels an open order
              *
-             * @see https://docs.api.prod.paradex.trade/#cancel-order
-             * @see https://docs.api.prod.paradex.trade/#cancel-open-order-by-client-order-$id
+             * @see https://docs.paradex.trade/api/prod/orders/cancel
+             * @see https://docs.paradex.trade/api/prod/orders/cancel-by-client-$id
              *
              * @param {string} $id order $id
              * @param {string} $symbol unified $symbol of the market the order was made in
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
              * @param {string} [$params->clientOrderId] a unique $id for the order
-             * @return {array} An ~@link https://docs.ccxt.com/#/?$id=order-structure order structure~
+             * @return {array} An ~@link https://docs.ccxt.com/?$id=order-structure order structure~
              */
             Async\await($this->authenticate_rest());
             Async\await($this->load_markets());
@@ -1537,11 +1600,11 @@ class paradex extends Exchange {
             /**
              * cancel all open orders in a $market
              *
-             * @see https://docs.api.prod.paradex.trade/#cancel-all-open-orders
+             * @see https://docs.paradex.trade/api/prod/orders/cancel-all
              *
              * @param {string} $symbol unified $market $symbol of the $market to cancel orders in
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
-             * @return {array[]} a list of ~@link https://docs.ccxt.com/#/?id=order-structure order structures~
+             * @return {array[]} a list of ~@link https://docs.ccxt.com/?id=order-structure order structures~
              */
             if ($symbol === null) {
                 throw new ArgumentsRequired($this->id . ' cancelAllOrders() requires a $symbol argument');
@@ -1556,7 +1619,7 @@ class paradex extends Exchange {
             //
             // if success, no $response->..
             //
-            return $response;
+            return array( $this->safe_order(array( 'info' => $response )) );
         }) ();
     }
 
@@ -1565,14 +1628,14 @@ class paradex extends Exchange {
             /**
              * fetches information on an order made by the user
              *
-             * @see https://docs.api.prod.paradex.trade/#get-order
-             * @see https://docs.api.prod.paradex.trade/#get-order-by-client-$id
+             * @see https://docs.paradex.trade/api/prod/orders/get
+             * @see https://docs.paradex.trade/api/prod/orders/get-by-client-$id
              *
              * @param {string} $id the order $id
              * @param {string} $symbol unified $symbol of the market the order was made in
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
              * @param {string} [$params->clientOrderId] a unique $id for the order
-             * @return {array} An ~@link https://docs.ccxt.com/#/?$id=order-structure order structure~
+             * @return {array} An ~@link https://docs.ccxt.com/?$id=order-structure order structure~
              */
             Async\await($this->authenticate_rest());
             Async\await($this->load_markets());
@@ -1622,7 +1685,7 @@ class paradex extends Exchange {
             /**
              * fetches information on multiple $orders made by the user
              *
-             * @see https://docs.api.prod.paradex.trade/#get-$orders
+             * @see https://docs.paradex.trade/api/prod/orders/get-$orders
              *
              * @param {string} $symbol unified $market $symbol of the $market $orders were made in
              * @param {int} [$since] the earliest time in ms to fetch $orders for
@@ -1631,7 +1694,7 @@ class paradex extends Exchange {
              * @param {string} [$params->side] 'buy' or 'sell'
              * @param {boolean} [$params->paginate] set to true if you want to fetch $orders with pagination
              * @param {int} $params->until timestamp in ms of the latest order to fetch
-             * @return {Order[]} a list of ~@link https://docs.ccxt.com/#/?id=order-structure order structures~
+             * @return {Order[]} a list of ~@link https://docs.ccxt.com/?id=order-structure order structures~
              */
             Async\await($this->authenticate_rest());
             Async\await($this->load_markets());
@@ -1705,13 +1768,13 @@ class paradex extends Exchange {
             /**
              * fetches information on multiple $orders made by the user
              *
-             * @see https://docs.api.prod.paradex.trade/#paradex-rest-api-$orders
+             * @see https://docs.paradex.trade/api/prod/orders/get-open-$orders
              *
              * @param {string} $symbol unified $market $symbol of the $market $orders were made in
              * @param {int} [$since] the earliest time in ms to fetch $orders for
              * @param {int} [$limit] the maximum number of order structures to retrieve
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
-             * @return {Order[]} a list of ~@link https://docs.ccxt.com/#/?id=order-structure order structures~
+             * @return {Order[]} a list of ~@link https://docs.ccxt.com/?id=order-structure order structures~
              */
             Async\await($this->authenticate_rest());
             Async\await($this->load_markets());
@@ -1764,10 +1827,10 @@ class paradex extends Exchange {
             /**
              * query for balance and get the amount of funds available for trading or funds locked in orders
              *
-             * @see https://docs.api.prod.paradex.trade/#list-balances
+             * @see https://docs.paradex.trade/api/prod/account/get-balance
              *
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
-             * @return {array} a ~@link https://docs.ccxt.com/#/?id=balance-structure balance structure~
+             * @return {array} a ~@link https://docs.ccxt.com/?id=balance-structure balance structure~
              */
             Async\await($this->authenticate_rest());
             Async\await($this->load_markets());
@@ -1806,7 +1869,7 @@ class paradex extends Exchange {
             /**
              * fetch all $trades made by the user
              *
-             * @see https://docs.api.prod.paradex.trade/#list-fills
+             * @see https://docs.paradex.trade/api/prod/account/list-fills
              *
              * @param {string} $symbol unified $market $symbol
              * @param {int} [$since] the earliest time in ms to fetch $trades for
@@ -1814,7 +1877,7 @@ class paradex extends Exchange {
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
              * @param {boolean} [$params->paginate] default false, when true will automatically $paginate by calling this endpoint multiple times. See in the docs all the [available parameters](https://github.com/ccxt/ccxt/wiki/Manual#pagination-$params)
              * @param {int} [$params->until] the latest time in ms to fetch entries for
-             * @return {Trade[]} a list of ~@link https://docs.ccxt.com/#/?id=trade-structure trade structures~
+             * @return {Trade[]} a list of ~@link https://docs.ccxt.com/?id=trade-structure trade structures~
              */
             Async\await($this->authenticate_rest());
             Async\await($this->load_markets());
@@ -1843,7 +1906,7 @@ class paradex extends Exchange {
             //         "prev" => null,
             //         "results" => array(
             //             {
-            //                 "id" => "1718947571560201703986670001",
+            //                 "id" => "1718947571560201703986670002",
             //                 "side" => "BUY",
             //                 "liquidity" => "TAKER",
             //                 "market" => "BTC-USD-PERP",
@@ -1873,11 +1936,11 @@ class paradex extends Exchange {
             /**
              * fetch data on an open position
              *
-             * @see https://docs.api.prod.paradex.trade/#list-open-$positions
+             * @see https://docs.paradex.trade/api/prod/account/get-$positions
              *
              * @param {string} $symbol unified $market $symbol of the $market the position is held in
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
-             * @return {array} a ~@link https://docs.ccxt.com/#/?id=position-structure position structure~
+             * @return {array} a ~@link https://docs.ccxt.com/?id=position-structure position structure~
              */
             Async\await($this->authenticate_rest());
             Async\await($this->load_markets());
@@ -1887,16 +1950,16 @@ class paradex extends Exchange {
         }) ();
     }
 
-    public function fetch_positions(?array $symbols = null, $params = array ()) {
+    public function fetch_positions(?array $symbols = null, $params = array ()): PromiseInterface {
         return Async\async(function () use ($symbols, $params) {
             /**
              * fetch all open positions
              *
-             * @see https://docs.api.prod.paradex.trade/#list-open-positions
+             * @see https://docs.paradex.trade/api/prod/account/get-positions
              *
              * @param {string[]} [$symbols] list of unified market $symbols
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
-             * @return {array[]} a list of ~@link https://docs.ccxt.com/#/?id=position-structure position structure~
+             * @return {array[]} a list of ~@link https://docs.ccxt.com/?id=position-structure position structure~
              */
             Async\await($this->authenticate_rest());
             Async\await($this->load_markets());
@@ -1995,14 +2058,14 @@ class paradex extends Exchange {
             /**
              * retrieves the public liquidations of a trading pair
              *
-             * @see https://docs.api.prod.paradex.trade/#list-liquidations
+             * @see https://docs.paradex.trade/api/prod/liquidations/get-liquidations
              *
              * @param {string} $symbol unified CCXT $market $symbol
              * @param {int} [$since] the earliest time in ms to fetch liquidations for
              * @param {int} [$limit] the maximum number of liquidation structures to retrieve
              * @param {array} [$params] exchange specific parameters for the huobi api endpoint
              * @param {int} [$params->until] timestamp in ms of the latest liquidation
-             * @return {array} an array of ~@link https://docs.ccxt.com/#/?id=liquidation-structure liquidation structures~
+             * @return {array} an array of ~@link https://docs.ccxt.com/?id=liquidation-structure liquidation structures~
              */
             Async\await($this->authenticate_rest());
             $request = array();
@@ -2043,6 +2106,7 @@ class paradex extends Exchange {
             'contracts' => null,
             'contractSize' => null,
             'price' => null,
+            'side' => null,
             'baseValue' => null,
             'quoteValue' => null,
             'timestamp' => $timestamp,
@@ -2055,7 +2119,7 @@ class paradex extends Exchange {
             /**
              * fetch all $deposits made to an account
              *
-             * @see https://docs.api.prod.paradex.trade/#paradex-rest-api-transfers
+             * @see https://docs.paradex.trade/api/prod/transfers/get
              *
              * @param {string} $code unified currency $code
              * @param {int} [$since] the earliest time in ms to fetch $deposits for
@@ -2063,7 +2127,7 @@ class paradex extends Exchange {
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
              * @param {int} [$params->until] the latest time in ms to fetch entries for
              * @param {boolean} [$params->paginate] default false, when true will automatically $paginate by calling this endpoint multiple times. See in the docs all the [availble parameters](https://github.com/ccxt/ccxt/wiki/Manual#pagination-$params)
-             * @return {array[]} a list of ~@link https://docs.ccxt.com/#/?id=transaction-structure transaction structures~
+             * @return {array[]} a list of ~@link https://docs.ccxt.com/?id=transaction-structure transaction structures~
              */
             Async\await($this->authenticate_rest());
             Async\await($this->load_markets());
@@ -2119,7 +2183,7 @@ class paradex extends Exchange {
             /**
              * fetch all withdrawals made from an account
              *
-             * @see https://docs.api.prod.paradex.trade/#paradex-rest-api-transfers
+             * @see https://docs.paradex.trade/api/prod/transfers/get
              *
              * @param {string} $code unified currency $code
              * @param {int} [$since] the earliest time in ms to fetch withdrawals for
@@ -2127,7 +2191,7 @@ class paradex extends Exchange {
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
              * @param {int} [$params->until] the latest time in ms to fetch withdrawals for
              * @param {boolean} [$params->paginate] default false, when true will automatically $paginate by calling this endpoint multiple times. See in the docs all the [availble parameters](https://github.com/ccxt/ccxt/wiki/Manual#pagination-$params)
-             * @return {array[]} a list of ~@link https://docs.ccxt.com/#/?id=transaction-structure transaction structures~
+             * @return {array[]} a list of ~@link https://docs.ccxt.com/?id=transaction-structure transaction structures~
              */
             Async\await($this->authenticate_rest());
             Async\await($this->load_markets());
@@ -2246,11 +2310,11 @@ class paradex extends Exchange {
             /**
              * fetches the margin mode of a specific $symbol
              *
-             * @see https://docs.api.testnet.paradex.trade/#get-account-margin-configuration
+             * @see https://docs.paradex.trade/api/prod/account/get-account-margin
              *
              * @param {string} $symbol unified $symbol of the $market the order was made in
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
-             * @return {array} a ~@link https://docs.ccxt.com/#/?id=margin-mode-structure margin mode structure~
+             * @return {array} a ~@link https://docs.ccxt.com/?id=margin-mode-structure margin mode structure~
              */
             Async\await($this->authenticate_rest());
             Async\await($this->load_markets());
@@ -2292,7 +2356,7 @@ class paradex extends Exchange {
             /**
              * set margin mode to 'cross' or 'isolated'
              *
-             * @see https://docs.api.testnet.paradex.trade/#set-margin-configuration
+             * @see https://docs.paradex.trade/api/prod/account/upsert-account-margin
              *
              * @param {string} $marginMode 'cross' or 'isolated'
              * @param {string} $symbol unified $market $symbol
@@ -2320,11 +2384,11 @@ class paradex extends Exchange {
             /**
              * fetch the set leverage for a $market
              *
-             * @see https://docs.api.testnet.paradex.trade/#get-account-margin-configuration
+             * @see https://docs.paradex.trade/api/prod/account/get-account-margin
              *
              * @param {string} $symbol unified $market $symbol
              * @param {array} [$params] extra parameters specific to the exchange API endpoint
-             * @return {array} a ~@link https://docs.ccxt.com/#/?id=leverage-structure leverage structure~
+             * @return {array} a ~@link https://docs.ccxt.com/?id=leverage-structure leverage structure~
              */
             Async\await($this->authenticate_rest());
             Async\await($this->load_markets());
@@ -2371,12 +2435,12 @@ class paradex extends Exchange {
         return $this->safe_string($modes, $mode, $mode);
     }
 
-    public function set_leverage(?int $leverage, ?string $symbol = null, $params = array ()) {
+    public function set_leverage(int $leverage, ?string $symbol = null, $params = array ()) {
         return Async\async(function () use ($leverage, $symbol, $params) {
             /**
              * set the level of $leverage for a $market
              *
-             * @see https://docs.api.testnet.paradex.trade/#set-margin-configuration
+             * @see https://docs.paradex.trade/api/prod/account/upsert-account-margin
              *
              * @param {float} $leverage the rate of $leverage
              * @param {string} [$symbol] unified $market $symbol (is mandatory for swap markets)
@@ -2396,6 +2460,252 @@ class paradex extends Exchange {
                 'margin_type' => $this->encode_margin_mode($marginMode),
             );
             return Async\await($this->privatePostAccountMarginMarket ($this->extend($request, $params)));
+        }) ();
+    }
+
+    public function fetch_greeks(string $symbol, $params = array ()): PromiseInterface {
+        return Async\async(function () use ($symbol, $params) {
+            /**
+             * fetches an option contracts $greeks, financial metrics used to measure the factors that affect the price of an options contract
+             *
+             * @see https://docs.paradex.trade/api/prod/markets/get-markets-summary
+             *
+             * @param {string} $symbol unified $symbol of the $market to fetch $greeks for
+             * @param {array} [$params] extra parameters specific to the exchange API endpoint
+             * @return {array} a ~@link https://docs.ccxt.com/?id=$greeks-structure $greeks structure~
+             */
+            Async\await($this->load_markets());
+            $market = $this->market($symbol);
+            $request = array(
+                'market' => $market['id'],
+            );
+            $response = Async\await($this->publicGetMarketsSummary ($this->extend($request, $params)));
+            //
+            //     {
+            //         "results" => array(
+            //             {
+            //                 "symbol" => "BTC-USD-114000-P",
+            //                 "mark_price" => "10835.66892602",
+            //                 "mark_iv" => "0.71781855",
+            //                 "delta" => "-0.98726024",
+            //                 "greeks" => array(
+            //                     "delta" => "-0.9872602390817709",
+            //                     "gamma" => "0.000004560958862297231",
+            //                     "vega" => "227.11344863639806",
+            //                     "rho" => "-302.0617972461581",
+            //                     "vanna" => "0.06609830491614832",
+            //                     "volga" => "925.9501532805552"
+            //                 ),
+            //                 "last_traded_price" => "10551.5",
+            //                 "bid" => "10794.9",
+            //                 "bid_iv" => "0.05",
+            //                 "ask" => "10887.3",
+            //                 "ask_iv" => "0.8783283",
+            //                 "last_iv" => "0.05",
+            //                 "volume_24h" => "0",
+            //                 "total_volume" => "195240.72672261014",
+            //                 "created_at" => 1747644009995,
+            //                 "underlying_price" => "103164.79162649",
+            //                 "open_interest" => "0",
+            //                 "funding_rate" => "0.000004464241170536191",
+            //                 "price_change_rate_24h" => "0.074915",
+            //                 "future_funding_rate" => "0.0001"
+            //             }
+            //         )
+            //     }
+            //
+            $data = $this->safe_list($response, 'results', array());
+            $greeks = $this->safe_dict($data, 0, array());
+            return $this->parse_greeks($greeks, $market);
+        }) ();
+    }
+
+    public function fetch_all_greeks(?array $symbols = null, $params = array ()): PromiseInterface {
+        return Async\async(function () use ($symbols, $params) {
+            /**
+             * fetches all option contracts greeks, financial metrics used to measure the factors that affect the price of an options contract
+             *
+             * @see https://docs.paradex.trade/api/prod/markets/get-markets-summary
+             *
+             * @param {string[]} [$symbols] unified $symbols of the markets to fetch greeks for, all markets are returned if not assigned
+             * @param {array} [$params] extra parameters specific to the exchange API endpoint
+             * @return {array} a ~@link https://docs.ccxt.com/?id=greeks-structure greeks structure~
+             */
+            Async\await($this->load_markets());
+            $symbols = $this->market_symbols($symbols, null, true, true, true);
+            $request = array(
+                'market' => 'ALL',
+            );
+            $response = Async\await($this->publicGetMarketsSummary ($this->extend($request, $params)));
+            //
+            //     {
+            //         "results" => array(
+            //             {
+            //                 "symbol" => "BTC-USD-114000-P",
+            //                 "mark_price" => "10835.66892602",
+            //                 "mark_iv" => "0.71781855",
+            //                 "delta" => "-0.98726024",
+            //                 "greeks" => array(
+            //                     "delta" => "-0.9872602390817709",
+            //                     "gamma" => "0.000004560958862297231",
+            //                     "vega" => "227.11344863639806",
+            //                     "rho" => "-302.0617972461581",
+            //                     "vanna" => "0.06609830491614832",
+            //                     "volga" => "925.9501532805552"
+            //                 ),
+            //                 "last_traded_price" => "10551.5",
+            //                 "bid" => "10794.9",
+            //                 "bid_iv" => "0.05",
+            //                 "ask" => "10887.3",
+            //                 "ask_iv" => "0.8783283",
+            //                 "last_iv" => "0.05",
+            //                 "volume_24h" => "0",
+            //                 "total_volume" => "195240.72672261014",
+            //                 "created_at" => 1747644009995,
+            //                 "underlying_price" => "103164.79162649",
+            //                 "open_interest" => "0",
+            //                 "funding_rate" => "0.000004464241170536191",
+            //                 "price_change_rate_24h" => "0.074915",
+            //                 "future_funding_rate" => "0.0001"
+            //             }
+            //         )
+            //     }
+            //
+            $results = $this->safe_list($response, 'results', array());
+            return $this->parse_all_greeks($results, $symbols);
+        }) ();
+    }
+
+    public function parse_greeks(array $greeks, ?array $market = null): array {
+        //
+        //     {
+        //         "symbol" => "BTC-USD-114000-P",
+        //         "mark_price" => "10835.66892602",
+        //         "mark_iv" => "0.71781855",
+        //         "delta" => "-0.98726024",
+        //         "greeks" => array(
+        //             "delta" => "-0.9872602390817709",
+        //             "gamma" => "0.000004560958862297231",
+        //             "vega" => "227.11344863639806",
+        //             "rho" => "-302.0617972461581",
+        //             "vanna" => "0.06609830491614832",
+        //             "volga" => "925.9501532805552"
+        //         ),
+        //         "last_traded_price" => "10551.5",
+        //         "bid" => "10794.9",
+        //         "bid_iv" => "0.05",
+        //         "ask" => "10887.3",
+        //         "ask_iv" => "0.8783283",
+        //         "last_iv" => "0.05",
+        //         "volume_24h" => "0",
+        //         "total_volume" => "195240.72672261014",
+        //         "created_at" => 1747644009995,
+        //         "underlying_price" => "103164.79162649",
+        //         "open_interest" => "0",
+        //         "funding_rate" => "0.000004464241170536191",
+        //         "price_change_rate_24h" => "0.074915",
+        //         "future_funding_rate" => "0.0001"
+        //     }
+        //
+        $marketId = $this->safe_string($greeks, 'symbol');
+        $market = $this->safe_market($marketId, $market, null, 'option');
+        $symbol = $market['symbol'];
+        $timestamp = $this->safe_integer($greeks, 'created_at');
+        $greeksData = $this->safe_dict($greeks, 'greeks', array());
+        return array(
+            'symbol' => $symbol,
+            'timestamp' => $timestamp,
+            'datetime' => $this->iso8601($timestamp),
+            'delta' => $this->safe_number($greeksData, 'delta'),
+            'gamma' => $this->safe_number($greeksData, 'gamma'),
+            'theta' => null,
+            'vega' => $this->safe_number($greeksData, 'vega'),
+            'rho' => $this->safe_number($greeksData, 'rho'),
+            'vanna' => $this->safe_number($greeksData, 'vanna'),
+            'volga' => $this->safe_number($greeksData, 'volga'),
+            'bidSize' => null,
+            'askSize' => null,
+            'bidImpliedVolatility' => $this->safe_number($greeks, 'bid_iv'),
+            'askImpliedVolatility' => $this->safe_number($greeks, 'ask_iv'),
+            'markImpliedVolatility' => $this->safe_number($greeks, 'mark_iv'),
+            'bidPrice' => $this->safe_number($greeks, 'bid'),
+            'askPrice' => $this->safe_number($greeks, 'ask'),
+            'markPrice' => $this->safe_number($greeks, 'mark_price'),
+            'lastPrice' => $this->safe_number($greeks, 'last_traded_price'),
+            'underlyingPrice' => $this->safe_number($greeks, 'underlying_price'),
+            'info' => $greeks,
+        );
+    }
+
+    public function fetch_funding_rate_history(?string $symbol = null, ?int $since = null, ?int $limit = null, $params = array ()) {
+        return Async\async(function () use ($symbol, $since, $limit, $params) {
+            /**
+             * fetches historical funding $rate prices
+             *
+             * @see https://docs.paradex.trade/api/prod/markets/get-funding-data
+             *
+             * @param {string} $symbol unified $symbol of the $market to fetch the funding $rate history for
+             * @param {int} [$since] $timestamp in ms of the earliest funding $rate to fetch
+             * @param {int} [$limit] the maximum amount of funding $rate structures
+             * @param {array} [$params] extra parameters specific to the exchange API endpoint
+             * @param {int} [$params->until] $timestamp in ms of the latest funding $rate to fetch
+             * @return {array[]} a list of ~@link https://docs.ccxt.com/?id=funding-$rate-history-structure funding $rate structures~
+             */
+            if ($symbol === null) {
+                throw new ArgumentsRequired($this->id . ' fetchFundingRateHistory() requires a $symbol argument');
+            }
+            Async\await($this->load_markets());
+            $market = $this->market($symbol);
+            $request = array(
+                'market' => $market['id'],
+            );
+            if ($limit !== null) {
+                $request['page_size'] = min ($limit, 5000); // api maximum 5000
+            } else {
+                $request['page_size'] = 1000; // max is 5000
+            }
+            if ($since !== null) {
+                $request['start_at'] = $since;
+            }
+            $until = $this->safe_integer($params, 'until');
+            if ($until !== null) {
+                $params = $this->omit($params, 'until');
+                $request['end_at'] = $until;
+            }
+            $response = Async\await($this->publicGetFundingData ($this->extend($request, $params)));
+            //
+            // {
+            //     "next" => "eyJmaWx0ZXIiMsIm1hcmtlciI6eyJtYXJrZXIiOiIxNjc1NjUwMDE3NDMxMTAxNjk5N=",
+            //     "prev" => "eyJmaWx0ZXIiOnsiTGltaXQiOjkwfSwidGltZSI6MTY4MTY3OTgzNzk3MTMwOTk1MywibWFya2VyIjp7Im1zMjExMD==",
+            //     "results" => array(
+            //          {
+            //              "market":"BTC-USD-PERP",
+            //              "funding_index":"20511.93608234044552",
+            //              "funding_premium":"-6.04646651485986656",
+            //              "funding_rate":"-0.00006992598926",
+            //              "funding_rate_8h":"",
+            //              "funding_period_hours":0,
+            //              "created_at":1764160327843
+            //          }
+            //     )
+            // }
+            //
+            $results = $this->safe_list($response, 'results', array());
+            $rates = array();
+            for ($i = 0; $i < count($results); $i++) {
+                $rate = $results[$i];
+                $timestamp = $this->safe_integer($rate, 'created_at');
+                $datetime = $this->iso8601($timestamp);
+                $rates[] = array(
+                    'info' => $rate,
+                    'symbol' => $market['symbol'],
+                    'fundingRate' => $this->safe_number($rate, 'funding_rate'),
+                    'timestamp' => $timestamp,
+                    'datetime' => $datetime,
+                );
+            }
+            $sorted = $this->sort_by($rates, 'timestamp');
+            return $this->filter_by_symbol_since_limit($sorted, $market['symbol'], $since, $limit);
         }) ();
     }
 
