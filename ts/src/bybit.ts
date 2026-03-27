@@ -1137,7 +1137,6 @@ export default class bybit extends Exchange {
                     'TRC20': 'TRX',
                     'BEP20': 'BSC',
                     'SOL': 'SOL',
-                    'SPL': 'SOL',
                     'ACA': 'ACA',
                     'ADA': 'ADA',
                     'ALGO': 'ALGO',
@@ -1213,7 +1212,6 @@ export default class bybit extends Exchange {
                 'networksById': {
                     'ETH': 'ERC20',
                     'TRX': 'TRC20',
-                    'SPL': 'SOL',
                 },
                 'defaultNetwork': 'ERC20',
                 'defaultNetworks': {
