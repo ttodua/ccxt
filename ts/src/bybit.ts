@@ -1135,6 +1135,8 @@ export default class bybit extends Exchange {
                     'ERC20': 'ETH',
                     'TRX': 'TRX',
                     'TRC20': 'TRX',
+                    'TRON': 'TRX',
+                    'BSC': 'BSC',
                     'BEP20': 'BSC',
                     'SOL': 'SOL',
                     'ACA': 'ACA',
@@ -1183,6 +1185,7 @@ export default class bybit extends Exchange {
                     'OASIS': 'ROSE',
                     'OMNI': 'OMNI',
                     'ONE': 'ONE',
+                    'OP': 'OP',
                     'OPTIMISM': 'OP',
                     'POKT': 'POKT',
                     'QTUM': 'QTUM',
@@ -1212,6 +1215,8 @@ export default class bybit extends Exchange {
                 'networksById': {
                     'ETH': 'ERC20',
                     'TRX': 'TRC20',
+                    'BSC': 'BEP20',
+                    'OP': 'OP',
                 },
                 'defaultNetwork': 'ERC20',
                 'defaultNetworks': {
