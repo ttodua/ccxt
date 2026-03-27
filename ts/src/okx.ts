@@ -1075,10 +1075,12 @@ export default class okx extends Exchange {
                     'BTC': 'Bitcoin',
                     'BTCLN': 'Lightning',
                     'BTCLIGHTNING': 'Lightning',
+                    'BSC': 'BSC',
                     'BEP20': 'BSC',
                     'BRC20': 'BRC20',
                     'ETH': 'ERC20',
                     'ERC20': 'ERC20',
+                    'TRON': 'TRC20',
                     'TRX': 'TRC20',
                     'TRC20': 'TRC20',
                     'CRC20': 'Crypto',
@@ -1196,10 +1198,9 @@ export default class okx extends Exchange {
                     // "ZetaChain",
                 },
                 'networksById': {
-                    'ETH': 'ERC20',
                     'ERC20': 'ERC20',
-                    'TRX': 'TRC20',
                     'TRC20': 'TRC20',
+                    'BEP20': 'BEP20',
                 },
                 'fetchOpenInterestHistory': {
                     'timeframes': {
