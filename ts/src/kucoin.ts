@@ -1071,8 +1071,10 @@ export default class kucoin extends Exchange {
                     'BTCNATIVESEGWIT': 'bech32',
                     'ETH': 'eth',
                     'ERC20': 'eth',
+                    'TRON': 'trx',
                     'TRX': 'trx',
                     'TRC20': 'trx',
+                    'HECO': 'heco',
                     'HRC20': 'heco',
                     'MATIC': 'matic',
                     'KCC': 'kcc', // kucoin community chain
@@ -1282,6 +1284,7 @@ export default class kucoin extends Exchange {
                     'btc': 'BTC',
                     'trx': 'TRC20',
                     'eth': 'ERC20',
+                    'heco': 'HRC20',
                     'optimism': 'OP',
                     'op': 'OP',
                 },
