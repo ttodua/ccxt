@@ -3142,7 +3142,7 @@ export default class binance extends Exchange {
                 'networks': networks,
                 'fee': undefined,
                 'fees': fees,
-                'limits': this.limits,
+                'limits': undefined,
                 'margin': this.safeBool (marginEntry, 'isBorrowable'),
             });
         }

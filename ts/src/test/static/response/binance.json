@@ -2715,29 +2715,13 @@
                             }
                         },
                         "limits": {
-                            "leverage": {
-                                "min": null,
-                                "max": null
-                            },
-                            "amount": {
-                                "min": null,
-                                "max": null
-                            },
-                            "price": {
-                                "min": null,
-                                "max": null
-                            },
-                            "cost": {
-                                "min": null,
-                                "max": null
-                            },
                             "deposit": {
-                                "min": 0,
+                                "min": 0.000001,
                                 "max": null
                             },
                             "withdraw": {
-                                "min": 0,
-                                "max": 10000000000000000000
+                                "min": 10,
+                                "max": 400000000
                             }
                         },
                         "margin": null
@@ -3465,29 +3449,13 @@
                             }
                         },
                         "limits": {
-                            "leverage": {
-                                "min": null,
-                                "max": null
-                            },
-                            "amount": {
-                                "min": null,
-                                "max": null
-                            },
-                            "price": {
-                                "min": null,
-                                "max": null
-                            },
-                            "cost": {
-                                "min": null,
-                                "max": null
-                            },
                             "deposit": {
-                                "min": 0,
+                                "min": 1e-8,
                                 "max": null
                             },
                             "withdraw": {
-                                "min": 0,
-                                "max": 10000000000000000000
+                                "min": 0.000018,
+                                "max": 35000
                             }
                         },
                         "margin": null
@@ -3901,29 +3869,13 @@
                             }
                         },
                         "limits": {
-                            "leverage": {
-                                "min": null,
-                                "max": null
-                            },
-                            "amount": {
-                                "min": null,
-                                "max": null
-                            },
-                            "price": {
-                                "min": null,
-                                "max": null
-                            },
-                            "cost": {
-                                "min": null,
-                                "max": null
-                            },
                             "deposit": {
-                                "min": 0,
+                                "min": 2e-8,
                                 "max": null
                             },
                             "withdraw": {
-                                "min": 0,
-                                "max": 10000000000000000000
+                                "min": 5.6e-7,
+                                "max": 10000000000
                             }
                         },
                         "margin": null
