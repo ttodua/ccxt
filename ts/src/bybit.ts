@@ -1137,6 +1137,7 @@ export default class bybit extends Exchange {
                     'TRC20': 'TRX',
                     'BEP20': 'BSC',
                     'SOL': 'SOL',
+                    'SPL': 'SOL',
                     'ACA': 'ACA',
                     'ADA': 'ADA',
                     'ALGO': 'ALGO',
