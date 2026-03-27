@@ -3086,10 +3086,8 @@ export default class binance extends Exchange {
                 // }
                 let withdrawPrecision = this.omitZero (this.safeString2 (networkItem, 'withdrawIntegerMultiple', 'withdrawInternalMin'));
                 // zero values happen only on fiat or leveraged(ETF) tokens: https://t.me/binance_api_english/393075
-                if (withdrawPrecision === undefined) {
-                    if (isFiat) {
-                        withdrawPrecision = this.safeString (this.options, 'defaultFiatWithdrawPrecision');
-                    }
+                if (withdrawPrecision === undefined && isFiat) {
+                    withdrawPrecision = this.safeString (this.options, 'defaultFiatWithdrawPrecision');
                 }
                 networks[networkCode] = {
                     'info': networkItem,
