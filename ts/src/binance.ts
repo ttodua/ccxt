@@ -2956,8 +2956,11 @@ export default class binance extends Exchange {
             const responseMarginables = results[1];
             marginablesById = this.indexBy (responseMarginables, 'assetName');
         }
-        const result: Dict = {};
-        for (let i = 0; i < responseCurrencies.length; i++) {
+        this.options['fetchCurrenciesMarginablesById'] = marginablesById;
+        return this.parseCurrencies (responseCurrencies);
+    }
+
+    parseCurrency (currency: Dict): Currency {
             //
             //    {
             //        "coin": "LINK",
@@ -3061,7 +3064,7 @@ export default class binance extends Exchange {
             //                "contractAddressUrl": "https://etherscan.io/address/",
             //                "contractAddress": "0x64bc2ca1be492be7185faa2c8835d9b824c8a194"
             //
-            const entry = responseCurrencies[i];
+            const entry = currency;
             const id = this.safeString (entry, 'coin');
             const name = this.safeString (entry, 'name');
             const code = this.safeCurrencyCode (id);
@@ -3110,7 +3113,7 @@ export default class binance extends Exchange {
                     },
                 };
             }
-            const marginEntry = this.safeDict (marginablesById, id, {});
+            const marginEntry = this.safeDict (this.options['fetchCurrenciesMarginablesById'], id, {});
             //
             //     {
             //         assetName: "BTC",
@@ -3129,7 +3132,7 @@ export default class binance extends Exchange {
             } else {
                 type = 'crypto';
             }
-            result[code] = this.safeCurrencyStructure ({
+            return this.safeCurrencyStructure ({
                 'id': id,
                 'name': name,
                 'code': code,
@@ -3146,7 +3149,6 @@ export default class binance extends Exchange {
                 'margin': this.safeBool (marginEntry, 'isBorrowable'),
             });
         }
-        return result;
     }
 
     /**
