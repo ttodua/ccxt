@@ -9230,7 +9230,11 @@ export default class binance extends Exchange {
             'coin': currency['id'],
             // 'network': 'ETH', // 'BSC', 'XMR', you can get network and isDefault in networkList in the response of sapiGetCapitalConfigDetail
         };
-        [ request, params ] = this.handleRequestNetwork (params, request, 'network', code, false);
+        let networkCode = undefined;
+        [ networkCode, params ] = this.handleNetworkCodeAndParams (params);
+        if (networkCode !== undefined) {
+            request['network'] = this.networkCodeToId (networkCode, currency['code']);
+        }
         // has support for the 'network' parameter
         const response = await this.sapiGetCapitalDepositAddress (this.extend (request, params));
         //
@@ -9538,7 +9542,7 @@ export default class binance extends Exchange {
         this.checkAddress (address);
         await this.loadMarkets ();
         const currency = this.currency (code);
-        let request: Dict = {
+        const request: Dict = {
             'coin': currency['id'],
             'address': address,
             // issue sapiGetCapitalConfigGetall () to get networks for withdrawing USDT ERC20 vs USDT Omni
@@ -9547,8 +9551,12 @@ export default class binance extends Exchange {
         if (tag !== undefined) {
             request['addressTag'] = tag;
         }
-        [ request, params ] = this.handleRequestNetwork (params, request, 'network', code, false);
-        request['amount'] = this.currencyToPrecision (code, amount, network);
+        let networkCode = undefined;
+        [ networkCode, params ] = this.handleNetworkCodeAndParams (params);
+        if (networkCode !== undefined) {
+            request['network'] = this.networkCodeToId (networkCode, currency['code']);
+        }
+        request['amount'] = this.currencyToPrecision (currency['code'], amount, networkCode);
         const response = await this.sapiPostCapitalWithdrawApply (this.extend (request, params));
         //     { id: '9a67628b16ba4988ae20d329333f16bc' }
         return this.parseTransaction (response, currency);
