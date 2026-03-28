@@ -4,6 +4,7 @@
 import assert from 'assert';
 import ccxt from '../../../ccxt.js';
 
+
 function helperTestNetworkProtocolCorrector () {
     const exchange = new ccxt.Exchange ({
         'id': 'sampleexchange',
@@ -148,11 +149,60 @@ function helperTestNetworkIdToCode () {
     assert (exchange.networkIdToCode ('Xyz', 'SAMPLECOIN'), 'Xyz');
 }
 
+
+function helperSampleNetworkCodes () {
+    return [ 'ETH', 'ERC20', 'TRON', 'TRX', 'TRC20', 'SOL', 'BSC', 'ARBONE', 'AVAXC', 'POL', 'BASE', 'SUI', 'OPTIMISM', 'OP', 'NEAR', 'CRO', 'CRONOS', 'BTC', 'APT', 'SCR', 'KAVA', 'TON', 'Cardano', 'ADA', 'HECO', 'HT', 'MNT', 'ALGO', 'RUNE', 'OSMO', 'CELO', 'HBAR', 'FTM', 'zkSync', 'EraZK', 'KLAY', 'ACA', 'STX', 'XTZ', 'NEO', 'METIS' ];
+}
+
+function helperSampleCurrencyCodes () {
+    return [ 'Bitcoin', 'BTC', 'Ethereum', 'ETH', 'Tether', 'USDT', 'BNB', 'BNB', 'XRP', 'XRP', 'USDC', 'USDC', 'Solana', 'SOL', 'TRON', 'TRX', 'Dogecoin', 'DOGE', 'Hyperliquid', 'HYPE', 'Bitcoin', 'Cash', 'BCH', 'Cardano', 'ADA', 'UNUS', 'SED', 'LEO', 'Chainlink', 'LINK', 'Ethena', 'USDe', 'USDe', 'Monero', 'XMR', 'Stellar', 'XLM', 'Dai', 'DAI', 'Litecoin', 'LTC', 'PayPal', 'USD', 'PYUSD', 'Hedera', 'HBAR', 'Avalanche', 'AVAX', 'Zcash', 'ZEC', 'Bittensor', 'TAO', 'Sui', 'SUI', 'Shiba', 'Inu', 'SHIB', 'Cronos', 'CRO', 'Toncoin', 'TON', 'WLFI', 'Tether', 'Gold', 'XAUt', '', 'PAX', 'Gold', 'PAXG', 'Mantle', 'MNT', 'Uniswap', 'UNI', 'Polkadot', 'DOT', 'Global', 'Dollar', 'USDG', 'OKB', 'OKB', 'Aster', 'ASTER', 'Aave', 'AAVE', 'NEAR', 'Protocol', 'NEAR', 'Ripple', 'USD', 'RLUSD', 'Polygon', 'POL' ];
+}
+
+function helperBatchNetworkTests () {
+    const exchange = new ccxt.Exchange ({
+        'id': 'sampleexchange',
+    });
+
+    //
+    // check batch
+    //
+    const exchangeDefaultOpts = exchange.getDefaultOptions ();
+    const chainMappings = exchangeDefaultOpts['chainMappings'];
+
+    const allNetworkCodes = helperSampleNetworkCodes ();
+    const allCurrencyCodes = helperSampleCurrencyCodes ();
+    for (let i = 0; i < allNetworkCodes.length; i++) {
+        const randomNetworkCode = allNetworkCodes[i];
+        for (let j = 0; j < allCurrencyCodes.length; j++) {
+            const randomCurrencyCode = allCurrencyCodes[j];
+            const result = exchange.networkCodeProtocolCorrector (randomCurrencyCode, randomNetworkCode);
+            for (let k = 0; k < chainMappings.length; k++) {
+                const chainMapping = chainMappings[k];
+                const baseCoin = chainMapping['baseCoin'];
+                const primaryNetworkCode = chainMapping['primary'];
+                const secondaryNetworkCode = chainMapping['secondary'];
+                const msg = 'network protocol test failed for networkCode:' + randomNetworkCode + ' & currencyCode: ' + randomCurrencyCode + ', result: ' + result + ', expected: ';
+                if (randomNetworkCode === primaryNetworkCode && randomCurrencyCode === baseCoin) {
+                    assert (result === primaryNetworkCode, msg + primaryNetworkCode);
+                } else if (randomNetworkCode === primaryNetworkCode && randomCurrencyCode !== baseCoin) {
+                    assert (result === secondaryNetworkCode, msg + secondaryNetworkCode);
+                } else if (randomNetworkCode === secondaryNetworkCode && randomCurrencyCode === baseCoin) {
+                    assert (result === primaryNetworkCode, msg + primaryNetworkCode);
+                } else if (randomNetworkCode === secondaryNetworkCode && randomCurrencyCode !== baseCoin) {
+                    assert (result === secondaryNetworkCode, msg + secondaryNetworkCode);
+                }
+            }
+        }
+    }
+}
+
+
 function testNetworkMethods () {
     helperTestNetworkProtocolCorrector ();
     // below two methods have same options
     helperTestNetworkCodeToId ();
     helperTestNetworkIdToCode ();
+    helperBatchNetworkTests ();
 }
 
 export default testNetworkMethods;
