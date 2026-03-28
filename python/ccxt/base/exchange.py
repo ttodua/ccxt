@@ -4,7 +4,7 @@
 
 # -----------------------------------------------------------------------------
 
-__version__ = '4.5.42'
+__version__ = '4.5.45'
 
 # -----------------------------------------------------------------------------
 
@@ -1178,8 +1178,21 @@ class Exchange(object):
         return needle in haystack
 
     @staticmethod
-    def is_empty(object):
-        return not object
+    def is_empty(obj):
+
+        if obj is None:
+            return True
+
+        # skip the strings
+        if hasattr(obj, "__len__") and not isinstance(obj, (str, bytes)):
+            return len(obj) == 0
+
+        if hasattr(obj, "__dict__"):
+            # filter-out private members
+            public_vars = [k for k in vars(obj).keys() if not k.startswith('_')]
+            return len(public_vars) == 0
+
+        return False
 
     @staticmethod
     def extract_params(string):
@@ -1229,7 +1242,7 @@ class Exchange(object):
         if isinstance(params, dict):
             for key in params:
                 _encode_params(params[key], key)
-        return _urlencode.urlencode(result, quote_via=_urlencode.quote)
+        return _urlencode.urlencode(result, safe='[]', quote_via=_urlencode.quote)
 
     @staticmethod
     def rawencode(params={}, sort=False):
@@ -3494,6 +3507,9 @@ class Exchange(object):
         res = self.parse_to_numeric((value % 1))
         return res == 0
 
+    def is_empty_string(self, value):
+        return not self.value_is_defined(value) or value == ''
+
     def safe_number_omit_zero(self, obj: object, key: IndexType, defaultValue: Num = None):
         value = self.safe_string(obj, key)
         final = self.parse_number(self.omit_zero(value))
@@ -4498,6 +4514,9 @@ class Exchange(object):
                 reversed[value] = key
         return reversed
 
+    def string_to_base16(self, str):
+        return '0x' + self.binary_to_base16(self.base64_to_binary(self.string_to_base64(str)))
+
     def reduce_fees_by_currency(self, fees):
         #
         # self function takes a list of fee structures having the following format
@@ -4678,6 +4697,12 @@ class Exchange(object):
         if self.has['fetchTrades']:
             message = '. If you want to build OHLCV candles from trade executions data, visit https://github.com/ccxt/ccxt/tree/master/examples/ and see "build-ohlcv-bars" file'
         raise NotSupported(self.id + ' fetchOHLCV() is not supported yet' + message)
+
+    def fetch_spot_ohlcv(self, symbol: str, timeframe: str = '1m', since: Int = None, limit: Int = None, params={}):
+        raise NotSupported(self.id + ' fetchSpotOHLCV() is not supported yet')
+
+    def fetch_contract_ohlcv(self, symbol: str, timeframe: str = '1m', since: Int = None, limit: Int = None, params={}):
+        raise NotSupported(self.id + ' fetchContractOHLCV() is not supported yet')
 
     def fetch_ohlcv_ws(self, symbol: str, timeframe: str = '1m', since: Int = None, limit: Int = None, params={}):
         message = ''
@@ -5401,7 +5426,8 @@ class Exchange(object):
         return self.create_order(symbol, type, side, amount, price, params)
 
     def edit_order_with_client_order_id(self, clientOrderId: str, symbol: str, type: OrderType, side: OrderSide, amount: Num = None, price: Num = None, params={}):
-        return self.edit_order('', symbol, type, side, amount, price, self.extend({'clientOrderId': clientOrderId}, params))
+        extendedParams = self.extend(params, {'clientOrderId': clientOrderId})
+        return self.edit_order('', symbol, type, side, amount, price, extendedParams)
 
     def edit_order_ws(self, id: str, symbol: str, type: OrderType, side: OrderSide, amount: Num = None, price: Num = None, params={}):
         self.cancel_order_ws(id, symbol)
@@ -5794,11 +5820,17 @@ class Exchange(object):
     def fetch_tickers(self, symbols: Strings = None, params={}):
         raise NotSupported(self.id + ' fetchTickers() is not supported yet')
 
+    def fetch_spot_tickers(self, symbols: Strings = None, params={}):
+        raise NotSupported(self.id + ' fetchSpotTickers() is not supported yet')
+
+    def fetch_contract_tickers(self, symbols: Strings = None, params={}):
+        raise NotSupported(self.id + ' fetchContractTickers() is not supported yet')
+
     def fetch_mark_prices(self, symbols: Strings = None, params={}):
         raise NotSupported(self.id + ' fetchMarkPrices() is not supported yet')
 
     def fetch_tickers_ws(self, symbols: Strings = None, params={}):
-        raise NotSupported(self.id + ' fetchTickers() is not supported yet')
+        raise NotSupported(self.id + ' fetchTickersWs() is not supported yet')
 
     def fetch_order_books(self, symbols: Strings = None, limit: Int = None, params={}):
         raise NotSupported(self.id + ' fetchOrderBooks() is not supported yet')
@@ -6224,6 +6256,12 @@ class Exchange(object):
     def create_orders(self, orders: List[OrderRequest], params={}):
         raise NotSupported(self.id + ' createOrders() is not supported yet')
 
+    def create_spot_orders(self, orders: List[OrderRequest], params={}):
+        raise NotSupported(self.id + ' createSpotOrders() is not supported yet')
+
+    def create_contract_orders(self, orders: List[OrderRequest], params={}):
+        raise NotSupported(self.id + ' createContractOrders() is not supported yet')
+
     def edit_orders(self, orders: List[OrderRequest], params={}):
         raise NotSupported(self.id + ' editOrders() is not supported yet')
 
@@ -6232,6 +6270,12 @@ class Exchange(object):
 
     def cancel_order(self, id: str, symbol: Str = None, params={}):
         raise NotSupported(self.id + ' cancelOrder() is not supported yet')
+
+    def cancel_spot_order(self, id: str, symbol: Str = None, params={}):
+        raise NotSupported(self.id + ' cancelSpotOrder() is not supported yet')
+
+    def cancel_contract_order(self, id: str, symbol: Str = None, params={}):
+        raise NotSupported(self.id + ' cancelContractOrder() is not supported yet')
 
     def cancel_order_with_client_order_id(self, clientOrderId: str, symbol: Str = None, params={}):
         """
@@ -6266,6 +6310,12 @@ class Exchange(object):
 
     def cancel_all_orders(self, symbol: Str = None, params={}):
         raise NotSupported(self.id + ' cancelAllOrders() is not supported yet')
+
+    def cancel_all_spot_orders(self, symbol: Str = None, params={}):
+        raise NotSupported(self.id + ' cancelAllSpotOrders() is not supported yet')
+
+    def cancel_all_contract_orders(self, symbol: Str = None, params={}):
+        raise NotSupported(self.id + ' cancelAllContractOrders() is not supported yet')
 
     def cancel_all_orders_after(self, timeout: Int, params={}):
         raise NotSupported(self.id + ' cancelAllOrdersAfter() is not supported yet')
@@ -6414,6 +6464,9 @@ class Exchange(object):
                 return self.safe_dict(addressStructures, key)
         else:
             raise NotSupported(self.id + ' fetchDepositAddress() is not supported yet')
+
+    def fetch_contract_deposit_address(self, code: str, params={}):
+        raise NotSupported(self.id + ' fetchContractDepositAddress() is not supported yet')
 
     def account(self) -> BalanceAccount:
         return {

@@ -2872,6 +2872,9 @@ class Exchange {
         const res = this.parseToNumeric((value % 1));
         return res === 0;
     }
+    isEmptyString(value) {
+        return !this.valueIsDefined(value) || value === '';
+    }
     safeNumberOmitZero(obj, key, defaultValue = undefined) {
         const value = this.safeString(obj, key);
         const final = this.parseNumber(this.omitZero(value));
@@ -4070,6 +4073,9 @@ class Exchange {
         }
         return reversed;
     }
+    stringToBase16(str) {
+        return '0x' + this.binaryToBase16(this.base64ToBinary(this.stringToBase64(str)));
+    }
     reduceFeesByCurrency(fees) {
         //
         // this function takes a list of fee structures having the following format
@@ -4277,6 +4283,12 @@ class Exchange {
             message = '. If you want to build OHLCV candles from trade executions data, visit https://github.com/ccxt/ccxt/tree/master/examples/ and see "build-ohlcv-bars" file';
         }
         throw new errors.NotSupported(this.id + ' fetchOHLCV() is not supported yet' + message);
+    }
+    async fetchSpotOHLCV(symbol, timeframe = '1m', since = undefined, limit = undefined, params = {}) {
+        throw new errors.NotSupported(this.id + ' fetchSpotOHLCV() is not supported yet');
+    }
+    async fetchContractOHLCV(symbol, timeframe = '1m', since = undefined, limit = undefined, params = {}) {
+        throw new errors.NotSupported(this.id + ' fetchContractOHLCV() is not supported yet');
     }
     async fetchOHLCVWs(symbol, timeframe = '1m', since = undefined, limit = undefined, params = {}) {
         let message = '';
@@ -5143,7 +5155,8 @@ class Exchange {
         return await this.createOrder(symbol, type, side, amount, price, params);
     }
     async editOrderWithClientOrderId(clientOrderId, symbol, type, side, amount = undefined, price = undefined, params = {}) {
-        return await this.editOrder('', symbol, type, side, amount, price, this.extend({ 'clientOrderId': clientOrderId }, params));
+        const extendedParams = this.extend(params, { 'clientOrderId': clientOrderId });
+        return await this.editOrder('', symbol, type, side, amount, price, extendedParams);
     }
     async editOrderWs(id, symbol, type, side, amount = undefined, price = undefined, params = {}) {
         await this.cancelOrderWs(id, symbol);
@@ -5611,11 +5624,17 @@ class Exchange {
     async fetchTickers(symbols = undefined, params = {}) {
         throw new errors.NotSupported(this.id + ' fetchTickers() is not supported yet');
     }
+    async fetchSpotTickers(symbols = undefined, params = {}) {
+        throw new errors.NotSupported(this.id + ' fetchSpotTickers() is not supported yet');
+    }
+    async fetchContractTickers(symbols = undefined, params = {}) {
+        throw new errors.NotSupported(this.id + ' fetchContractTickers() is not supported yet');
+    }
     async fetchMarkPrices(symbols = undefined, params = {}) {
         throw new errors.NotSupported(this.id + ' fetchMarkPrices() is not supported yet');
     }
     async fetchTickersWs(symbols = undefined, params = {}) {
-        throw new errors.NotSupported(this.id + ' fetchTickers() is not supported yet');
+        throw new errors.NotSupported(this.id + ' fetchTickersWs() is not supported yet');
     }
     async fetchOrderBooks(symbols = undefined, limit = undefined, params = {}) {
         throw new errors.NotSupported(this.id + ' fetchOrderBooks() is not supported yet');
@@ -6120,6 +6139,12 @@ class Exchange {
     async createOrders(orders, params = {}) {
         throw new errors.NotSupported(this.id + ' createOrders() is not supported yet');
     }
+    async createSpotOrders(orders, params = {}) {
+        throw new errors.NotSupported(this.id + ' createSpotOrders() is not supported yet');
+    }
+    async createContractOrders(orders, params = {}) {
+        throw new errors.NotSupported(this.id + ' createContractOrders() is not supported yet');
+    }
     async editOrders(orders, params = {}) {
         throw new errors.NotSupported(this.id + ' editOrders() is not supported yet');
     }
@@ -6128,6 +6153,12 @@ class Exchange {
     }
     async cancelOrder(id, symbol = undefined, params = {}) {
         throw new errors.NotSupported(this.id + ' cancelOrder() is not supported yet');
+    }
+    async cancelSpotOrder(id, symbol = undefined, params = {}) {
+        throw new errors.NotSupported(this.id + ' cancelSpotOrder() is not supported yet');
+    }
+    async cancelContractOrder(id, symbol = undefined, params = {}) {
+        throw new errors.NotSupported(this.id + ' cancelContractOrder() is not supported yet');
     }
     /**
      * @method
@@ -6166,6 +6197,12 @@ class Exchange {
     }
     async cancelAllOrders(symbol = undefined, params = {}) {
         throw new errors.NotSupported(this.id + ' cancelAllOrders() is not supported yet');
+    }
+    async cancelAllSpotOrders(symbol = undefined, params = {}) {
+        throw new errors.NotSupported(this.id + ' cancelAllSpotOrders() is not supported yet');
+    }
+    async cancelAllContractOrders(symbol = undefined, params = {}) {
+        throw new errors.NotSupported(this.id + ' cancelAllContractOrders() is not supported yet');
     }
     async cancelAllOrdersAfter(timeout, params = {}) {
         throw new errors.NotSupported(this.id + ' cancelAllOrdersAfter() is not supported yet');
@@ -6328,6 +6365,9 @@ class Exchange {
         else {
             throw new errors.NotSupported(this.id + ' fetchDepositAddress() is not supported yet');
         }
+    }
+    async fetchContractDepositAddress(code, params = {}) {
+        throw new errors.NotSupported(this.id + ' fetchContractDepositAddress() is not supported yet');
     }
     account() {
         return {

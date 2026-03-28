@@ -1395,6 +1395,7 @@ class okx extends okx$1["default"] {
                 // the exchange refers to ERC20 version of Aeternity (AEToken)
                 'AE': 'AET', // https://github.com/ccxt/ccxt/issues/4981
             },
+            'rollingWindowSize': 0.0, // okx always receives rateLimitExceeded with rolling window
         });
     }
     handleMarketTypeAndParams(methodName, market = undefined, params = {}, defaultValue = undefined) {
@@ -1889,7 +1890,18 @@ class okx extends okx$1["default"] {
         //     }
         //
         const dataResponse = this.safeList(response, 'data', []);
-        return this.parseMarkets(dataResponse);
+        const marketsWithoutTest = [];
+        for (let i = 0; i < dataResponse.length; i++) {
+            const data = dataResponse[i];
+            if (this.isSandboxModeEnabled) {
+                const instFamily = this.safeString(data, 'instFamily', '');
+                if (instFamily.startsWith('TEST')) {
+                    continue;
+                }
+            }
+            marketsWithoutTest.push(data);
+        }
+        return this.parseMarkets(marketsWithoutTest);
     }
     /**
      * @method
@@ -6183,7 +6195,12 @@ class okx extends okx$1["default"] {
             initialMarginPercentage = this.parseNumber(Precise["default"].stringDiv(initialMarginString, notionalString, 4));
         }
         else if (initialMarginString === undefined) {
-            initialMarginString = Precise["default"].stringDiv(Precise["default"].stringDiv(Precise["default"].stringMul(contractsAbs, contractSizeString), entryPriceString), leverageString);
+            if (market['linear']) {
+                initialMarginString = Precise["default"].stringMul(initialMarginPercentage, notionalString);
+            }
+            else {
+                initialMarginString = Precise["default"].stringDiv(Precise["default"].stringDiv(Precise["default"].stringMul(contractsAbs, contractSizeString), entryPriceString), leverageString);
+            }
         }
         const rounder = '0.00005'; // round to closest 0.01%
         const maintenanceMarginPercentage = this.parseNumber(Precise["default"].stringDiv(Precise["default"].stringAdd(maintenanceMarginPercentageString, rounder), '1', 4));
@@ -6825,6 +6842,15 @@ class okx extends okx$1["default"] {
             const marketInner = this.safeMarket(instId);
             const currencyId = this.safeString(entry, 'ccy');
             const code = this.safeCurrencyCode(currencyId);
+            const balanceChange = this.safeString(entry, 'balChg');
+            const positionBalanceChange = this.safeString(entry, 'posBalChg');
+            let amount = undefined;
+            if ((balanceChange !== undefined) && (!Precise["default"].stringEq(balanceChange, '0'))) {
+                amount = balanceChange;
+            }
+            else {
+                amount = positionBalanceChange;
+            }
             result.push({
                 'info': entry,
                 'symbol': marketInner['symbol'],
@@ -6832,7 +6858,7 @@ class okx extends okx$1["default"] {
                 'timestamp': timestamp,
                 'datetime': this.iso8601(timestamp),
                 'id': this.safeString(entry, 'billId'),
-                'amount': this.safeNumber(entry, 'balChg'),
+                'amount': this.parseNumber(amount),
             });
         }
         const sorted = this.sortBy(result, 'timestamp');
