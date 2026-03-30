@@ -1135,7 +1135,6 @@ export default class bybit extends Exchange {
                     'ERC20': 'ETH',
                     'TRX': 'TRX',
                     'TRC20': 'TRX',
-                    'TRON': 'TRX',
                     'BSC': 'BSC',
                     'BEP20': 'BSC',
                     'SOL': 'SOL',
