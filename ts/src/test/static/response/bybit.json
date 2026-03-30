@@ -1269,7 +1269,7 @@
                                     }
                                 }
                             },
-                            "OPTIMISM": {
+                            "OP": {
                                 "info": {
                                     "chainType": "OP Mainnet",
                                     "confirmation": "30",
@@ -1285,7 +1285,7 @@
                                     "safeConfirmNumber": "1800"
                                 },
                                 "id": "OP",
-                                "network": "OPTIMISM",
+                                "network": "OP",
                                 "active": true,
                                 "deposit": true,
                                 "withdraw": true,
@@ -2146,7 +2146,7 @@
                                     }
                                 }
                             },
-                            "OPTIMISM": {
+                            "OP": {
                                 "info": {
                                     "chainType": "OP Mainnet",
                                     "confirmation": "30",
@@ -2162,7 +2162,7 @@
                                     "safeConfirmNumber": "1800"
                                 },
                                 "id": "OP",
-                                "network": "OPTIMISM",
+                                "network": "OP",
                                 "active": true,
                                 "deposit": true,
                                 "withdraw": true,
