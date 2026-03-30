@@ -5,36 +5,6 @@ import assert from 'assert';
 import ccxt from '../../../ccxt.js';
 
 
-function helperTestNetworkProtocolCorrector () {
-    const exchange = new ccxt.Exchange ({
-        'id': 'sampleexchange',
-    });
-
-    // for ETH
-    assert (exchange.networkCodeProtocolCorrector ('USDC', 'ERC20') === 'ERC20');
-    assert (exchange.networkCodeProtocolCorrector ('USDC', 'ETH') === 'ERC20');
-    assert (exchange.networkCodeProtocolCorrector ('ETH', 'ERC20') === 'ETH');
-    assert (exchange.networkCodeProtocolCorrector ('ETH', 'ETH') === 'ETH');
-
-    // for TRX
-    assert (exchange.networkCodeProtocolCorrector ('USDC', 'TRC20') === 'TRC20');
-    assert (exchange.networkCodeProtocolCorrector ('USDC', 'TRX') === 'TRC20');
-    assert (exchange.networkCodeProtocolCorrector ('TRX', 'TRC20') === 'TRX');
-    assert (exchange.networkCodeProtocolCorrector ('TRX', 'TRX') === 'TRX');
-
-    // for CRONOS
-    assert (exchange.networkCodeProtocolCorrector ('USDC', 'CRC20') === 'CRC20');
-    assert (exchange.networkCodeProtocolCorrector ('USDC', 'CRONOS') === 'CRC20');
-    assert (exchange.networkCodeProtocolCorrector ('CRO', 'CRC20') === 'CRONOS');
-    assert (exchange.networkCodeProtocolCorrector ('CRO', 'CRONOS') === 'CRONOS');
-
-    // for BTC
-    assert (exchange.networkCodeProtocolCorrector ('MEMECOIN', 'BRC20') === 'BRC20');
-    assert (exchange.networkCodeProtocolCorrector ('MEMECOIN', 'BTC') === 'BRC20');
-    assert (exchange.networkCodeProtocolCorrector ('BTC', 'BRC20') === 'BTC');
-    assert (exchange.networkCodeProtocolCorrector ('BTC', 'BTC') === 'BTC');
-}
-
 function helperTestNetworkCodeToId () {
     // we should conduct tests with such example configuration
     const exchange = new ccxt.Exchange ({
@@ -175,7 +145,7 @@ function helperBatchNetworkTests () {
         const randomNetworkCode = allNetworkCodes[i];
         for (let j = 0; j < allCurrencyCodes.length; j++) {
             const randomCurrencyCode = allCurrencyCodes[j];
-            const result = exchange.networkCodeProtocolCorrector (randomCurrencyCode, randomNetworkCode);
+            const result = exchange.networkCodeToId (randomNetworkCode, randomCurrencyCode);
             for (let k = 0; k < chainMappings.length; k++) {
                 const chainMapping = chainMappings[k];
                 const baseCoin = chainMapping['baseCoin'];
@@ -198,8 +168,6 @@ function helperBatchNetworkTests () {
 
 
 function testNetworkMethods () {
-    helperTestNetworkProtocolCorrector ();
-    // below two methods have same options
     helperTestNetworkCodeToId ();
     helperTestNetworkIdToCode ();
     helperBatchNetworkTests ();
