@@ -11,7 +11,7 @@
         "default": "./js/ccxt.js"
       },
       "require": {
-        "types": "./index.d.ts",
+        "types": "./index.d.cts",
         "default": "./dist/ccxt.cjs"
       }
     }
