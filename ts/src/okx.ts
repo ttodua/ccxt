@@ -1080,7 +1080,6 @@ export default class okx extends Exchange {
                     'BRC20': 'BRC20',
                     'ETH': 'ERC20',
                     'ERC20': 'ERC20',
-                    'TRON': 'TRC20',
                     'TRX': 'TRC20',
                     'TRC20': 'TRC20',
                     'CRC20': 'Crypto',
