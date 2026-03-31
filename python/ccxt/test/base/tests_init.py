@@ -15,6 +15,7 @@ sys.path.append(root)
 from ccxt.base.decimal_to_precision import decimal_to_precision  # noqa E402
 from ccxt.base.decimal_to_precision import number_to_string  # noqa E402
 from ccxt.base.precise import Precise  # noqa E402
+from ccxt.test.base.test_aggregate import test_aggregate  # noqa E402
 from ccxt.test.base.test_decimal_to_precision import test_decimal_to_precision  # noqa E402
 from ccxt.test.base.test_binary_to_base64 import test_binary_to_base64  # noqa E402
 from ccxt.test.base.test_base64_to_binary import test_base64_to_binary  # noqa E402
@@ -71,6 +72,7 @@ async def base_tests_init():
     await test_language_specific()
     test_constants()
     test_after_constructor()
+    test_aggregate()
     test_extend()
     test_deep_extend()
     test_cryptography()

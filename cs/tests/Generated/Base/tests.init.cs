@@ -12,6 +12,7 @@ public partial class BaseTest
             await testLanguageSpecific();
             testConstants();
             testAfterConstructor();
+            testAggregate();
             testExtend();
             testDeepExtend();
             testCryptography();
