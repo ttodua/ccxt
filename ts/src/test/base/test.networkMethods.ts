@@ -143,7 +143,7 @@ function helperBatchNetworkTests () {
         const randomNetworkCode = allNetworkCodes[i];
         for (let j = 0; j < allCurrencyCodes.length; j++) {
             const randomCurrencyCode = allCurrencyCodes[j];
-            const result = exchange.networkCodeToId (randomNetworkCode, randomCurrencyCode);
+            const result = exchange.networkIdToCode (randomNetworkCode, randomCurrencyCode);
             const defKeys = Object.keys (chainMappings);
             for (let k = 0; k < defKeys.length; k++) {
                 const chainKey = defKeys[k];
