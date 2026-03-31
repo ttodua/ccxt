@@ -1,6 +1,6 @@
 
 
-
+import testAggregate from './test.aggregate.js';
 import testDecimalToPrecision from './test.decimalToPrecision.js';
 import testBinaryToBase64 from './test.binaryToBase64.js';
 import testBase64ToBinary from './test.base64ToBinary.js';
@@ -57,6 +57,7 @@ async function baseTestsInit () {
     await testLanguageSpecific ();
     testConstants ();
     testAfterConstructor ();
+    testAggregate ();
     testExtend ();
     testDeepExtend ();
     testCryptography ();
