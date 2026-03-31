@@ -135,7 +135,7 @@ function helperBatchNetworkTests () {
     // check batch
     //
     const exchangeDefaultOpts = exchange.getDefaultOptions ();
-    const chainMappings = exchangeDefaultOpts['chainMappings'];
+    const chainMappings = exchangeDefaultOpts['defaultNetworkCodeReplacements'];
 
     const allNetworkCodes = helperSampleNetworkCodes ();
     const allCurrencyCodes = helperSampleCurrencyCodes ();
@@ -144,12 +144,17 @@ function helperBatchNetworkTests () {
         for (let j = 0; j < allCurrencyCodes.length; j++) {
             const randomCurrencyCode = allCurrencyCodes[j];
             const result = exchange.networkCodeToId (randomNetworkCode, randomCurrencyCode);
-            for (let k = 0; k < chainMappings.length; k++) {
-                const chainMapping = chainMappings[k];
-                const baseCoin = chainMapping['baseCoin'];
-                const primaryNetworkCode = chainMapping['primary'];
-                const secondaryNetworkCode = chainMapping['secondary'];
-                const msg = 'network protocol test failed for networkCode:' + randomNetworkCode + ' & currencyCode: ' + randomCurrencyCode + ', result: ' + result + ', expected: ';
+            const defKeys = Object.keys (chainMappings);
+            for (let k = 0; k < defKeys.length; k++) {
+                const chainKey = defKeys[k];
+                const chainMapping = chainMappings[chainKey];
+                const chainMappingKeys = Object.keys (chainMapping);
+                const firstKey = chainMappingKeys[0];
+                const firstValue = chainMapping[firstKey];
+                const baseCoin = chainKey;
+                const primaryNetworkCode = firstValue;
+                const secondaryNetworkCode = firstKey;
+                const msg = 'network protocol test failed for currencyCode:' + randomCurrencyCode + ' & networkCode: ' + randomNetworkCode + ', result: ' + result + ', expected: ';
                 if (randomNetworkCode === primaryNetworkCode && randomCurrencyCode === baseCoin) {
                     assert (result === primaryNetworkCode, msg + primaryNetworkCode);
                 } else if (randomNetworkCode === primaryNetworkCode && randomCurrencyCode !== baseCoin) {
