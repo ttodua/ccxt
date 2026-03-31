@@ -531,11 +531,7 @@ public partial class Exchange
             return 0;
         }
 
-        if (value is byte[] byteArray)
-        {
-            return byteArray.Length;
-        }
-        else if (value is (IList<object>))
+        if (value is (IList<object>))
         {
             return ((IList<object>)value).Count;
         }
