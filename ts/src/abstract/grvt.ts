@@ -10,6 +10,7 @@ import { Exchange as _Exchange } from '../base/Exchange.js';
 
 interface Exchange {
     privateEdgePostAuthApiKeyLogin (params?: {}): Promise<implicitReturnType>;
+    privateEdgePostAuthWalletLogin (params?: {}): Promise<implicitReturnType>;
     publicMarketPostFullV1Instrument (params?: {}): Promise<implicitReturnType>;
     publicMarketPostFullV1AllInstruments (params?: {}): Promise<implicitReturnType>;
     publicMarketPostFullV1Instruments (params?: {}): Promise<implicitReturnType>;

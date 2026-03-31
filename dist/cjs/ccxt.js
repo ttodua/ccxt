@@ -9,7 +9,6 @@ var Precise = require('./src/base/Precise.js');
 var functions = require('./src/base/functions.js');
 var errors = require('./src/base/errors.js');
 var aftermath = require('./src/aftermath.js');
-var alp = require('./src/alp.js');
 var alpaca = require('./src/alpaca.js');
 var apex = require('./src/apex.js');
 var arkham = require('./src/arkham.js');
@@ -63,7 +62,6 @@ var coinspot = require('./src/coinspot.js');
 var cryptocom = require('./src/cryptocom.js');
 var cryptomus = require('./src/cryptomus.js');
 var deepcoin = require('./src/deepcoin.js');
-var defx = require('./src/defx.js');
 var delta = require('./src/delta.js');
 var deribit = require('./src/deribit.js');
 var derive = require('./src/derive.js');
@@ -108,7 +106,6 @@ var paradex = require('./src/paradex.js');
 var paymium = require('./src/paymium.js');
 var phemex = require('./src/phemex.js');
 var poloniex = require('./src/poloniex.js');
-var timex = require('./src/timex.js');
 var tokocrypto = require('./src/tokocrypto.js');
 var toobit = require('./src/toobit.js');
 var upbit = require('./src/upbit.js');
@@ -160,7 +157,6 @@ var coinex$1 = require('./src/pro/coinex.js');
 var coinone$1 = require('./src/pro/coinone.js');
 var cryptocom$1 = require('./src/pro/cryptocom.js');
 var deepcoin$1 = require('./src/pro/deepcoin.js');
-var defx$1 = require('./src/pro/defx.js');
 var deribit$1 = require('./src/pro/deribit.js');
 var derive$1 = require('./src/pro/derive.js');
 var dydx$1 = require('./src/pro/dydx.js');
@@ -204,11 +200,10 @@ var xt$1 = require('./src/pro/xt.js');
 
 //-----------------------------------------------------------------------------
 // this is updated by vss.js when building
-const version = '4.5.43';
+const version = '4.5.46';
 Exchange["default"].ccxtVersion = version;
 const exchanges = {
     'aftermath': aftermath["default"],
-    'alp': alp["default"],
     'alpaca': alpaca["default"],
     'apex': apex["default"],
     'arkham': arkham["default"],
@@ -262,7 +257,6 @@ const exchanges = {
     'cryptocom': cryptocom["default"],
     'cryptomus': cryptomus["default"],
     'deepcoin': deepcoin["default"],
-    'defx': defx["default"],
     'delta': delta["default"],
     'deribit': deribit["default"],
     'derive': derive["default"],
@@ -307,7 +301,6 @@ const exchanges = {
     'paymium': paymium["default"],
     'phemex': phemex["default"],
     'poloniex': poloniex["default"],
-    'timex': timex["default"],
     'tokocrypto': tokocrypto["default"],
     'toobit': toobit["default"],
     'upbit': upbit["default"],
@@ -361,7 +354,6 @@ const pro = {
     'coinone': coinone$1["default"],
     'cryptocom': cryptocom$1["default"],
     'deepcoin': deepcoin$1["default"],
-    'defx': defx$1["default"],
     'deribit': deribit$1["default"],
     'derive': derive$1["default"],
     'dydx': dydx$1["default"],
@@ -455,7 +447,6 @@ exports.RestrictedLocation = errors.RestrictedLocation;
 exports.UnsubscribeError = errors.UnsubscribeError;
 exports.errors = errors;
 exports.aftermath = aftermath["default"];
-exports.alp = alp["default"];
 exports.alpaca = alpaca["default"];
 exports.apex = apex["default"];
 exports.arkham = arkham["default"];
@@ -509,7 +500,6 @@ exports.coinspot = coinspot["default"];
 exports.cryptocom = cryptocom["default"];
 exports.cryptomus = cryptomus["default"];
 exports.deepcoin = deepcoin["default"];
-exports.defx = defx["default"];
 exports.delta = delta["default"];
 exports.deribit = deribit["default"];
 exports.derive = derive["default"];
@@ -554,7 +544,6 @@ exports.paradex = paradex["default"];
 exports.paymium = paymium["default"];
 exports.phemex = phemex["default"];
 exports.poloniex = poloniex["default"];
-exports.timex = timex["default"];
 exports.tokocrypto = tokocrypto["default"];
 exports.toobit = toobit["default"];
 exports.upbit = upbit["default"];

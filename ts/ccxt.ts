@@ -40,14 +40,13 @@ import {BaseError, ExchangeError, AuthenticationError, PermissionDenied, Account
 //-----------------------------------------------------------------------------
 // this is updated by vss.js when building
 
-const version = '4.5.43';
+const version = '4.5.46';
 
 (Exchange as any).ccxtVersion = version
 
 //-----------------------------------------------------------------------------
 
 import aftermath from  './src/aftermath.js'
-import alp from  './src/alp.js'
 import alpaca from  './src/alpaca.js'
 import apex from  './src/apex.js'
 import arkham from  './src/arkham.js'
@@ -101,7 +100,6 @@ import coinspot from  './src/coinspot.js'
 import cryptocom from  './src/cryptocom.js'
 import cryptomus from  './src/cryptomus.js'
 import deepcoin from  './src/deepcoin.js'
-import defx from  './src/defx.js'
 import delta from  './src/delta.js'
 import deribit from  './src/deribit.js'
 import derive from  './src/derive.js'
@@ -146,7 +144,6 @@ import paradex from  './src/paradex.js'
 import paymium from  './src/paymium.js'
 import phemex from  './src/phemex.js'
 import poloniex from  './src/poloniex.js'
-import timex from  './src/timex.js'
 import tokocrypto from  './src/tokocrypto.js'
 import toobit from  './src/toobit.js'
 import upbit from  './src/upbit.js'
@@ -201,7 +198,6 @@ import coinexPro from  './src/pro/coinex.js'
 import coinonePro from  './src/pro/coinone.js'
 import cryptocomPro from  './src/pro/cryptocom.js'
 import deepcoinPro from  './src/pro/deepcoin.js'
-import defxPro from  './src/pro/defx.js'
 import deribitPro from  './src/pro/deribit.js'
 import derivePro from  './src/pro/derive.js'
 import dydxPro from  './src/pro/dydx.js'
@@ -245,7 +241,6 @@ import xtPro from  './src/pro/xt.js'
 
 const exchanges = {
     'aftermath':              aftermath,
-    'alp':                    alp,
     'alpaca':                 alpaca,
     'apex':                   apex,
     'arkham':                 arkham,
@@ -299,7 +294,6 @@ const exchanges = {
     'cryptocom':              cryptocom,
     'cryptomus':              cryptomus,
     'deepcoin':               deepcoin,
-    'defx':                   defx,
     'delta':                  delta,
     'deribit':                deribit,
     'derive':                 derive,
@@ -344,7 +338,6 @@ const exchanges = {
     'paymium':                paymium,
     'phemex':                 phemex,
     'poloniex':               poloniex,
-    'timex':                  timex,
     'tokocrypto':             tokocrypto,
     'toobit':                 toobit,
     'upbit':                  upbit,
@@ -399,7 +392,6 @@ const pro = {
     'coinone':                coinonePro,
     'cryptocom':              cryptocomPro,
     'deepcoin':               deepcoinPro,
-    'defx':                   defxPro,
     'deribit':                deribitPro,
     'derive':                 derivePro,
     'dydx':                   dydxPro,
@@ -586,7 +578,6 @@ export {
     CrossBorrowRates,
     LeverageTiers,
     aftermath,
-    alp,
     alpaca,
     apex,
     arkham,
@@ -640,7 +631,6 @@ export {
     cryptocom,
     cryptomus,
     deepcoin,
-    defx,
     delta,
     deribit,
     derive,
@@ -685,7 +675,6 @@ export {
     paymium,
     phemex,
     poloniex,
-    timex,
     tokocrypto,
     toobit,
     upbit,

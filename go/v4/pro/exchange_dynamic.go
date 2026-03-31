@@ -163,10 +163,6 @@ func DynamicallyCreateInstance(exchangeId string, exchangeArgs map[string]interf
         deepcoinItf := NewDeepcoinCore()
         deepcoinItf.Init(exchangeArgs)
         return deepcoinItf, true
-    case "defx":
-        defxItf := NewDefxCore()
-        defxItf.Init(exchangeArgs)
-        return defxItf, true
     case "deribit":
         deribitItf := NewDeribitCore()
         deribitItf.Init(exchangeArgs)

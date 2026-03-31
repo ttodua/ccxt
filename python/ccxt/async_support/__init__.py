@@ -4,7 +4,7 @@
 
 # -----------------------------------------------------------------------------
 
-__version__ = '4.5.43'
+__version__ = '4.5.46'
 
 # -----------------------------------------------------------------------------
 
@@ -65,7 +65,6 @@ from ccxt.base.errors import error_hierarchy                          # noqa: F4
 
 
 from ccxt.async_support.aftermath import aftermath                              # noqa: F401
-from ccxt.async_support.alp import alp                                          # noqa: F401
 from ccxt.async_support.alpaca import alpaca                                    # noqa: F401
 from ccxt.async_support.apex import apex                                        # noqa: F401
 from ccxt.async_support.arkham import arkham                                    # noqa: F401
@@ -119,7 +118,6 @@ from ccxt.async_support.coinspot import coinspot                                
 from ccxt.async_support.cryptocom import cryptocom                              # noqa: F401
 from ccxt.async_support.cryptomus import cryptomus                              # noqa: F401
 from ccxt.async_support.deepcoin import deepcoin                                # noqa: F401
-from ccxt.async_support.defx import defx                                        # noqa: F401
 from ccxt.async_support.delta import delta                                      # noqa: F401
 from ccxt.async_support.deribit import deribit                                  # noqa: F401
 from ccxt.async_support.derive import derive                                    # noqa: F401
@@ -164,7 +162,6 @@ from ccxt.async_support.paradex import paradex                                  
 from ccxt.async_support.paymium import paymium                                  # noqa: F401
 from ccxt.async_support.phemex import phemex                                    # noqa: F401
 from ccxt.async_support.poloniex import poloniex                                # noqa: F401
-from ccxt.async_support.timex import timex                                      # noqa: F401
 from ccxt.async_support.tokocrypto import tokocrypto                            # noqa: F401
 from ccxt.async_support.toobit import toobit                                    # noqa: F401
 from ccxt.async_support.upbit import upbit                                      # noqa: F401
@@ -180,7 +177,6 @@ from ccxt.async_support.zonda import zonda                                      
 
 exchanges = [
     'aftermath',
-    'alp',
     'alpaca',
     'apex',
     'arkham',
@@ -234,7 +230,6 @@ exchanges = [
     'cryptocom',
     'cryptomus',
     'deepcoin',
-    'defx',
     'delta',
     'deribit',
     'derive',
@@ -279,7 +274,6 @@ exchanges = [
     'paymium',
     'phemex',
     'poloniex',
-    'timex',
     'tokocrypto',
     'toobit',
     'upbit',

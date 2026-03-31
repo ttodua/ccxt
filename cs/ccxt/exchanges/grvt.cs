@@ -624,7 +624,7 @@ public partial class grvt : Exchange
             { "signature", this.defaultSignature() },
         };
         request = this.createSignedRequest(request, "EIP712_WALLETLOGIN_TYPE");
-        object response = await ((Task<object>)callDynamically(this, "privateEdgePostAuthWalletLogin", new object[] { this.extend(request, parameters) }));
+        object response = await this.privateEdgePostAuthWalletLogin(this.extend(request, parameters));
         //
         //    {
         //        "location": "",
@@ -751,7 +751,7 @@ public partial class grvt : Exchange
         //            ...
         //
         object promises = new List<object>() {marketsPromise};
-        if (isTrue(isTrue(!isEqual(this.privateKey, null)) || isTrue(!isEqual(this.apiKey, null))))
+        if (isTrue(!isTrue(this.isEmptyString(this.apiKey)) || !isTrue(this.isEmptyString(this.privateKey))))
         {
             ((IList<object>)promises).Add(this.signIn());
         }
@@ -869,7 +869,10 @@ public partial class grvt : Exchange
     public async override Task<object> fetchCurrencies(object parameters = null)
     {
         parameters ??= new Dictionary<string, object>();
-        object response = await this.publicMarketPostFullV1Currency(parameters);
+        object request = new Dictionary<string, object>() {
+            { "", "" },
+        }; // workaround for php [] empty arr
+        object response = await this.publicMarketPostFullV1Currency(request);
         //
         //    {
         //        "result": [

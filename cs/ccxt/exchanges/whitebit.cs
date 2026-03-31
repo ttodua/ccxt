@@ -4271,7 +4271,7 @@ public partial class whitebit : Exchange
         {
             ((IDictionary<string,object>)request)["limit"] = limit;
         }
-        object response = await ((Task<object>)callDynamically(this, "v4PublicGetFundingHistoryMarket", new object[] { this.extend(request, parameters) }));
+        object response = await this.v4PublicGetFundingHistoryMarket(this.extend(request, parameters));
         //
         //     [
         //         {
