@@ -10,6 +10,7 @@ namespace ccxt;
 use React\Async;
 use React\Promise;
 use \ccxt\Precise;
+include_once __DIR__ . '/test_aggregate.php';
 include_once __DIR__ . '/test_decimal_to_precision.php';
 include_once __DIR__ . '/test_binary_to_base64.php';
 include_once __DIR__ . '/test_base64_to_binary.php';
@@ -67,6 +68,7 @@ function base_tests_init() {
         Async\await(test_language_specific());
         test_constants();
         test_after_constructor();
+        test_aggregate();
         test_extend();
         test_deep_extend();
         test_cryptography();
