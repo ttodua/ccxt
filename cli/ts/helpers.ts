@@ -12,7 +12,8 @@ const log = ololog.configure ({ 'locate': false }).unlimited;
 let add_static_result;
 
 try {
-    add_static_result = (await import ('../../utils/update-static-tests-data.js')).add_static_result;
+    // @ts-ignore
+    add_static_result = (await import ('../../utils/update-static-tests-data')).add_static_result;
 } catch (e) {
     // noop
 }
@@ -27,7 +28,8 @@ try {
         // local ccxt project
         ccxt = await (Function ('return import("../../ts/ccxt")') ());
     } catch (ee) {
-        log.error ('Neither a local nor a global ccxt installation was detected, please do `npm i` first');
+        log.error (ee);
+        log.error ('Neither a local installation nor a global CCXT installation was detected, make `npm i` first, Also make sure your local ccxt version does not contain any syntax errors.');
         process.exit (1);
     }
 }
@@ -87,10 +89,14 @@ function injectMissingUndefined (fn, args) {
         const paramsObj = args[args.length - 1];
         args.pop ();
         const newArgsArray = args;
+        const isPartialFunction = fn.toString ().indexOf ('(params = {}, context = {})');
         for (let j = 0; j < missingParams; j++) {
             newArgsArray.push (undefined);
         }
         newArgsArray.push (paramsObj);
+        if (isPartialFunction) {
+            newArgsArray.reverse ();
+        }
         args = newArgsArray;
     }
     return args;
@@ -405,6 +411,8 @@ function setNoSend (exchange: any) {
     return exchange;
 }
 
+// ----------------------------------------------------------------------------
+
 /**
  *
  * @param exchange
@@ -420,7 +428,7 @@ function parseMethodArgs (exchange, params, methodName, cliOptions, inject = tru
             ? exchange.parse8601 (s)
             : s))
         .map ((s) => (() => {
-            if (s.match (/^\d+$/g)) return s < Number.MAX_SAFE_INTEGER ? Number (s) : s;
+            if (typeof s === 'string' && s.match (/^\d+$/g)) return s < Number.MAX_SAFE_INTEGER ? Number (s) : s;
             try {
                 return eval ('(() => (' + s + ')) ()');
             } catch (e) {
@@ -456,11 +464,12 @@ async function loadSettingsAndCreateExchange (
 
     if (fs.existsSync (keysGlobal)) {
         allSettings = JSON.parse (fs.readFileSync (keysGlobal).toString ());
-    } else if (fs.existsSync (keysLocal)) {
-        allSettings = JSON.parse (fs.readFileSync (keysLocal).toString ());
-    } else {
-    // log ((`( Note, CCXT CLI is being loaded without api keys, because ${keysLocal} does not exist.  You can see the sample at https://github.com/ccxt/ccxt/blob/master/keys.json )` as any).yellow);
     }
+    if (fs.existsSync (keysLocal)) {
+        const localSettings = JSON.parse (fs.readFileSync (keysLocal).toString ());
+        allSettings = { ...allSettings, ...localSettings };
+    }
+    // log ((`( Note, CCXT CLI is being loaded without api keys, because ${keysLocal} does not exist.  You can see the sample at https://github.com/ccxt/ccxt/blob/master/keys.json )` as any).yellow);
 
     const exchangeSettings = getExchangeSettings (exchangeId);
 
@@ -515,6 +524,8 @@ async function loadSettingsAndCreateExchange (
         }
         if (cliOptions.sandbox || cliOptions.testnet) {
             exchange.setSandboxMode (true);
+        } else if (cliOptions.demo) {
+            exchange.enableDemoTrading (true);
         }
     } catch (e) {
         log.red (e);
