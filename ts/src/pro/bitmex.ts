@@ -46,10 +46,6 @@ export default class bitmex extends bitmexRest {
                 'watchOrderBookLevel': 'orderBookL2', // 'orderBookL2' = L2 full order book, 'orderBookL2_25' = L2 top 25, 'orderBook10' L3 top 10
                 'tradesLimit': 1000,
                 'OHLCVLimit': 1000,
-                'wsOHLCV': {
-                    // 'useOpenTimestamp': true, // todo
-                    'autocorrectOpenPrice': true,
-                },
             },
             'exceptions': {
                 'ws': {
@@ -1489,7 +1485,7 @@ export default class bitmex extends bitmexRest {
             const market = this.safeMarket (marketId);
             const symbol = market['symbol'];
             const messageHash = table + ':' + market['id'];
-            const result = [
+            const initialCandle = [
                 this.parse8601 (this.safeString (candle, 'timestamp')) - duration * 1000,
                 this.safeFloat (candle, 'open'),
                 this.safeFloat (candle, 'high'),
@@ -1497,6 +1493,7 @@ export default class bitmex extends bitmexRest {
                 this.safeFloat (candle, 'close'),
                 this.safeFloat (candle, 'volume'),
             ];
+            const result = this.changeCandlesOpenToHighLow ([ initialCandle ])[0];
             this.ohlcvs[symbol] = this.safeValue (this.ohlcvs, symbol, {});
             let stored = this.safeValue (this.ohlcvs[symbol], timeframe);
             if (stored === undefined) {
@@ -1504,8 +1501,7 @@ export default class bitmex extends bitmexRest {
                 stored = new ArrayCacheByTimestamp (limit);
                 this.ohlcvs[symbol][timeframe] = stored;
             }
-            const resultCorrected = this.fixCandlesHL ([ result ], 'wsOHLCV'); // pass only 1 item
-            stored.append (resultCorrected[0]);
+            stored.append (result);
             results[messageHash] = stored;
         }
         const messageHashes = Object.keys (results);
