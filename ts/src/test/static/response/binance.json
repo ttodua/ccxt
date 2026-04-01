@@ -2281,7 +2281,7 @@
                                     }
                                 }
                             },
-                            "OPTIMISM": {
+                            "OP": {
                                 "info": {
                                     "network": "OPTIMISM",
                                     "coin": "USDT",
@@ -2312,7 +2312,7 @@
                                     "contractAddress": "0x94b008aa00579c1307b0ef2c499ad98a8ce58e58"
                                 },
                                 "id": "OPTIMISM",
-                                "network": "OPTIMISM",
+                                "network": "OP",
                                 "active": true,
                                 "deposit": true,
                                 "withdraw": true,
@@ -3257,7 +3257,7 @@
                                     }
                                 }
                             },
-                            "OPTIMISM": {
+                            "OP": {
                                 "info": {
                                     "network": "OPTIMISM",
                                     "coin": "ETH",
@@ -3287,7 +3287,7 @@
                                     "contractAddressUrl": "https://optimistic.etherscan.io/token/"
                                 },
                                 "id": "OPTIMISM",
-                                "network": "OPTIMISM",
+                                "network": "OP",
                                 "active": true,
                                 "deposit": true,
                                 "withdraw": true,
