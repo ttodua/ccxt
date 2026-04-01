@@ -6651,6 +6651,18 @@ func WithFetchContractWithdrawalsParams(params map[string]any) FetchContractWith
 	}
 }
 
+type TransferClassicOptionsStruct struct {
+	Params *map[string]interface{}
+}
+
+type TransferClassicOptions func(opts *TransferClassicOptionsStruct)
+
+func WithTransferClassicParams(params map[string]interface{}) TransferClassicOptions {
+	return func(opts *TransferClassicOptionsStruct) {
+		opts.Params = &params
+	}
+}
+
 type FetchBorrowRateHistoriesOptionsStruct struct {
 	Codes  *any
 	Since  *int64

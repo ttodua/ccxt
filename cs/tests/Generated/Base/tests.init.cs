@@ -12,10 +12,12 @@ public partial class BaseTest
             await testLanguageSpecific();
             testConstants();
             testAfterConstructor();
+            testAggregate();
             testExtend();
             testDeepExtend();
             testCryptography();
             testBinaryToBase64();
+            testBase64ToBinary();
             testDatetime();
             testDecimalToPrecision();
             testCapitalize();
@@ -23,10 +25,13 @@ public partial class BaseTest
             testPrecise();
             testSafeMethods();
             testSafeTicker();
+            testToArray();
             testJson();
             testSortBy();
             testSum();
             testUrlencodeBase64();
+            testStringToBase64();
+            testUrlencode();
             testOmit();
             testGroupBy();
             testIndexBy();
@@ -34,10 +39,14 @@ public partial class BaseTest
             testFilterBy();
             testHandleMethods();
             testRemoveRepeatedElementsFromArray();
+            testIsEmpty();
             testUrlencodeWithArrayRepeat();
             testParsePrecision();
             testPrecisionFromString();
+            testTimeframes();
             testStrip();
+            testRawencode();
+            testStringToBase16();
             testExtractParams();
             testArrayConcat();
             testArraysConcat();
@@ -51,5 +60,6 @@ public partial class BaseTest
             await testSleep();
             testIo();
             testIsJsonEncodedObject();
+            testEncodeDecode();
         }
 }

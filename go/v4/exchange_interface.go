@@ -174,7 +174,10 @@ type ICoreExchange interface {
 	FetchLedgerEntry(id any, optionalArgs ...any) <-chan any
 	FetchFundingRateHistory(optionalArgs ...any) <-chan any
 	FetchMyTrades(optionalArgs ...any) <-chan any
+	FetchDepositAddressesByNetwork(code any, optionalArgs ...any) <-chan any
 	FetchOpenInterestHistory(symbol any, optionalArgs ...any) <-chan any
+	FetchOpenInterest(symbol any, optionalArgs ...any) <-chan any
+	FetchOpenInterests(optionalArgs ...any) <-chan any
 	FetchOrderBooks(optionalArgs ...any) <-chan any
 	FetchTickers(optionalArgs ...any) <-chan any
 	FetchTrades(symbol any, optionalArgs ...any) <-chan any
@@ -411,6 +414,9 @@ type IDerivedExchange interface {
 	ParseWsTrade(trade any, optionalArgs ...any) any
 	FetchPositionsADLRank(optionalArgs ...any) <-chan any
 	ParseADLRank(info any, optionalArgs ...any) any
+	FetchDepositAddressesByNetwork(code any, optionalArgs ...any) <-chan any
+	FetchOpenInterest(symbol any, optionalArgs ...any) <-chan any
+	FetchOpenInterests(optionalArgs ...any) <-chan any
 }
 
 type Describer interface {

@@ -46,11 +46,11 @@ use Lighter\Signer;
 
 use Exception;
 
-$version = '4.5.44';
+$version = '4.5.46';
 
 class Exchange extends \ccxt\Exchange {
 
-    const VERSION = '4.5.44';
+    const VERSION = '4.5.46';
 
     public $browser;
     public $marketsLoading = null;
@@ -2829,6 +2829,10 @@ class Exchange extends \ccxt\Exchange {
             }
         }
         return $reversed;
+    }
+
+    public function string_to_base16($str) {
+        return '0x' . bin2hex(base64_decode(base64_encode($str)));
     }
 
     public function reduce_fees_by_currency($fees) {
