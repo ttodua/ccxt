@@ -13,10 +13,6 @@ func DynamicallyCreateInstance(exchangeId string, exchangeArgs map[string]any) (
 		aftermathItf := NewAftermathCore()
 		aftermathItf.Init(exchangeArgs)
 		return aftermathItf, true
-	case "alp":
-		alpItf := NewAlpCore()
-		alpItf.Init(exchangeArgs)
-		return alpItf, true
 	case "alpaca":
 		alpacaItf := NewAlpacaCore()
 		alpacaItf.Init(exchangeArgs)

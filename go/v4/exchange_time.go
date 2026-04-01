@@ -122,7 +122,7 @@ func (this *Exchange) Ymdhms(ts any, args ...any) string {
 	if ts == nil {
 		return ""
 	}
-	startdatetime := ts.(int64)
+	startdatetime := ParseInt(ts)
 	date := time.Unix(0, startdatetime*int64(time.Millisecond)).UTC()
 	return date.Format("2006-01-02" + infix.(string) + "15:04:05")
 }
@@ -136,8 +136,8 @@ func (this *Exchange) Yyyymmdd(ts any, args ...any) string {
 	if ts == nil {
 		return ""
 	}
-	startdatetime := ts.(int64)
-	date := time.Unix(0, startdatetime*int64(time.Millisecond))
+	startdatetime := ParseInt(ts)
+	date := time.Unix(0, startdatetime*int64(time.Millisecond)).UTC()
 	return date.Format("2006" + infix.(string) + "01" + infix.(string) + "02")
 }
 
@@ -150,8 +150,8 @@ func (this *Exchange) Yymmdd(ts any, args ...any) string {
 	if ts == nil {
 		return ""
 	}
-	startdatetime := ts.(int64)
-	date := time.Unix(0, startdatetime*int64(time.Millisecond))
+	startdatetime := ParseInt(ts)
+	date := time.Unix(0, startdatetime*int64(time.Millisecond)).UTC()
 	return date.Format("06" + infix.(string) + "01" + infix.(string) + "02")
 }
 
@@ -164,8 +164,8 @@ func (this *Exchange) Ymd(ts any, args ...any) string {
 	if ts == nil {
 		return ""
 	}
-	startdatetime := ts.(int64)
-	date := time.Unix(0, startdatetime*int64(time.Millisecond))
+	startdatetime := ParseInt(ts)
+	date := time.Unix(0, startdatetime*int64(time.Millisecond)).UTC()
 	return date.Format("2006" + infix.(string) + "01" + infix.(string) + "02")
 }
 
