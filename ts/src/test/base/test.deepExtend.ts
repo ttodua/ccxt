@@ -44,8 +44,15 @@ function testDeepExtend () {
         "other2": "y",
     };
 
+    const clonedObj1 = exchange.extend ({}, obj1);
+    const clonedObj2 = exchange.extend ({}, obj2);
+
     // deepExtend
     const deepExtended = exchange.deepExtend (obj1, obj2);
+    // check obj1 & obj2 for immutability
+    testSharedMethods.assertDeepEqual (exchange, undefined, 'testDeepExtend', obj1, clonedObj1);
+    testSharedMethods.assertDeepEqual (exchange, undefined, 'testDeepExtend', obj2, clonedObj2);
+    //
     const compareTo = {
         "a": 2,
         "b": [ 3, 4 ],
@@ -67,8 +74,6 @@ function testDeepExtend () {
         "other1": "x",
         "other2": "y",
     };
-    // todo: results are different across langs.
-    // to avoid delay to this PR, I comment out this now, but will return to this after this PR merged
     testSharedMethods.assertDeepEqual (exchange, undefined, 'testDeepExtend', deepExtended, compareTo);
 }
 
