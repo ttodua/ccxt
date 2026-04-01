@@ -4,6 +4,35 @@ import assert from 'assert';
 import ccxt from '../../../ccxt.js';
 import testSharedMethods from '../Exchange/base/test.sharedMethods.js';
 
+
+function helperTestDeepExtendImmutability () {
+    // todo: sandbox for real exchanges
+    const opts = {
+        'id': 'sampleexchange',
+        'options': {
+            'sandbox': false,
+        },
+        'urls': {
+            'api': {
+                'public': 'https://example.com'
+            },
+            'test': {
+                'public': 'https://testnet.org'
+            },
+        }
+    };
+    //
+    // CASE A: when sandbox is not enabled
+    //
+    const exchange3 = new ccxt.Exchange (opts);
+    exchange3.setSandboxMode (true);
+    opts['options']['sandbox'] = true;
+    const exchange4 = new ccxt.Exchange (opts);
+    exchange4.setSandboxMode (false);
+    assert (exchange4.urls['api']['public'] === 'https://example.com');
+    assert (exchange4.urls['test']['public'] === 'https://testnet.org');
+}
+
 function testDeepExtend () {
 
     const exchange = new ccxt.Exchange ({
@@ -44,15 +73,8 @@ function testDeepExtend () {
         "other2": "y",
     };
 
-    const clonedObj1 = exchange.extend ({}, obj1);
-    const clonedObj2 = exchange.extend ({}, obj2);
-
     // deepExtend
     const deepExtended = exchange.deepExtend (obj1, obj2);
-    // check obj1 & obj2 for immutability
-    testSharedMethods.assertDeepEqual (exchange, undefined, 'testDeepExtend', obj1, clonedObj1);
-    testSharedMethods.assertDeepEqual (exchange, undefined, 'testDeepExtend', obj2, clonedObj2);
-    //
     const compareTo = {
         "a": 2,
         "b": [ 3, 4 ],
@@ -75,6 +97,9 @@ function testDeepExtend () {
         "other2": "y",
     };
     testSharedMethods.assertDeepEqual (exchange, undefined, 'testDeepExtend', deepExtended, compareTo);
+
+    // test against immutability
+    helperTestDeepExtendImmutability ();
 }
 
 export default testDeepExtend;
