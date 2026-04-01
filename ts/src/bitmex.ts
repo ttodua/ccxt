@@ -1709,7 +1709,15 @@ export default class bitmex extends Exchange {
         //         {"timestamp":"2015-09-25T13:40:00.000Z","symbol":"XBTUSD","open":237.45,"high":237.45,"low":237.45,"close":237.45,"trades":0,"volume":0,"vwap":null,"lastSize":null,"turnover":0,"homeNotional":0,"foreignNotional":0}
         //     ]
         //
-        const result = this.parseOHLCVs (response, market, timeframe, since, limit);
+        let result = this.parseOHLCVs (response, market, timeframe, since, limit);
+        result = this.changeCandlesFromCloseToOpenTime (result, duration, params);
+        result = this.changeCandlesOpenToHighLow (result);
+        return result;
+    }
+
+    changeCandlesFromCloseToOpenTime (result, duration: Int, params = {}) {
+        let useOpenTimestamp = undefined;
+        [ useOpenTimestamp, params ] = this.handleOptionAndParams (params, 'fetchOHLCV', 'useOpenTimestamp', true);
         if (useOpenTimestamp) {
             // bitmex returns the candle's close timestamp - https://github.com/ccxt/ccxt/issues/4446
             // we can emulate the open timestamp by shifting all the timestamps one place
@@ -1718,19 +1726,18 @@ export default class bitmex extends Exchange {
                 result[i][0] = result[i][0] - duration;
             }
         }
-        return this.fixCandlesHL (result, 'fetchOHLCV');
+        return result;
     }
 
-    fixCandlesHL (result: any[], methodName: string): OHLCV[] {
+    changeCandlesOpenToHighLow (result: any[]): OHLCV[] {
         // see the bug https://github.com/ccxt/ccxt/pull/21356#issuecomment-1969565862
         // so, when OPEN price is outside of H/L range because of that misbehavior, we have to set High or Low to that value, like all other exchanges (& TradingView charts) do
-        // for example, take 1 minute bars:
-        // - last trade happens at 15:40:45, at 0.2 price
-        // - next trade happens at 15:41:58, at 0.3 price
-        // so, the last 1m bar should have      :  O=0.2  H=0.3 L=0.2 C=0.3
-        // but bitmex might return wrong H(or L):  O=0.2  H=0.3 L=0.3 C=0.3
-        const autoCorrectPrices = this.handleOption (methodName, 'autocorrectOpenPrice', true);
-        if (autoCorrectPrices) {
+        // for example, take 1 minute chart:
+        // - a trade happens at 15:40:45, at 0.2 price, then pause and the next trade happens at 15:41:58, at 0.3 price
+        // so, the 15:41 bar should have :  O= 0.2  H= 0.3 L= 0.2 C= 0.3
+        // but bitmex returns wrong Low  :  O= 0.2  H= 0.3 L= 0.3 C= 0.3
+        // thus, either Open needs to be adjusted to High/Low
+        if (this.handleOption ('fetchOHLCV', 'autocorrectOpenPrice', true)) {
             for (let i = 0; i < result.length; i++) {
                 const open = result[i][1];
                 const high = result[i][2];
