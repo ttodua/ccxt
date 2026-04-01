@@ -1,12 +1,18 @@
 'use strict';
 
-var hitbtc = require('./hitbtc.js');
+Object.defineProperty(exports, '__esModule', { value: true });
 
-//  ---------------------------------------------------------------------------
+var hitbtc = require('./hitbtc.js');
+var hitbtc$1 = require('../hitbtc.js');
+var bequant$1 = require('../bequant.js');
+
+// ----------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
-class bequant extends hitbtc {
+class bequant extends hitbtc["default"] {
     describe() {
-        return this.deepExtend(super.describe(), {
+        // eslint-disable-next-line new-cap
+        const describeExtended = this.getDescribeForExtendedWsExchange(new bequant$1["default"](), new hitbtc$1["default"](), super.describe());
+        return this.deepExtend(describeExtended, {
             'id': 'bequant',
             'name': 'Bequant',
             'countries': ['MT'],
@@ -14,8 +20,12 @@ class bequant extends hitbtc {
             'urls': {
                 'logo': 'https://user-images.githubusercontent.com/1294454/55248342-a75dfe00-525a-11e9-8aa2-05e9dca943c6.jpg',
                 'api': {
-                    'public': 'https://api.bequant.io',
-                    'private': 'https://api.bequant.io',
+                    'public': 'https://api.bequant.io/api/3',
+                    'private': 'https://api.bequant.io/api/3',
+                    'ws': {
+                        'public': 'wss://api.bequant.io/api/3/ws/public',
+                        'private': 'wss://api.bequant.io/api/3/ws/trading',
+                    },
                 },
                 'www': 'https://bequant.io',
                 'doc': [
@@ -30,4 +40,4 @@ class bequant extends hitbtc {
     }
 }
 
-module.exports = bequant;
+exports["default"] = bequant;
