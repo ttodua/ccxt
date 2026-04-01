@@ -1400,8 +1400,11 @@ public partial class binance : Exchange
                 } },
                 { "networks", new Dictionary<string, object>() {
                     { "ERC20", "ETH" },
+                    { "ETH", "ETH" },
                     { "TRC20", "TRX" },
+                    { "TRX", "TRX" },
                     { "BEP2", "BNB" },
+                    { "BSC", "BSC" },
                     { "BEP20", "BSC" },
                     { "EOS", "EOS" },
                     { "SPL", "SOL" },
@@ -1411,6 +1414,7 @@ public partial class binance : Exchange
                     { "MATIC", "MATIC" },
                     { "BASE", "BASE" },
                     { "SUI", "SUI" },
+                    { "OP", "OPTIMISM" },
                     { "OPTIMISM", "OPTIMISM" },
                     { "NEAR", "NEAR" },
                     { "APT", "APT" },
@@ -1439,7 +1443,11 @@ public partial class binance : Exchange
                     { "ONT", "ONT" },
                 } },
                 { "networksById", new Dictionary<string, object>() {
+                    { "TRX", "TRC20" },
+                    { "BSC", "BEP20" },
+                    { "ETH", "ERC20" },
                     { "SOL", "SOL" },
+                    { "OPTIMISM", "OP" },
                 } },
                 { "impliedNetworks", new Dictionary<string, object>() {
                     { "ETH", new Dictionary<string, object>() {

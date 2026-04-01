@@ -1456,11 +1456,11 @@ func  (this *GateCore) HandleMyTrades(client interface{}, message interface{})  
 /**
  * @method
  * @name gate#watchBalance
+ * @description watch balance and get the amount of funds available for trading or funds locked in orders
  * @see https://www.gate.com/docs/developers/apiv4/ws/en/#spot-balance-channel
  * @see https://www.gate.com/docs/developers/futures/ws/en/#balances-api
  * @see https://www.gate.com/docs/developers/delivery/ws/en/#balances-api
  * @see https://www.gate.com/docs/developers/options/ws/en/#balances-channel
- * @description watch balance and get the amount of funds available for trading or funds locked in orders
  * @param {object} [params] extra parameters specific to the exchange API endpoint
  * @returns {object} a [balance structure]{@link https://docs.ccxt.com/?id=balance-structure}
  */
@@ -1507,22 +1507,26 @@ func  (this *GateCore) WatchBalance(optionalArgs ...interface{}) <- chan interfa
 func  (this *GateCore) HandleBalance(client interface{}, message interface{})  {
     //
     // spot order fill
-    //   {
-    //       "time": 1653664351,
-    //       "channel": "spot.balances",
-    //       "event": "update",
-    //       "result": [
-    //         {
-    //           "timestamp": "1653664351",
-    //           "timestamp_ms": "1653664351017",
-    //           "user": "10406147",
-    //           "currency": "LTC",
-    //           "change": "-0.0002000000000000",
-    //           "total": "0.09986000000000000000",
-    //           "available": "0.09986000000000000000"
-    //         }
-    //       ]
-    //   }
+    //     {
+    //         "time": 1653664351,
+    //         "time_ms": 1605248616763,
+    //         "channel": "spot.balances",
+    //         "event": "update",
+    //         "result": [
+    //             {
+    //                 "timestamp": "1667556323",
+    //                 "timestamp_ms": "1667556323730",
+    //                 "user": "1000001",
+    //                 "currency": "USDT",
+    //                 "change": "0",
+    //                 "total": "222244.3827652",
+    //                 "available": "222244.3827",
+    //                 "freeze": "5",
+    //                 "freeze_change": "5.000000",
+    //                 "change_type": "order-create"
+    //             }
+    //         ]
+    //     }
     //
     // account transfer
     //
@@ -1566,15 +1570,16 @@ func  (this *GateCore) HandleBalance(client interface{}, message interface{})  {
     //   }
     //
     var result interface{} = this.SafeValue(message, "result", []interface{}{})
-    var timestamp interface{} = this.SafeInteger(message, "time_ms")
     ccxt.AddElementToObject(this.Balance, "info", result)
-    ccxt.AddElementToObject(this.Balance, "timestamp", timestamp)
-    ccxt.AddElementToObject(this.Balance, "datetime", this.Iso8601(timestamp))
     for i := 0; ccxt.IsLessThan(i, ccxt.GetArrayLength(result)); i++ {
         var rawBalance interface{} = ccxt.GetValue(result, i)
         var account interface{} = this.Account()
         var currencyId interface{} = this.SafeString(rawBalance, "currency", "USDT") // when not present it is USDT
         var code interface{} = this.SafeCurrencyCode(currencyId)
+        var timestamp interface{} = this.SafeInteger2(rawBalance, "time_ms", "timestamp_ms")
+        ccxt.AddElementToObject(this.Balance, "timestamp", timestamp)
+        ccxt.AddElementToObject(this.Balance, "datetime", this.Iso8601(timestamp))
+        ccxt.AddElementToObject(account, "used", this.SafeString(rawBalance, "freeze"))
         ccxt.AddElementToObject(account, "free", this.SafeString(rawBalance, "available"))
         ccxt.AddElementToObject(account, "total", this.SafeString2(rawBalance, "total", "balance"))
         ccxt.AddElementToObject(this.Balance, code, account)
@@ -1618,8 +1623,8 @@ func  (this *GateCore) WatchPositions(optionalArgs ...interface{}) <- chan inter
             params := ccxt.GetArg(optionalArgs, 3, map[string]interface{} {})
             _ = params
         
-            retRes12088 := (<-this.LoadMarkets())
-            ccxt.PanicOnError(retRes12088)
+            retRes12138 := (<-this.LoadMarkets())
+            ccxt.PanicOnError(retRes12138)
             var market interface{} = nil
             symbols = this.MarketSymbols(symbols)
             var payload interface{} = []interface{}{ccxt.Add("!", "all")}
@@ -1657,9 +1662,9 @@ func  (this *GateCore) WatchPositions(optionalArgs ...interface{}) <- chan inter
             var cache interface{} = this.SafeValue(this.Positions, typeVar)
             if ccxt.IsTrue(ccxt.IsTrue(ccxt.IsTrue(fetchPositionsSnapshot) && ccxt.IsTrue(awaitPositionsSnapshot)) && ccxt.IsTrue(ccxt.IsEqual(cache, nil))) {
         
-                    retRes124119 :=  (<-client.(ccxt.ClientInterface).Future(ccxt.Add(typeVar, ":fetchPositionsSnapshot")))
-                    ccxt.PanicOnError(retRes124119)
-                    ch <- retRes124119
+                    retRes124619 :=  (<-client.(ccxt.ClientInterface).Future(ccxt.Add(typeVar, ":fetchPositionsSnapshot")))
+                    ccxt.PanicOnError(retRes124619)
+                    ch <- retRes124619
                     return nil
             }
         
@@ -1807,11 +1812,11 @@ func  (this *GateCore) HandlePositions(client interface{}, message interface{}) 
 /**
  * @method
  * @name gate#watchOrders
+ * @description watches information on multiple orders made by the user
  * @see https://www.gate.com/docs/developers/apiv4/ws/en/#orders-channel
  * @see https://www.gate.com/docs/developers/futures/ws/en/#orders-api
  * @see https://www.gate.com/docs/developers/delivery/ws/en/#orders-api
  * @see https://www.gate.com/docs/developers/options/ws/en/#orders-channel
- * @description watches information on multiple orders made by the user
  * @param {string} symbol unified market symbol of the market orders were made in
  * @param {int} [since] the earliest time in ms to fetch orders for
  * @param {int} [limit] the maximum number of order structures to retrieve
@@ -1834,8 +1839,8 @@ func  (this *GateCore) WatchOrders(optionalArgs ...interface{}) <- chan interfac
             params := ccxt.GetArg(optionalArgs, 3, map[string]interface{} {})
             _ = params
         
-            retRes13848 := (<-this.LoadMarkets())
-            ccxt.PanicOnError(retRes13848)
+            retRes13898 := (<-this.LoadMarkets())
+            ccxt.PanicOnError(retRes13898)
             var market interface{} = nil
             if ccxt.IsTrue(!ccxt.IsEqual(symbol, nil)) {
                 market = this.Market(symbol)
@@ -1883,39 +1888,46 @@ func  (this *GateCore) WatchOrders(optionalArgs ...interface{}) <- chan interfac
         }
 func  (this *GateCore) HandleOrder(client interface{}, message interface{})  {
     //
-    // {
-    //     "time": 1605175506,
-    //     "channel": "spot.orders",
-    //     "event": "update",
-    //     "result": [
-    //       {
-    //         "id": "30784435",
-    //         "user": 123456,
-    //         "text": "t-abc",
-    //         "create_time": "1605175506",
-    //         "create_time_ms": "1605175506123",
-    //         "update_time": "1605175506",
-    //         "update_time_ms": "1605175506123",
-    //         "event": "put",
-    //         "currency_pair": "BTC_USDT",
-    //         "type": "limit",
-    //         "account": "spot",
-    //         "side": "sell",
-    //         "amount": "1",
-    //         "price": "10001",
-    //         "time_in_force": "gtc",
-    //         "left": "1",
-    //         "filled_total": "0",
-    //         "fee": "0",
-    //         "fee_currency": "USDT",
-    //         "point_fee": "0",
-    //         "gt_fee": "0",
-    //         "gt_discount": true,
-    //         "rebated_fee": "0",
-    //         "rebated_fee_currency": "USDT"
-    //       }
-    //     ]
-    // }
+    //     {
+    //         "time": 1774613210,
+    //         "time_ms": 1774613210392,
+    //         "channel": "spot.orders",
+    //         "event": "update",
+    //         "result": [
+    //             {
+    //                 "id": "1036717689726",
+    //                 "text": "apiv4",
+    //                 "create_time": "1774613210",
+    //                 "update_time": "1774613210",
+    //                 "currency_pair": "BTC_USDT",
+    //                 "type": "limit",
+    //                 "account": "unified",
+    //                 "side": "buy",
+    //                 "amount": "0.1",
+    //                 "price": "200",
+    //                 "time_in_force": "gtc",
+    //                 "left": "0.1",
+    //                 "filled_amount": "0",
+    //                 "filled_total": "0",
+    //                 "avg_deal_price": "0",
+    //                 "fee": "0",
+    //                 "fee_currency": "BTC",
+    //                 "point_fee": "0",
+    //                 "gt_fee": "0",
+    //                 "rebated_fee": "0",
+    //                 "rebated_fee_currency": "BTC",
+    //                 "create_time_ms": "1774613210391",
+    //                 "update_time_ms": "1774613210391",
+    //                 "user": 10406147,
+    //                 "event": "put",
+    //                 "stp_id": 0,
+    //                 "stp_act": "-",
+    //                 "finish_as": "open",
+    //                 "biz_info": "ch:ccxt",
+    //                 "amend_text": "-"
+    //             }
+    //         ]
+    //     }
     //
     var orders interface{} = this.SafeValue(message, "result", []interface{}{})
     var limit interface{} = this.SafeInteger(this.Options, "ordersLimit", 1000)
@@ -2007,8 +2019,8 @@ func  (this *GateCore) WatchMyLiquidationsForSymbols(symbols interface{}, option
             params := ccxt.GetArg(optionalArgs, 2, map[string]interface{} {})
             _ = params
         
-            retRes15228 := (<-this.LoadMarkets())
-            ccxt.PanicOnError(retRes15228)
+            retRes15348 := (<-this.LoadMarkets())
+            ccxt.PanicOnError(retRes15348)
             symbols = this.MarketSymbols(symbols, nil, true, true)
             var market interface{} = this.GetMarketFromSymbols(symbols)
             var typeVar interface{} = nil
@@ -2559,9 +2571,9 @@ func  (this *GateCore) SubscribePublic(url interface{}, messageHash interface{},
             }
             var message interface{} = this.Extend(request, params)
         
-                retRes204315 :=  (<-this.Watch(url, messageHash, message, messageHash, subscription))
-                ccxt.PanicOnError(retRes204315)
-                ch <- retRes204315
+                retRes205515 :=  (<-this.Watch(url, messageHash, message, messageHash, subscription))
+                ccxt.PanicOnError(retRes205515)
+                ch <- retRes205515
                 return nil
         
             }()
@@ -2585,9 +2597,9 @@ func  (this *GateCore) SubscribePublicMultiple(url interface{}, messageHashes in
             }
             var message interface{} = this.Extend(request, params)
         
-                retRes205715 :=  (<-this.WatchMultiple(url, messageHashes, message, messageHashes))
-                ccxt.PanicOnError(retRes205715)
-                ch <- retRes205715
+                retRes206915 :=  (<-this.WatchMultiple(url, messageHashes, message, messageHashes))
+                ccxt.PanicOnError(retRes206915)
+                ch <- retRes206915
                 return nil
         
             }()
@@ -2619,9 +2631,9 @@ func  (this *GateCore) UnSubscribePublicMultiple(url interface{}, topic interfac
             }
             var message interface{} = this.Extend(request, params)
         
-                retRes207915 :=  (<-this.WatchMultiple(url, messageHashes, message, messageHashes, sub))
-                ccxt.PanicOnError(retRes207915)
-                ch <- retRes207915
+                retRes209115 :=  (<-this.WatchMultiple(url, messageHashes, message, messageHashes, sub))
+                ccxt.PanicOnError(retRes209115)
+                ch <- retRes209115
                 return nil
         
             }()
@@ -2639,9 +2651,9 @@ func  (this *GateCore) Authenticate(url interface{}, messageType interface{}) <-
             var authenticated interface{} = this.SafeValue(client.(ccxt.ClientInterface).GetSubscriptions(), messageHash)
             if ccxt.IsTrue(ccxt.IsEqual(authenticated, nil)) {
         
-                    retRes208919 :=  (<-this.RequestPrivate(url, map[string]interface{} {}, channel, messageHash))
-                    ccxt.PanicOnError(retRes208919)
-                    ch <- retRes208919
+                    retRes210119 :=  (<-this.RequestPrivate(url, map[string]interface{} {}, channel, messageHash))
+                    ccxt.PanicOnError(retRes210119)
+                    ch <- retRes210119
                     return nil
             }
         
@@ -2695,9 +2707,9 @@ func  (this *GateCore) RequestPrivate(url interface{}, reqParams interface{}, ch
                 "payload": payload,
             }
         
-                retRes213215 :=  (<-this.Watch(url, messageHash, request, messageHash, requestId))
-                ccxt.PanicOnError(retRes213215)
-                ch <- retRes213215
+                retRes214415 :=  (<-this.Watch(url, messageHash, request, messageHash, requestId))
+                ccxt.PanicOnError(retRes214415)
+                ch <- retRes214415
                 return nil
         
             }()
@@ -2751,9 +2763,9 @@ func  (this *GateCore) SubscribePrivate(url interface{}, messageHash interface{}
             }
             var message interface{} = this.Extend(request, params)
         
-                retRes217615 :=  (<-this.Watch(url, messageHash, message, messageHash, messageHash))
-                ccxt.PanicOnError(retRes217615)
-                ch <- retRes217615
+                retRes218815 :=  (<-this.Watch(url, messageHash, message, messageHash, messageHash))
+                ccxt.PanicOnError(retRes218815)
+                ch <- retRes218815
                 return nil
         
             }()

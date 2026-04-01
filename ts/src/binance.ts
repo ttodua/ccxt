@@ -1384,8 +1384,11 @@ export default class binance extends Exchange {
                 },
                 'networks': {
                     'ERC20': 'ETH',
+                    'ETH': 'ETH',
                     'TRC20': 'TRX',
+                    'TRX': 'TRX',
                     'BEP2': 'BNB',
+                    'BSC': 'BSC',
                     'BEP20': 'BSC',
                     'EOS': 'EOS',
                     'SPL': 'SOL', // temporarily keep support for SPL (old name)
@@ -1398,6 +1401,7 @@ export default class binance extends Exchange {
                     'MATIC': 'MATIC',
                     'BASE': 'BASE',
                     'SUI': 'SUI',
+                    'OP': 'OPTIMISM',
                     'OPTIMISM': 'OPTIMISM',
                     'NEAR': 'NEAR',
                     'APT': 'APT',
@@ -1443,7 +1447,11 @@ export default class binance extends Exchange {
                     'ONT': 'ONT', // ontology
                 },
                 'networksById': {
+                    'TRX': 'TRC20',
+                    'BSC': 'BEP20',
+                    'ETH': 'ERC20',
                     'SOL': 'SOL', // temporary fix for SPL definition
+                    'OPTIMISM': 'OP',
                 },
                 'impliedNetworks': {
                     'ETH': { 'ERC20': 'ETH' },
@@ -1487,7 +1495,6 @@ export default class binance extends Exchange {
                     'BUSD': 'USD',
                 },
                 'defaultWithdrawPrecision': 0.00000001,
-                'defaultFiatWithdrawPrecision': 0.01,
             },
             'features': {
                 'spot': {
@@ -2956,200 +2963,202 @@ export default class binance extends Exchange {
             const responseMarginables = results[1];
             marginablesById = this.indexBy (responseMarginables, 'assetName');
         }
-        this.options['fetchCurrenciesMarginablesById'] = marginablesById;
-        const result = this.parseCurrencies (responseCurrencies);
-        delete this.options['fetchCurrenciesMarginablesById'];
-        return result;
-    }
-
-    parseCurrency (currency: Dict): Currency {
-        //
-        //    {
-        //        "coin": "LINK",
-        //        "depositAllEnable": true,
-        //        "withdrawAllEnable": true,
-        //        "name": "ChainLink",
-        //        "free": "0",
-        //        "locked": "0",
-        //        "freeze": "0",
-        //        "withdrawing": "0",
-        //        "ipoing": "0",
-        //        "ipoable": "0",
-        //        "storage": "0",
-        //        "isLegalMoney": false,
-        //        "trading": true,
-        //        "networkList": [
-        //            {
-        //                "network": "BSC",
-        //                "coin": "LINK",
-        //                "withdrawIntegerMultiple": "0.00000001",
-        //                "isDefault": false,
-        //                "depositEnable": true,
-        //                "withdrawEnable": true,
-        //                "depositDesc": "",
-        //                "withdrawDesc": "",
-        //                "specialTips": "",
-        //                "specialWithdrawTips": "The network you have selected is BSC. Please ensure that the withdrawal address supports the Binance Smart Chain network. You will lose your assets if the chosen platform does not support retrievals.",
-        //                "name": "BNB Smart Chain (BEP20)",
-        //                "resetAddressStatus": false,
-        //                "addressRegex": "^(0x)[0-9A-Fa-f]{40}$",
-        //                "addressRule": "",
-        //                "memoRegex": "",
-        //                "withdrawFee": "0.012",
-        //                "withdrawMin": "0.024",
-        //                "withdrawMax": "9999999999.99999999",
-        //                "minConfirm": "15",
-        //                "unLockConfirm": "0",
-        //                "sameAddress": false,
-        //                "estimatedArrivalTime": "5",
-        //                "busy": false,
-        //                "country": "AE,BINANCE_BAHRAIN_BSC"
-        //            },
-        //            {
-        //                "network": "BNB",
-        //                "coin": "LINK",
-        //                "withdrawIntegerMultiple": "0.00000001",
-        //                "isDefault": false,
-        //                "depositEnable": true,
-        //                "withdrawEnable": true,
-        //                "depositDesc": "",
-        //                "withdrawDesc": "",
-        //                "specialTips": "Both a MEMO and an Address are required to successfully deposit your LINK BEP2 tokens to Binance.",
-        //                "specialWithdrawTips": "",
-        //                "name": "BNB Beacon Chain (BEP2)",
-        //                "resetAddressStatus": false,
-        //                "addressRegex": "^(bnb1)[0-9a-z]{38}$",
-        //                "addressRule": "",
-        //                "memoRegex": "^[0-9A-Za-z\\-_]{1,120}$",
-        //                "withdrawFee": "0.003",
-        //                "withdrawMin": "0.01",
-        //                "withdrawMax": "10000000000",
-        //                "minConfirm": "1",
-        //                "unLockConfirm": "0",
-        //                "sameAddress": true,
-        //                "estimatedArrivalTime": "5",
-        //                "busy": false,
-        //                "country": "AE,BINANCE_BAHRAIN_BSC"
-        //            },
-        //            {
-        //                "network": "ETH",
-        //                "coin": "LINK",
-        //                "withdrawIntegerMultiple": "0.00000001",
-        //                "isDefault": true,
-        //                "depositEnable": true,
-        //                "withdrawEnable": true,
-        //                "depositDesc": "",
-        //                "withdrawDesc": "",
-        //                "name": "Ethereum (ERC20)",
-        //                "resetAddressStatus": false,
-        //                "addressRegex": "^(0x)[0-9A-Fa-f]{40}$",
-        //                "addressRule": "",
-        //                "memoRegex": "",
-        //                "withdrawFee": "0.55",
-        //                "withdrawMin": "1.1",
-        //                "withdrawMax": "10000000000",
-        //                "minConfirm": "12",
-        //                "unLockConfirm": "0",
-        //                "sameAddress": false,
-        //                "estimatedArrivalTime": "5",
-        //                "busy": false,
-        //                "country": "AE,BINANCE_BAHRAIN_BSC"
-        //            }
-        //        ]
-        //    }
-        //
-        //     some coins (e.g. ETH, BIGTIME, SONIC, etc) return extra fields under network entry
-        //
-        //                "specialTips": "",
-        //                "specialWithdrawTips": "",
-        //                "withdrawInternalMin": "0",
-        //                "contractAddressUrl": "https://etherscan.io/address/",
-        //                "contractAddress": "0x64bc2ca1be492be7185faa2c8835d9b824c8a194"
-        //
-        const entry = currency;
-        const id = this.safeString (entry, 'coin');
-        const name = this.safeString (entry, 'name');
-        const code = this.safeCurrencyCode (id);
-        const isFiat = this.safeBool (entry, 'isLegalMoney');
-        const networkList = this.safeList (entry, 'networkList', []);
-        const fees: Dict = {};
-        const networks: Dict = {};
-        let isETF = false;
-        for (let j = 0; j < networkList.length; j++) {
-            const networkItem = networkList[j];
-            const network = this.safeString (networkItem, 'network');
-            const networkCode = this.networkIdToCode (network, code);
-            isETF = (network === 'ETF'); // ETF currencies (e.g. BTCUP, ETHDOWN) have only 1 "network" entry and are deterministic to set
-            // const name = this.safeString (networkItem, 'name');
-            const withdrawFee = this.safeNumber (networkItem, 'withdrawFee');
-            const depositEnable = this.safeBool (networkItem, 'depositEnable');
-            const withdrawEnable = this.safeBool (networkItem, 'withdrawEnable');
-            fees[network] = withdrawFee;
-            // todo: default networks in "setMarkets" overload
-            // if (isDefault) {
-            //     this.options['defaultNetworkCodesForCurrencies'][code] = networkCode;
-            // }
-            let withdrawPrecision = this.omitZero (this.safeString2 (networkItem, 'withdrawIntegerMultiple', 'withdrawInternalMin'));
-            // zero values happen only on fiat or leveraged(ETF) tokens: https://t.me/binance_api_english/393075
-            if (withdrawPrecision === undefined && isFiat) {
-                withdrawPrecision = this.safeString (this.options, 'defaultFiatWithdrawPrecision');
+        const result: Dict = {};
+        for (let i = 0; i < responseCurrencies.length; i++) {
+            //
+            //    {
+            //        "coin": "LINK",
+            //        "depositAllEnable": true,
+            //        "withdrawAllEnable": true,
+            //        "name": "ChainLink",
+            //        "free": "0",
+            //        "locked": "0",
+            //        "freeze": "0",
+            //        "withdrawing": "0",
+            //        "ipoing": "0",
+            //        "ipoable": "0",
+            //        "storage": "0",
+            //        "isLegalMoney": false,
+            //        "trading": true,
+            //        "networkList": [
+            //            {
+            //                "network": "BSC",
+            //                "coin": "LINK",
+            //                "withdrawIntegerMultiple": "0.00000001",
+            //                "isDefault": false,
+            //                "depositEnable": true,
+            //                "withdrawEnable": true,
+            //                "depositDesc": "",
+            //                "withdrawDesc": "",
+            //                "specialTips": "",
+            //                "specialWithdrawTips": "The network you have selected is BSC. Please ensure that the withdrawal address supports the Binance Smart Chain network. You will lose your assets if the chosen platform does not support retrievals.",
+            //                "name": "BNB Smart Chain (BEP20)",
+            //                "resetAddressStatus": false,
+            //                "addressRegex": "^(0x)[0-9A-Fa-f]{40}$",
+            //                "addressRule": "",
+            //                "memoRegex": "",
+            //                "withdrawFee": "0.012",
+            //                "withdrawMin": "0.024",
+            //                "withdrawMax": "9999999999.99999999",
+            //                "minConfirm": "15",
+            //                "unLockConfirm": "0",
+            //                "sameAddress": false,
+            //                "estimatedArrivalTime": "5",
+            //                "busy": false,
+            //                "country": "AE,BINANCE_BAHRAIN_BSC"
+            //            },
+            //            {
+            //                "network": "BNB",
+            //                "coin": "LINK",
+            //                "withdrawIntegerMultiple": "0.00000001",
+            //                "isDefault": false,
+            //                "depositEnable": true,
+            //                "withdrawEnable": true,
+            //                "depositDesc": "",
+            //                "withdrawDesc": "",
+            //                "specialTips": "Both a MEMO and an Address are required to successfully deposit your LINK BEP2 tokens to Binance.",
+            //                "specialWithdrawTips": "",
+            //                "name": "BNB Beacon Chain (BEP2)",
+            //                "resetAddressStatus": false,
+            //                "addressRegex": "^(bnb1)[0-9a-z]{38}$",
+            //                "addressRule": "",
+            //                "memoRegex": "^[0-9A-Za-z\\-_]{1,120}$",
+            //                "withdrawFee": "0.003",
+            //                "withdrawMin": "0.01",
+            //                "withdrawMax": "10000000000",
+            //                "minConfirm": "1",
+            //                "unLockConfirm": "0",
+            //                "sameAddress": true,
+            //                "estimatedArrivalTime": "5",
+            //                "busy": false,
+            //                "country": "AE,BINANCE_BAHRAIN_BSC"
+            //            },
+            //            {
+            //                "network": "ETH",
+            //                "coin": "LINK",
+            //                "withdrawIntegerMultiple": "0.00000001",
+            //                "isDefault": true,
+            //                "depositEnable": true,
+            //                "withdrawEnable": true,
+            //                "depositDesc": "",
+            //                "withdrawDesc": "",
+            //                "name": "Ethereum (ERC20)",
+            //                "resetAddressStatus": false,
+            //                "addressRegex": "^(0x)[0-9A-Fa-f]{40}$",
+            //                "addressRule": "",
+            //                "memoRegex": "",
+            //                "withdrawFee": "0.55",
+            //                "withdrawMin": "1.1",
+            //                "withdrawMax": "10000000000",
+            //                "minConfirm": "12",
+            //                "unLockConfirm": "0",
+            //                "sameAddress": false,
+            //                "estimatedArrivalTime": "5",
+            //                "busy": false,
+            //                "country": "AE,BINANCE_BAHRAIN_BSC"
+            //            }
+            //        ]
+            //    }
+            //
+            //     some coins (e.g. ETH, BIGTIME, SONIC, etc) return extra fields under network entry
+            //
+            //                "specialTips": "",
+            //                "specialWithdrawTips": "",
+            //                "withdrawInternalMin": "0",
+            //                "contractAddressUrl": "https://etherscan.io/address/",
+            //                "contractAddress": "0x64bc2ca1be492be7185faa2c8835d9b824c8a194"
+            //
+            const entry = responseCurrencies[i];
+            const id = this.safeString (entry, 'coin');
+            const name = this.safeString (entry, 'name');
+            const code = this.safeCurrencyCode (id);
+            const isFiat = this.safeBool (entry, 'isLegalMoney');
+            const networkList = this.safeList (entry, 'networkList', []);
+            const fees: Dict = {};
+            let fee = undefined;
+            const networks: Dict = {};
+            let isETF = false;
+            for (let j = 0; j < networkList.length; j++) {
+                const networkItem = networkList[j];
+                const network = this.safeString (networkItem, 'network');
+                const networkCode = this.networkIdToCode (network, code);
+                isETF = (network === 'ETF'); // ETF currencies (e.g. BTCUP, ETHDOWN) have only 1 "network" entry and are deterministic to set
+                // const name = this.safeString (networkItem, 'name');
+                const withdrawFee = this.safeNumber (networkItem, 'withdrawFee');
+                const depositEnable = this.safeBool (networkItem, 'depositEnable');
+                const withdrawEnable = this.safeBool (networkItem, 'withdrawEnable');
+                fees[network] = withdrawFee;
+                const isDefault = this.safeBool (networkItem, 'isDefault');
+                if (isDefault || (fee === undefined)) {
+                    fee = withdrawFee;
+                }
+                // todo: default networks in "setMarkets" overload
+                // if (isDefault) {
+                //     this.options['defaultNetworkCodesForCurrencies'][code] = networkCode;
+                // }
+                let withdrawPrecision = this.omitZero (this.safeString2 (networkItem, 'withdrawIntegerMultiple', 'withdrawInternalMin'));
+                // zero values happen only on fiat or leveraged(ETF) tokens: https://t.me/binance_api_english/393075
+                if (withdrawPrecision === undefined && isFiat) {
+                    withdrawPrecision = this.safeString (this.options, 'defaultFiatWithdrawPrecision');
+                }
+                networks[networkCode] = {
+                    'info': networkItem,
+                    'id': network,
+                    'network': networkCode,
+                    'active': undefined,
+                    'deposit': depositEnable,
+                    'withdraw': withdrawEnable,
+                    'fee': withdrawFee,
+                    'precision': this.parseNumber (withdrawPrecision),
+                    'limits': {
+                        'withdraw': {
+                            'min': this.safeNumber (networkItem, 'withdrawMin'),
+                            'max': this.safeNumber (networkItem, 'withdrawMax'),
+                        },
+                        'deposit': {
+                            'min': this.safeNumber (networkItem, 'depositDust'),
+                            'max': undefined,
+                        },
+                    },
+                };
             }
-            networks[networkCode] = {
-                'info': networkItem,
-                'id': network,
-                'network': networkCode,
-                'active': undefined,
-                'deposit': depositEnable,
-                'withdraw': withdrawEnable,
-                'fee': withdrawFee,
-                'precision': this.parseNumber (withdrawPrecision),
-                'limits': {
-                    'withdraw': {
-                        'min': this.safeNumber (networkItem, 'withdrawMin'),
-                        'max': this.safeNumber (networkItem, 'withdrawMax'),
-                    },
-                    'deposit': {
-                        'min': this.safeNumber (networkItem, 'depositDust'),
-                        'max': undefined,
-                    },
-                },
-            };
+            const marginEntry = this.safeDict (marginablesById, id, {});
+            //
+            //     {
+            //         assetName: "BTC",
+            //         assetFullName: "Bitcoin",
+            //         isBorrowable: true,
+            //         isMortgageable: true,
+            //         userMinBorrow: "0",
+            //         userMinRepay: "0",
+            //     }
+            //
+            let type: Str = undefined;
+            if (isETF) {
+                type = 'leveraged';
+            } else if (isFiat) {
+                type = 'fiat';
+            } else {
+                type = 'crypto';
+            }
+            result[code] = this.safeCurrencyStructure ({
+                'id': id,
+                'name': name,
+                'code': code,
+                'type': type,
+                'precision': undefined,
+                'info': entry,
+                'active': this.safeBool (entry, 'trading'),
+                'deposit': undefined,
+                'withdraw': undefined,
+                'networks': networks,
+                'fee': undefined,
+                'fees': fees,
+                'limits': undefined,
+                'margin': this.safeBool (marginEntry, 'isBorrowable'),
+            });
         }
-        const marginEntry = this.safeDict (this.options['fetchCurrenciesMarginablesById'], id, {});
-        //
-        //     {
-        //         assetName: "BTC",
-        //         assetFullName: "Bitcoin",
-        //         isBorrowable: true,
-        //         isMortgageable: true,
-        //         userMinBorrow: "0",
-        //         userMinRepay: "0",
-        //     }
-        //
-        let type: Str = undefined;
-        if (isETF) {
-            type = 'leveraged';
-        } else if (isFiat) {
-            type = 'fiat';
-        } else {
-            type = 'crypto';
-        }
-        return this.safeCurrencyStructure ({
-            'id': id,
-            'name': name,
-            'code': code,
-            'type': type,
-            'precision': undefined,
-            'info': entry,
-            'active': this.safeBool (entry, 'trading'),
-            'deposit': undefined,
-            'withdraw': undefined,
-            'networks': networks,
-            'fee': undefined,
-            'fees': fees,
-            'limits': undefined,
-            'margin': this.safeBool (marginEntry, 'isBorrowable'),
-        });
+        return result;
     }
 
     /**
@@ -9229,12 +9238,10 @@ export default class binance extends Exchange {
             'coin': currency['id'],
             // 'network': 'ETH', // 'BSC', 'XMR', you can get network and isDefault in networkList in the response of sapiGetCapitalConfigDetail
         };
-        const networks = this.safeDict (this.options, 'networks', {});
-        let network = this.safeStringUpper (params, 'network'); // this line allows the user to specify either ERC20 or ETH
-        network = this.safeString (networks, network, network); // handle ERC20>ETH alias
-        if (network !== undefined) {
-            request['network'] = network;
-            params = this.omit (params, 'network');
+        let networkCode = undefined;
+        [ networkCode, params ] = this.handleNetworkCodeAndParams (params);
+        if (networkCode !== undefined) {
+            request['network'] = this.networkCodeToId (networkCode, currency['code']);
         }
         // has support for the 'network' parameter
         const response = await this.sapiGetCapitalDepositAddress (this.extend (request, params));
@@ -9498,12 +9505,13 @@ export default class binance extends Exchange {
         //        ]
         //    }
         //
+        const code = this.safeString (currency, 'code');
         const networkList = this.safeList (fee, 'networkList', []);
         const result = this.depositWithdrawFee (fee);
         for (let j = 0; j < networkList.length; j++) {
             const networkEntry = networkList[j];
             const networkId = this.safeString (networkEntry, 'network');
-            const networkCode = this.networkIdToCode (networkId);
+            const networkCode = this.networkIdToCode (networkId, code);
             const withdrawFee = this.safeNumber (networkEntry, 'withdrawFee');
             const isDefault = this.safeBool (networkEntry, 'isDefault');
             if (isDefault === true) {
@@ -9552,14 +9560,12 @@ export default class binance extends Exchange {
         if (tag !== undefined) {
             request['addressTag'] = tag;
         }
-        const networks = this.safeDict (this.options, 'networks', {});
-        let network = this.safeStringUpper (params, 'network'); // this line allows the user to specify either ERC20 or ETH
-        network = this.safeString (networks, network, network); // handle ERC20>ETH alias
-        if (network !== undefined) {
-            request['network'] = network;
-            params = this.omit (params, 'network');
+        let networkCode = undefined;
+        [ networkCode, params ] = this.handleNetworkCodeAndParams (params);
+        if (networkCode !== undefined) {
+            request['network'] = this.networkCodeToId (networkCode, currency['code']);
         }
-        request['amount'] = this.currencyToPrecision (code, amount, network);
+        request['amount'] = this.currencyToPrecision (currency['code'], amount, networkCode);
         const response = await this.sapiPostCapitalWithdrawApply (this.extend (request, params));
         //     { id: '9a67628b16ba4988ae20d329333f16bc' }
         return this.parseTransaction (response, currency);
