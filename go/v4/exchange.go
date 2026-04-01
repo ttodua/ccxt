@@ -382,7 +382,6 @@ func (this *Exchange) LoadMarketsHelper(params ...interface{}) <-chan interface{
 		}()
 		reload := GetArg(params, 0, false).(bool)
 		params := GetArg(params, 1, map[string]interface{}{})
-		this.WarmUpCache()
 		if !reload {
 			if this.Markets != nil {
 				if this.Markets_by_id == nil {
@@ -963,21 +962,27 @@ func (this *Exchange) FixStringifiedJsonMembers(a interface{}) string {
 	aStr = strings.ReplaceAll(aStr, "}\"", "}")
 	return aStr
 }
-
 func (this *Exchange) IsEmpty(a interface{}) bool {
 	if a == nil {
 		return true
 	}
-
 	v := reflect.ValueOf(a)
 
 	switch v.Kind() {
-	case reflect.String:
+
+	case reflect.Array, reflect.Slice, reflect.Map:
 		return v.Len() == 0
-	case reflect.Slice, reflect.Array:
-		return v.Len() == 0
-	case reflect.Map:
-		return v.Len() == 0
+
+	case reflect.Struct:
+		return v.IsZero()
+
+	case reflect.Ptr:
+		if v.IsNil() {
+			return true
+		}
+		// Recursively check the value the pointer points to
+		return this.IsEmpty(v.Elem().Interface())
+
 	default:
 		return false
 	}

@@ -412,6 +412,19 @@ export default class Exchange {
     binaryLength(binary: Uint8Array): number;
     lockId(): any;
     unlockId(): any;
+    loadLighterLibrary(libraryPath: any, chainId: any, privateKey: any, apiKeyIndex: any, accountIndex: any): Promise<{}>;
+    lighterSignCreateGroupedOrders(signer: any, request: any): any[];
+    lighterSignCreateOrder(signer: any, request: any): any[];
+    checkLighterSignedError(result: any): void;
+    lighterSignCancelOrder(signer: any, request: any): any[];
+    lighterSignWithdraw(signer: any, request: any): any[];
+    lighterSignCreateSubAccount(signer: any, request: any): any[];
+    lighterSignCancelAllOrders(signer: any, request: any): any[];
+    lighterSignModifyOrder(signer: any, request: any): any[];
+    lighterSignTransfer(signer: any, request: any): any[];
+    lighterSignUpdateLeverage(signer: any, request: any): any[];
+    lighterCreateAuthToken(signer: any, request: any): string;
+    lighterSignUpdateMargin(signer: any, request: any): any[];
     describe(): any;
     safeBoolN(dictionaryOrList: any, keys: IndexType[], defaultValue?: boolean): boolean | undefined;
     safeBool2(dictionary: any, key1: IndexType, key2: IndexType, defaultValue?: boolean): boolean | undefined;
@@ -538,6 +551,7 @@ export default class Exchange {
     parseToInt(number: any): number;
     parseToNumeric(number: any): number;
     isRoundNumber(value: number): boolean;
+    isEmptyString(value: any): boolean;
     safeNumberOmitZero(obj: object, key: IndexType, defaultValue?: Num): Num;
     safeIntegerOmitZero(obj: object, key: IndexType, defaultValue?: Int): Int;
     afterConstruct(): void;
@@ -608,6 +622,7 @@ export default class Exchange {
     parseFeeNumeric(fee: any): any;
     findNearestCeiling(arr: number[], providedValue: number): number;
     invertFlatStringDictionary(dict: any): {};
+    stringToBase16(str: any): string;
     reduceFeesByCurrency(fees: any): any[];
     safeTicker(ticker: Dict, market?: Market): Ticker;
     fetchBorrowRate(code: string, amount: number, params?: {}): Promise<{}>;
@@ -618,6 +633,8 @@ export default class Exchange {
     borrowMargin(code: string, amount: number, symbol?: Str, params?: {}): Promise<{}>;
     repayMargin(code: string, amount: number, symbol?: Str, params?: {}): Promise<{}>;
     fetchOHLCV(symbol: string, timeframe?: string, since?: Int, limit?: Int, params?: {}): Promise<OHLCV[]>;
+    fetchSpotOHLCV(symbol: string, timeframe?: string, since?: Int, limit?: Int, params?: {}): Promise<OHLCV[]>;
+    fetchContractOHLCV(symbol: string, timeframe?: string, since?: Int, limit?: Int, params?: {}): Promise<OHLCV[]>;
     fetchOHLCVWs(symbol: string, timeframe?: string, since?: Int, limit?: Int, params?: {}): Promise<OHLCV[]>;
     watchOHLCV(symbol: string, timeframe?: string, since?: Int, limit?: Int, params?: {}): Promise<OHLCV[]>;
     convertTradingViewToOHLCV(ohlcvs: number[][], timestamp?: string, open?: string, high?: string, low?: string, close?: string, volume?: string, ms?: boolean): any[];
@@ -742,6 +759,8 @@ export default class Exchange {
     fetchTickerWs(symbol: string, params?: {}): Promise<Ticker>;
     watchTicker(symbol: string, params?: {}): Promise<Ticker>;
     fetchTickers(symbols?: Strings, params?: {}): Promise<Tickers>;
+    fetchSpotTickers(symbols?: Strings, params?: {}): Promise<Tickers>;
+    fetchContractTickers(symbols?: Strings, params?: {}): Promise<Tickers>;
     fetchMarkPrices(symbols?: Strings, params?: {}): Promise<Tickers>;
     fetchTickersWs(symbols?: Strings, params?: {}): Promise<Tickers>;
     fetchOrderBooks(symbols?: Strings, limit?: Int, params?: {}): Promise<OrderBooks>;
@@ -790,9 +809,13 @@ export default class Exchange {
     setTakeProfitAndStopLossParams(symbol: string, type: OrderType, side: OrderSide, amount: number, price?: Num, takeProfit?: Num, stopLoss?: Num, params?: {}): {};
     createOrderWithTakeProfitAndStopLossWs(symbol: string, type: OrderType, side: OrderSide, amount: number, price?: Num, takeProfit?: Num, stopLoss?: Num, params?: {}): Promise<Order>;
     createOrders(orders: OrderRequest[], params?: {}): Promise<Order[]>;
+    createSpotOrders(orders: OrderRequest[], params?: {}): Promise<Order[]>;
+    createContractOrders(orders: OrderRequest[], params?: {}): Promise<Order[]>;
     editOrders(orders: OrderRequest[], params?: {}): Promise<Order[]>;
     createOrderWs(symbol: string, type: OrderType, side: OrderSide, amount: number, price?: Num, params?: {}): Promise<Order>;
     cancelOrder(id: string, symbol?: Str, params?: {}): Promise<Order>;
+    cancelSpotOrder(id: string, symbol?: Str, params?: {}): Promise<Order>;
+    cancelContractOrder(id: string, symbol?: Str, params?: {}): Promise<Order>;
     /**
      * @method
      * @name cancelOrderWithClientOrderId
@@ -817,6 +840,8 @@ export default class Exchange {
     cancelOrdersWithClientOrderIds(clientOrderIds: string[], symbol?: Str, params?: {}): Promise<Order[]>;
     cancelOrdersWs(ids: string[], symbol?: Str, params?: {}): Promise<Order[]>;
     cancelAllOrders(symbol?: Str, params?: {}): Promise<Order[]>;
+    cancelAllSpotOrders(symbol?: Str, params?: {}): Promise<Order[]>;
+    cancelAllContractOrders(symbol?: Str, params?: {}): Promise<Order[]>;
     cancelAllOrdersAfter(timeout: Int, params?: {}): Promise<{}>;
     cancelOrdersForSymbols(orders: CancellationRequest[], params?: {}): Promise<Order[]>;
     cancelAllOrdersWs(symbol?: Str, params?: {}): Promise<Order[]>;
@@ -853,6 +878,7 @@ export default class Exchange {
     fetchL3OrderBook(symbol: string, limit?: Int, params?: {}): Promise<OrderBook>;
     parseLastPrice(price: any, market?: Market): LastPrice;
     fetchDepositAddress(code: string, params?: {}): Promise<DepositAddress>;
+    fetchContractDepositAddress(code: string, params?: {}): Promise<DepositAddress>;
     account(): BalanceAccount;
     commonCurrencyCode(code: string): string;
     currency(code: string): CurrencyInterface;
