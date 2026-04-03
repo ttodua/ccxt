@@ -28,13 +28,13 @@ public partial class Exchange
 
     public string hostname { get; set; } = "";
 
-    public IDictionary<string, object> baseCurrencies { get; set; } = new dict();
+    public IDictionary<string, object> baseCurrencies { get; set; } = null;
 
     public bool reloadingMarkets { get; set; } = false;
 
     public Task<object> marketsLoading { get; set; } = null;
 
-    public IDictionary<string, object> quoteCurrencies { get; set; } = new dict();
+    public IDictionary<string, object> quoteCurrencies { get; set; } = null;
 
     public dict api { get; set; } = new dict();
 
@@ -44,11 +44,11 @@ public partial class Exchange
 
     public IDictionary<string, object> markets_by_id { get; set; } = null;
 
-    public List<object> symbols { get; set; } = new list();
+    public List<object> symbols { get; set; } = null;
 
-    public List<object> codes { get; set; } = new list();
+    public List<object> codes { get; set; } = null;
 
-    public List<object> ids { get; set; } = new list();
+    public List<object> ids { get; set; } = null;
 
     public bool substituteCommonCurrencyCodes { get; set; } = true;
 
@@ -58,11 +58,11 @@ public partial class Exchange
 
     public object precisionMode { get; set; } = DECIMAL_PLACES;
 
-    public object currencies_by_id { get; set; } = new dict();
+    public object currencies_by_id { get; set; } = null;
 
     public object accounts { get; set; } = new dict();
 
-    public object accountsById { get; set; } = new dict();
+    public object accountsById { get; set; } = null;
 
     public object status { get; set; } = new dict();
 
@@ -78,11 +78,11 @@ public partial class Exchange
     public object currencies { get; set; } = new dict();
     public object fees { get; set; } = new dict();
     public object requiredCredentials { get; set; } = new dict();
-    public object timeframes { get; set; } = new dict();
-    public double rateLimit { get; set; }
+    public dict timeframes { get; set; } = null;
+    public double rateLimit { get; set; } = 2000;
     public object exceptions { get; set; } = new dict();
     public object urls { get; set; } = new dict();
-    public object precision { get; set; } = new dict();
+    public dict precision { get; set; } = null;
 
     public string apiKey { get; set; }
     public string secret { get; set; }
@@ -275,7 +275,7 @@ public partial class Exchange
             this.options = new ConcurrentDictionary<string, object>(dict2);
         }
         this.verbose = (bool)this.safeValue(extendedProperties, "verbose", false);
-        this.timeframes = SafeValue(extendedProperties, "timeframes", new dict()) as dict;
+        this.timeframes = SafeValue(extendedProperties, "timeframes", null) as dict;
         this.fees = SafeValue(extendedProperties, "fees") as dict;
         this.has = SafeValue(extendedProperties, "has") as dict;
         this.httpExceptions = SafeValue(extendedProperties, "httpExceptions") as dict;
