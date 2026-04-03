@@ -70,7 +70,7 @@ public partial class Exchange
 
     public object number { get; set; } = typeof(float);
     public Dictionary<string, object> has { get; set; } = new dict();
-    public Dictionary<string, object> features { get; set; } = new dict();
+    public Dictionary<string, object> features { get; set; }
     public ConcurrentDictionary<string, object> options { get; set; } = new ConcurrentDictionary<string, object>();
     public bool isSandboxModeEnabled { get; set; } = false;
 

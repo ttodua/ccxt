@@ -2191,6 +2191,7 @@ export default class Exchange {
             'countries': this.countries,
             'enableRateLimit': this.enableRateLimit,
             'rateLimit': this.rateLimit, // milliseconds = seconds * 1000
+            'rateLimiterAlgorithm': this.rateLimiterAlgorithm,
             'timeout': this.timeout, // milliseconds = seconds * 1000
             'certified': this.certified, // if certified by the CCXT dev team
             'pro': this.pro, // if it is integrated with CCXT Pro for WebSocket support
