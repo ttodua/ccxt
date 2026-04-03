@@ -494,8 +494,7 @@ func (this *BitstampCore) Describe() interface{} {
 				"Wrong API key format":                        AuthenticationError,
 				"Your account is frozen":                      PermissionDenied,
 				"Please update your profile with your FATCA information, before using API.": PermissionDenied,
-				"Order not found.":                                                   OrderNotFound,
-				"Price is more than 20% below market price.":                         InvalidOrder,
+				"Order not found.": OrderNotFound,
 				"Bitstamp.net is under scheduled maintenance. We\\'ll be back soon.": OnMaintenance,
 				"Order could not be placed.":                                         ExchangeNotAvailable,
 				"Invalid offset.":                                                    BadRequest,
@@ -503,6 +502,7 @@ func (this *BitstampCore) Describe() interface{} {
 			},
 			"broad": map[string]interface{}{
 				"Minimum order size is":                   InvalidOrder,
+				"Price is more than":                      InvalidOrder,
 				"Check your account balance for details.": InsufficientFunds,
 				"Ensure this value has at least":          InvalidAddress,
 				"Ensure that there are no more than":      InvalidOrder,

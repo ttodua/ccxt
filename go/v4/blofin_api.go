@@ -63,6 +63,10 @@ func (this *BlofinCore) PrivateGetAssetBills(args ...interface{}) <-chan interfa
 	return this.callEndpointAsync("privateGetAssetBills", args...)
 }
 
+func (this *BlofinCore) PrivateGetSpotTradeFillsHistory(args ...interface{}) <-chan interface{} {
+	return this.callEndpointAsync("privateGetSpotTradeFillsHistory", args...)
+}
+
 func (this *BlofinCore) PrivateGetAccountBalance(args ...interface{}) <-chan interface{} {
 	return this.callEndpointAsync("privateGetAccountBalance", args...)
 }
