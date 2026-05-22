@@ -383,6 +383,7 @@ class Transpiler {
             // and a non greedy match for the calls not picked up by the previous regex
             [ /\\?\b(?:React\\)?Async\\await\((.+?)\);/gs, '$1;' ],
             [ /\byield(?: from)?\s+/g, '' ], // delete yield from
+            [ /this\-\>throttler/gm, 'this\-\>throttler_sync' ], // delete this.throttler (bcz in sync it doesnt exist)
         ]
     }
 
@@ -574,6 +575,7 @@ class Transpiler {
             [ /Math\.(max|min)/g, '$1' ],
             [ /console\.log/g, 'var_dump'],
             [ /process\.exit/g, 'exit'],
+            [ /this->throttler\./g, 'this->throttler->' ], // throttler fix
             [ /super\./g, 'parent::'],
             [ /\sdelete\s([^\n]+)\;/g, ' unset($1);' ],
             [ /\~([\]\[\|@\.\s+\:\/#()\-a-zA-Z0-9_-]+?)\~/g, '{$1}' ], // resolve the "arrays vs url params" conflict (both are in {}-brackets)

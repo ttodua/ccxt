@@ -325,6 +325,8 @@ class Exchange {
         'refillRate' => ($this->rateLimit > 0) ? 1.0 / $this->rateLimit : PHP_INT_MAX,
     ); */
 
+    public $throttler_sync = null; // placeholder for transpilation
+
     public $baseCurrencies = null;
     public $quoteCurrencies = null;
 
@@ -1182,10 +1184,6 @@ class Exchange {
 
     public function init_throttler() {
         // stub in sync php
-    }
-
-    public function set_rate_limit(float $rateLimit) {
-        $this->rateLimit = $rateLimit;
     }
 
     public static function underscore($camelcase) {

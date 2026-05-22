@@ -327,11 +327,6 @@ func (this *Exchange) InitThrottler() {
 	this.Throttler = NewThrottler(this.TokenBucket)
 }
 
-func (this *Exchange) SetRateLimit(rateLimit float64) {
-	this.RateLimit = rateLimit
-	this.Throttler.SetRateLimit(rateLimit)
-}
-
 /*
 *
   - @method
