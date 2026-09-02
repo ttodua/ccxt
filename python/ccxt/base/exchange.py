@@ -725,13 +725,25 @@ class BaseExchange(object):
             return False
 
     @staticmethod
-    def safe_float(container, key, default_value=None):
+    def safe_float_2(container, key1, key2, default_value=None):
         if container is not None:
             if isinstance(container, dict):
-                value = container.get(key)
+                value = container.get(key1)
             else:
                 try:
-                    value = container[key]
+                    value = container[key1]
+                except (KeyError, IndexError, TypeError):
+                    value = None
+            if value is not None:
+                try:
+                    return float(value)
+                except (TypeError, ValueError, OverflowError):
+                    pass
+            if isinstance(container, dict):
+                value = container.get(key2)
+            else:
+                try:
+                    value = container[key2]
                 except (KeyError, IndexError, TypeError):
                     value = None
             if value is not None:
@@ -820,7 +832,8 @@ class BaseExchange(object):
     @staticmethod
     def safe_float_2(container, key1, key2, default_value=None):
         if container is not None:
-            if isinstance(container, dict):
+            is_dict = isinstance(container, dict)
+            if is_dict:
                 value = container.get(key1)
             else:
                 try:
@@ -832,7 +845,7 @@ class BaseExchange(object):
                     return float(value)
                 except (TypeError, ValueError, OverflowError):
                     pass
-            if isinstance(container, dict):
+            if is_dict:
                 value = container.get(key2)
             else:
                 try:
