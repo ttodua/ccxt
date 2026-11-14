@@ -490,7 +490,7 @@ export default class interactivebrokers extends Exchange {
                         // 'QEF' - Spot-Quoted Ether (Cleared Future), 0.2 ETH
                         // 'QEM' - Ether Marker Spot Quoted Futures, 0.2 ETH
                     },
-                    'cryptoCboeFuturesSymbols': {
+                    'cryptoCboeFutureSymbols': {
                         // CFE (cboe) futures, a single contract with a far (2035) expiry
                         'PBT': 'BTC', // Cboe Kaiko Bitcoin Index, 0.01 BTC
                         'PET': 'ETH', // Cboe Kaiko Ether Index, 0.1 ETH
@@ -1620,10 +1620,10 @@ export default class interactivebrokers extends Exchange {
         const options = this.safeDict (this.options, 'fetchMarkets', {});
         const types = this.safeList (options, 'types', []);
         const cryptoCmeFutureSymbols = this.safeDict (options, 'cryptoCmeFutureSymbols', {});
-        const cryptoCboeFuturesSymbols = this.safeDict (options, 'cryptoCboeFuturesSymbols', {});
+        const cryptoCboeFutureSymbols = this.safeDict (options, 'cryptoCboeFutureSymbols', {});
         const symbols = await this.fetchCoinbaseDerivativesSymbols ();
         const cmeSymbols = Object.keys (cryptoCmeFutureSymbols);
-        const cfeSymbols = Object.keys (cryptoCboeFuturesSymbols);
+        const cfeSymbols = Object.keys (cryptoCboeFutureSymbols);
         const targetSymbols = this.arrayConcat (cmeSymbols, cfeSymbols);
         for (let i = 0; i < targetSymbols.length; i++) {
             if (!this.inArray (targetSymbols[i], symbols)) {
