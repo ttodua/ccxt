@@ -1583,8 +1583,9 @@ export default class interactivebrokers extends Exchange {
         const cfeSymbols = Object.keys (cryptoCboeFutureSymbols);
         const targetSymbols = this.arraysConcat ([ coinbaseDerivSymbols, cmeSymbols, cfeSymbols ]);
         const symbols = this.unique (targetSymbols);
+        const joined = (symbols as string[]).join (','); // c# fix, todo investigate
         const request: Dict = {
-            'symbols': symbols.join (','),
+            'symbols': joined,
         };
         const response = await this.marketsEndpointCall (this.extend (request, params), 'webapiGetV1ApiTrsrvFutures', {});
         //
