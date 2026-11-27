@@ -1334,6 +1334,16 @@
             }
         }
     },
+    "etoro": {
+        "preferredSpotSymbol": "AAPL/USD",
+        "preferredSwapSymbol": "GOLD/USD",
+        "skipMethods": {
+            "fetchOrderBook": "eToro is a broker, it has no order book",
+            "fetchTrades": "eToro publishes no public trades",
+            "fetchCurrencies": "eToro has no currencies endpoint, the currencies are derived from the markets",
+            "fetchLedger": "eToro needs the id of a cash account in params.accountId and the test account has none"
+        }
+    },
     "exmo": {
         "skipMethods": {
             "loadMarkets": {
